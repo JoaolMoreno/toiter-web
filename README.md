@@ -1,36 +1,178 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# **Toiter - Clone do Twitter**
 
-## Getting Started
+Este é o repositório do **Toiter**, um clone do Twitter focado em interação em tempo real, alta escalabilidade e um tema visual moderno com predominância de verde. O projeto utiliza **Next.js** no front-end, com React e TypeScript, enquanto o back-end é baseado em microsserviços. A aplicação permite criar, curtir, repostar, responder e visualizar postagens, além de oferecer feeds personalizados e recursos sociais.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## **Índice**
+1. [Sobre o Projeto](#sobre-o-projeto)
+2. [Funcionalidades](#funcionalidades)
+3. [Tecnologias Utilizadas](#tecnologias-utilizadas)
+4. [Configuração do Ambiente](#configuração-do-ambiente)
+5. [Estrutura de Telas](#estrutura-de-telas)
+6. [Como Contribuir](#como-contribuir)
+7. [Licença](#licença)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## **Sobre o Projeto**
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+O **Toiter** é uma rede social minimalista inspirada no Twitter. Ele é projetado para ser modular, escalável e interativo, permitindo aos usuários publicar postagens curtas e interagir em tempo real com o conteúdo de outros usuários.
 
-## Learn More
+### **Objetivos do Projeto**
+- Oferecer uma experiência de usuário fluida e moderna.
+- Implementar funcionalidades comuns de redes sociais, como curtidas, repostagens e respostas.
+- Criar um ambiente extensível para futuras funcionalidades, como notificações e mensagens diretas.
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## **Funcionalidades**
+- **Cadastro e Autenticação**:
+    - Cadastro de novos usuários.
+    - Login utilizando JWT para autenticação segura.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **Feed de Postagens**:
+    - Feed personalizado com postagens de usuários seguidos.
+    - Postagens destacadas por interações recentes.
 
-## Deploy on Vercel
+- **Postagens**:
+    - Criar postagens com ou sem mídia.
+    - Curtir, repostar e responder a postagens.
+    - Visualizar respostas em formato de thread.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **Perfil de Usuário**:
+    - Exibir informações do perfil (nome, bio, imagem).
+    - Listar postagens e interações do usuário.
+    - Permitir edição de informações pessoais.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Relacionamentos**:
+    - Seguir e deixar de seguir usuários.
+    - Listar seguidores e seguidos.
+
+---
+
+## **Tecnologias Utilizadas**
+
+### **Front-End**
+- **Framework**: [Next.js](https://nextjs.org/) (React + SSR/SSG).
+- **Linguagem**: TypeScript.
+- **Estilização**: Styled Components.
+
+### **Back-End**
+- **Linguagem**: Java.
+- **Framework**: Spring Boot.
+- **Banco de Dados**: PostgreSQL e Redis (cache).
+
+### **Outras Ferramentas**
+- Docker e Docker Compose para orquestração.
+- Mensageria com Apache Kafka.
+- Controle de versão com Git.
+
+---
+
+## **Configuração do Ambiente**
+
+### **Pré-requisitos**
+- Node.js (LTS recomendado).
+- NPM ou Yarn.
+- Docker e Docker Compose.
+
+### **Instalação**
+1. Clone este repositório:
+   ```bash
+   git clone https://github.com/JoaolMoreno/toiter-frontend.git
+   cd toiter-frontend
+   ```
+
+2. Instale as dependências:
+   ```bash
+   npm install
+   ```
+
+3. Inicie o servidor de desenvolvimento:
+   ```bash
+   npm run dev
+   ```
+
+4. Acesse a aplicação em `http://localhost:3000`.
+
+---
+
+## **Estrutura de Telas**
+
+### **Tela de Login**
+- **Descrição**: Formulário para login do usuário com validação de credenciais.
+- **Elementos**:
+    - Campo de email/username.
+    - Campo de senha.
+    - Botão de login.
+    - Link para cadastro.
+
+### **Tela de Registro**
+- **Descrição**: Formulário para criação de conta.
+- **Elementos**:
+    - Campos de nome, email, senha e confirmação de senha.
+    - Botão de registro.
+
+### **Tela de Feed**
+- **Descrição**: Exibe postagens de usuários seguidos.
+- **Elementos**:
+    - Header com botão de logout.
+    - Campo para criar uma nova postagem.
+    - Lista de postagens com interações (curtir, repostar, responder).
+    - Carregamento infinito para novas postagens.
+
+### **Tela de Postagem**
+- **Descrição**: Exibe os detalhes de uma postagem.
+- **Elementos**:
+    - Conteúdo completo da postagem.
+    - Contador de curtidas, repostagens e respostas.
+    - Lista de respostas em formato de thread.
+
+### **Tela de Perfil**
+- **Descrição**: Exibe informações e postagens de um usuário.
+- **Elementos**:
+    - Foto de perfil e cabeçalho.
+    - Nome, bio e contadores (seguidores e seguindo).
+    - Lista de postagens do usuário.
+    - Botão de editar perfil (para o próprio usuário).
+
+### **Tela de Seguidores e Seguindo**
+- **Descrição**: Lista de usuários que seguem ou são seguidos.
+- **Elementos**:
+    - Nome e foto de perfil de cada usuário.
+    - Botão para seguir/deixar de seguir.
+
+### **Tela de Notificações** (Planejada)
+- **Descrição**: Exibe notificações sobre interações no perfil do usuário.
+- **Elementos**:
+    - Lista de notificações (curtidas, respostas, repostagens, novos seguidores).
+
+### **Tela de Configurações** (Planejada)
+- **Descrição**: Gerenciamento de configurações da conta.
+- **Elementos**:
+    - Alteração de senha.
+    - Exclusão de conta.
+
+---
+
+## **Como Contribuir**
+1. Faça um fork do projeto.
+2. Crie uma branch para sua funcionalidade:
+   ```bash
+   git checkout -b minha-funcionalidade
+   ```
+3. Faça as alterações e comite:
+   ```bash
+   git commit -m "Adicionei minha funcionalidade"
+   ```
+4. Envie as alterações:
+   ```bash
+   git push origin minha-funcionalidade
+   ```
+5. Crie um Pull Request.
+
+---
+
+## **Licença**
+Este projeto está licenciado sob a [MIT License](LICENSE).
