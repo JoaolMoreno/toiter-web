@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getPostsByUser } from '@/services/postService';
+import {getFeed, getPostsByUser} from '@/services/postService';
 import { useAuth } from '@/context/AuthContext';
 import { PostData } from '@/models/PostData';
 import styled from "styled-components";
@@ -12,8 +12,6 @@ const Feed = () => {
     const [hasMore, setHasMore] = useState(true); // Se ainda há mais posts para carregar
     const [loading, setLoading] = useState(false); // Estado para evitar requisições duplicadas
 
-    const username = 'joao'; // Nome de usuário fixo para teste
-
     // Função para carregar posts
     const loadPosts = async () => {
         if (!hasMore || loading) return; // Impede carregar se não há mais páginas ou já está carregando
@@ -22,7 +20,7 @@ const Feed = () => {
 
         try {
             console.log('Carregando posts...');
-            const data = await getPostsByUser(username, page, size);
+            const data = await getFeed(page, size);
 
             // Atualiza os posts
             setPosts((prevPosts) => [...prevPosts, ...data.content]);
