@@ -10,9 +10,11 @@ export const getPostsByUser = async (username: string, page: number, size: numbe
     first: boolean;
 }> => {
     try {
+        console.log('Buscando posts do usuário:', username);
         const { data } = await api.get(`posts/user/${username}`, {
             params: { page, size },
         });
+        console.log('Posts encontrados:', data);
         return data;
     } catch (error) {
         console.error('Erro ao buscar posts:', error);
