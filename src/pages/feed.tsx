@@ -21,6 +21,7 @@ const Feed = () => {
         setLoading(true); // Indica que estamos carregando mais posts
 
         try {
+            console.log('Carregando posts...');
             const data = await getPostsByUser(username, page, size);
 
             // Atualiza os posts
@@ -32,6 +33,7 @@ const Feed = () => {
         } catch (error) {
             console.error('Erro ao carregar posts:', error);
         } finally {
+            console.log('Finalizando carregamento...');
             setLoading(false); // Finaliza o carregamento
         }
     };
@@ -72,7 +74,7 @@ const Feed = () => {
             <FeedTitle>Seu Feed</FeedTitle>
             {posts.map((post) => (
                 <PostCard key={post.id}>
-                    <h3>Usuário: {post.userId}</h3>
+                    <h3>{post.username}</h3>
                     <p>{post.content}</p>
                     <small>
                         Curtidas: {post.likesCount} | Respostas: {post.repliesCount} | Reposts: {post.repostsCount}
@@ -89,7 +91,7 @@ export default Feed;
 
 // Estilos com styled-components
 export const FeedContainer = styled.div`
-    max-width: 600px;
+    //max-width: 600px;
     margin: 0 auto;
     padding: 20px;
     background-color: #f9f9f9;

@@ -4,7 +4,7 @@ export interface PostData {
     repostParentId?: number | null;
     isRepost: boolean;
     isReply: boolean;
-    userId: number;
+    username: string;
     content: string;
     mediaUrl?: string | null;
     likesCount: number;
