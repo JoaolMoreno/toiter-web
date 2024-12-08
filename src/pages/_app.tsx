@@ -2,6 +2,7 @@ import { AppProps } from 'next/app';
 import { ThemeProvider } from 'styled-components';
 import {AuthProvider} from '@/context/AuthContext';
 import '../globals.css';
+import {FeedProvider} from "@/context/FeedProvider";
 
 // Defina o tema global
 const theme = {
@@ -17,7 +18,9 @@ function MyApp({ Component, pageProps }: AppProps) {
     return (
         <AuthProvider>
             <ThemeProvider theme={theme}>
-                <Component {...pageProps} />
+                <FeedProvider>
+                    <Component {...pageProps} />
+                </FeedProvider>
             </ThemeProvider>
         </AuthProvider>
     );
