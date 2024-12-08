@@ -4,7 +4,7 @@ import { login as loginService, logout as logoutService, checkSession } from '..
 import api from "@/services/api";
 
 interface AuthContextType {
-    isAuthenticated: boolean;
+    isAuthenticated: boolean | undefined;
     login: (email: string, password: string) => Promise<void>;
     logout: () => Promise<void>;
 }
@@ -12,47 +12,61 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [isAuthenticated, setIsAuthenticated] = useState<boolean | undefined>(undefined);
     const router = useRouter();
 
-    // Função para verificar sessão
     const verifySession = async () => {
-        const token = localStorage.getItem('accessToken'); // Recupera o token salvo
+        console.log("Verificando sessão...");
+        try {
+            const token = localStorage.getItem('accessToken');
+            console.log("Token recuperado:", token);
 
-        if (token) {
-            // Configura o token no header do Axios
-            api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+            if (token) {
+                api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                const sessionValid = await checkSession();
+                console.log("Sessão válida:", sessionValid);
+                setIsAuthenticated(sessionValid);
 
-            // Verifica a validade do token no backend
-            const sessionValid = await checkSession();
-            setIsAuthenticated(sessionValid);
-
-            if (!sessionValid) {
-                localStorage.removeItem('accessToken');
-                delete api.defaults.headers.common['Authorization'];
+                if (!sessionValid) {
+                    console.warn("Sessão inválida, removendo token.");
+                    localStorage.removeItem('accessToken');
+                    delete api.defaults.headers.common['Authorization'];
+                }
+            } else {
+                console.info("Nenhum token encontrado.");
+                setIsAuthenticated(false);
             }
-        } else {
+        } catch (error) {
+            console.error("Erro ao verificar sessão:", error);
             setIsAuthenticated(false);
         }
     };
 
-    // Verifica a sessão ao carregar o app
     useEffect(() => {
         verifySession();
     }, []);
 
-    // Função de login
+    useEffect(() => {
+        verifySession();
+    }, []);
+
     const login = async (email: string, password: string) => {
         await loginService(email, password);
         setIsAuthenticated(true);
         await router.push('/feed');
     };
 
-    // Função de logout
     const logout = async () => {
-        await logoutService();
-        setIsAuthenticated(false);
-        await router.push('/auth/login');
+        try {
+            console.log("Fazendo logout...");
+            await logoutService();
+            localStorage.removeItem('accessToken');
+            delete api.defaults.headers.common['Authorization'];
+            setIsAuthenticated(false);
+            await router.push('/auth/login');
+        } catch (error: any) {
+            console.error("Erro ao fazer logout:", error.response?.data || error.message);
+        }
     };
 
     return (
