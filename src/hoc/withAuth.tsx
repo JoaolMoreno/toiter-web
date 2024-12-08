@@ -8,19 +8,28 @@ const withAuth = (WrappedComponent: React.FC) => {
         const router = useRouter();
 
         React.useEffect(() => {
-            if (!isAuthenticated) {
+            console.log("Verificando autenticação no withAuth. Status:", isAuthenticated);
+            if (isAuthenticated === false) {
+                console.log("Usuário não autenticado. Redirecionando para login...");
                 router.replace('/auth/login');
             }
         }, [isAuthenticated]);
 
-        if (!isAuthenticated) {
-            return null; // Enquanto verifica a autenticação, evita renderizar
+        if (isAuthenticated === undefined) {
+            console.log("Autenticação pendente...");
+            return <div>Carregando...</div>;
         }
 
-        return <WrappedComponent {...props} />;
+        if (isAuthenticated) {
+            console.log("Usuário autenticado. Renderizando componente protegido.");
+            return <WrappedComponent {...props} />;
+        }
+
+        return null;
     };
 
     return RequiresAuth;
 };
 
 export default withAuth;
+

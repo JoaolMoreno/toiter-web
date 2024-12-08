@@ -1,6 +1,5 @@
 import api from './api';
 
-// Login do usuário
 export const login = async (email: string, password: string) => {
     try {
         const { data } = await api.post('/auth/login', { usernameOrEmail: email, password });
@@ -17,21 +16,15 @@ export const login = async (email: string, password: string) => {
     }
 };
 
-// Logout do usuário
 export const logout = async () => {
     try {
         await api.post('/auth/logout');
-
-        // Remove o token do localStorage e do header padrão
-        localStorage.removeItem('accessToken');
-        delete api.defaults.headers.common['Authorization'];
         console.log('Logout bem-sucedido');
-    } catch (error) {
-        console.error('Erro ao fazer logout:', error);
+    } catch (error: any) {
+        console.error('Erro ao fazer logout:', error.response?.data || error.message);
     }
 };
 
-// Verificar sessão do usuário
 export const checkSession = async () => {
     try {
         const { data } = await api.get('/auth/check-session');
