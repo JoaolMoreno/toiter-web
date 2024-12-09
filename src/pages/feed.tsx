@@ -18,17 +18,17 @@ const Feed = () => {
         loading, setLoading
     } = useFeedContext();
 
-    const [isModalOpen, setModalOpen] = useState(false); // Estado para controlar o modal
+    const [isModalOpen, setModalOpen] = useState(false);
 
     const handleCreateNewPost = () => {
-        setModalOpen(true); // Abre o modal para criar um post
+        setModalOpen(true);
     };
 
     const handleSubmitPost = async (content: string) => {
         try {
-            const newPost = await createPost(content); // Chama a API para criar o post
-            setPosts((prevPosts) => [newPost, ...prevPosts]); // Adiciona o novo post ao início do feed
-            setModalOpen(false); // Fecha o modal
+            const newPost = await createPost(content);
+            setPosts((prevPosts) => [newPost, ...prevPosts]);
+            setModalOpen(false);
         } catch (error) {
             console.error('Erro ao criar novo post:', error);
         }
