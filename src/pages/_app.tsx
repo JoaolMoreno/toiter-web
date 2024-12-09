@@ -4,7 +4,6 @@ import {AuthProvider} from '@/context/AuthContext';
 import '../globals.css';
 import {FeedProvider} from "@/context/FeedProvider";
 
-// Defina o tema global
 const theme = {
     colors: {
         primary: '#2ecc71',
@@ -14,7 +13,7 @@ const theme = {
     },
 };
 
-function MyApp({ Component, pageProps }: AppProps) {
+function Toiter({ Component, pageProps }: AppProps) {
     return (
         <AuthProvider>
             <ThemeProvider theme={theme}>
@@ -26,4 +25,4 @@ function MyApp({ Component, pageProps }: AppProps) {
     );
 }
 
-export default MyApp;
+export default Toiter;
