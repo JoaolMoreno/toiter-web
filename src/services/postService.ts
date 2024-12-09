@@ -49,6 +49,53 @@ export const unlikePost = async (postId: number) => {
     }
 };
 
+export const createPost = async (content: string): Promise<PostData> => {
+    try {
+        const response = await api.post('/posts', { content });
+        return response.data;
+    } catch (error) {
+        console.error('Erro ao criar post:', error);
+        throw error;
+    }
+};
+
+export const createRepost = async (repostParentId: number): Promise<PostData> => {
+    alert('Calma ai patrão, ainda não implementei essa função');
+    return {} as PostData;
+    // try {
+    //     const response = await api.post('/posts', { repostParentId });
+    //     return response.data;
+    // } catch (error) {
+    //     console.error('Erro ao repostar:', error);
+    //     throw error;
+    // }
+};
+
+// Função para repostar com comentário
+export const createRepostWithComment = async (
+    repostParentId: number,
+    content: string
+): Promise<PostData> => {
+    try {
+        const response = await api.post('/posts', { repostParentId, content });
+        return response.data;
+    } catch (error) {
+        console.error('Erro ao repostar com comentário:', error);
+        throw error;
+    }
+};
+
+// Função para responder a um post
+export const createReply = async (parentPostId: number, content: string): Promise<PostData> => {
+    try {
+        const response = await api.post('/posts', { parentPostId, content });
+        return response.data;
+    } catch (error) {
+        console.error('Erro ao responder post:', error);
+        throw error;
+    }
+};
+
 export interface ThreadResponse {
     parentPost: PostData;
     childPosts: PostData[];

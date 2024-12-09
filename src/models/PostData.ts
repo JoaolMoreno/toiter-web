@@ -10,6 +10,7 @@ export interface PostData {
     repostsCount: number;
     viewCount: number;
     isLiked: boolean;
+    isReposted: boolean;
     repostPostData?: PostData | null;
     deleted?: boolean;
     createdAt: string;

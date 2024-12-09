@@ -51,10 +51,6 @@ const PostId = () => {
             {/* Post Principal */}
             <Post
                 post={parentPost}
-                onReply={() => console.log('Responder Parent Post')}
-                onToggleLike={() => console.log('Curtir Parent Post')}
-                onRepost={() => console.log('Repostar Parent Post')}
-                onViewThread={() => console.log('Já estamos na thread')}
             />
 
             <RepliesTitle>Respostas</RepliesTitle>
@@ -65,10 +61,6 @@ const PostId = () => {
                     <Post
                         key={reply.id}
                         post={reply}
-                        onReply={() => console.log(`Responder Post ${reply.id}`)}
-                        onToggleLike={() => console.log(`Curtir Post ${reply.id}`)}
-                        onRepost={() => console.log(`Repostar Post ${reply.id}`)}
-                        onViewThread={() => router.push(`/thread/${reply.id}`)}
                     />
                 ))
             ) : (
@@ -84,9 +76,8 @@ export default withAuth(PostId);
 const ThreadContainer = styled.div`
     display: flex;
     flex-direction: column;
-    //justify-content: center;
     align-content: center;
-    min-height: 100vh; /* Garante que ocupe pelo menos 100% da altura da viewport */
+    min-height: 100vh;
     padding: 20px;
     margin: 0 auto;
     background-color: #f9f9f9;

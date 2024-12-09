@@ -1,13 +1,16 @@
-import React, { useEffect } from 'react';
-import { getFeed, getThread } from '@/services/postService';
+import React, {useEffect, useState} from 'react';
+import { getFeed } from '@/services/postService';
 import { useAuth } from '@/context/AuthContext';
 import styled from "styled-components";
 import Post from '@/components/post';
 import {useFeedContext} from "@/context/FeedProvider";
 import withAuth from "@/hoc/withAuth";
+import Modal from "@/components/modal";
+import { createPost } from '@/services/postService';
 
 const Feed = () => {
     const { isAuthenticated, logout } = useAuth();
+    const [inputContent, setInputContent] = useState('');
     const {
         posts, setPosts,
         page, setPage,
@@ -15,29 +18,19 @@ const Feed = () => {
         loading, setLoading
     } = useFeedContext();
 
-    const handleReply = (postId: number) => {
-        console.log("Responder post:", postId);
+    const [isModalOpen, setModalOpen] = useState(false); // Estado para controlar o modal
+
+    const handleCreateNewPost = () => {
+        setModalOpen(true); // Abre o modal para criar um post
     };
 
-    const handleToggleLike = (postId: number) => {
-        console.log("Curtir/Descurtir post:", postId);
-    };
-
-    const handleRepost = (postId: number) => {
-        console.log("Repostar post:", postId);
-    };
-
-    function handleCreateNewPost() {
-        console.log("Criar novo post");
-    }
-
-    const handleViewThread = async (postId: number) => {
-        console.log("Ver thread do post:", postId);
+    const handleSubmitPost = async (content: string) => {
         try {
-            const data = await getThread(postId, 0, 10);
-            console.log("PostId data:", data);
+            const newPost = await createPost(content); // Chama a API para criar o post
+            setPosts((prevPosts) => [newPost, ...prevPosts]); // Adiciona o novo post ao início do feed
+            setModalOpen(false); // Fecha o modal
         } catch (error) {
-            console.error("Erro ao obter thread:", error);
+            console.error('Erro ao criar novo post:', error);
         }
     };
 
@@ -60,28 +53,9 @@ const Feed = () => {
         }
     };
 
-    const handleScroll = () => {
-        if (!hasMore || loading) return;
-        if (
-            window.innerHeight + document.documentElement.scrollTop >=
-            document.documentElement.offsetHeight - 100
-        ) {
-            setPage((prevPage: number) => prevPage + 1);
-        }
-    };
-
     useEffect(() => {
         if (isAuthenticated) loadPosts();
     }, [isAuthenticated, page]);
-
-    useEffect(() => {
-        window.addEventListener("scroll", handleScroll);
-        return () => window.removeEventListener("scroll", handleScroll);
-    }, [hasMore, loading]);
-
-    if (!isAuthenticated) {
-        return <div>Carregando...</div>;
-    }
 
     return (
         <Container>
@@ -92,7 +66,9 @@ const Feed = () => {
             <FeedContainer>
                 <FeedTitle>Seu Feed</FeedTitle>
                 <CreatePostContainer>
-                    <CreatePostInput placeholder="No que você está pensando?" />
+                    <CreatePostInput placeholder="No que você está pensando?"
+                                     value={inputContent}
+                                     onChange={(e) => setInputContent(e.target.value)}/>
                     <CreatePostButton onClick={handleCreateNewPost}>Postar</CreatePostButton>
                 </CreatePostContainer>
 
@@ -100,10 +76,6 @@ const Feed = () => {
                     <Post
                         key={post.id}
                         post={post}
-                        onReply={handleReply}
-                        onToggleLike={handleToggleLike}
-                        onRepost={handleRepost}
-                        onViewThread={handleViewThread}
                     />
                 ))}
                 {loading && <LoadingMessage>Carregando mais posts...</LoadingMessage>}
@@ -111,10 +83,21 @@ const Feed = () => {
 
                 <FloatingButton onClick={handleCreateNewPost}>+</FloatingButton>
             </FeedContainer>
+
+            {/* Modal para criar novo post */}
+            {isModalOpen && (
+                <Modal
+                    isOpen={isModalOpen}
+                    onClose={() => setModalOpen(false)}
+                    onSubmit={handleSubmitPost}
+                    title="Criar Novo Post"
+                    postType="post"
+                    initialContent={inputContent}
+                />
+            )}
         </Container>
     );
 };
-
 export default withAuth(Feed);
 
 export const Container = styled.div`
