@@ -87,7 +87,13 @@ const Post: React.FC<PostProps> = ({ post }) => {
         }
     };
 
-    const handleViewThread = (postId: number) => router.push(`/thread/${postId}`);
+    const handleViewThread = (postId: number) => {
+        const currentPath = window.location.pathname;
+        router.push({
+            pathname: `/thread/${postId}`,
+            query: { from: currentPath }
+        });
+    };
 
     const isRepost = post.repostParentId !== null;
     const isRepostWithComment = isRepost && post.content && post.content !== '';

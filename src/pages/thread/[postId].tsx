@@ -8,11 +8,19 @@ import withAuth from "@/hoc/withAuth";
 
 const PostId = () => {
     const router = useRouter();
-    const { postId } = router.query;
+    const { postId, from } = router.query;
 
     const [parentPost, setParentPost] = useState<PostData | null>(null);
     const [replies, setReplies] = useState<PostData[]>([]);
     const [loading, setLoading] = useState(true);
+
+    const handleBack = () => {
+      if (from) {
+          router.push(from as string);
+      } else {
+          router.push('/feed');
+      }
+  };
 
     const loadThread = async () => {
         try {
@@ -44,7 +52,7 @@ const PostId = () => {
     return (
         <ThreadContainer>
             <Header>
-                <BackButton onClick={() => router.back()}>Voltar</BackButton>
+              <BackButton onClick={handleBack}>Voltar</BackButton>
                 <Title>Visualização de Thread</Title>
             </Header>
 
