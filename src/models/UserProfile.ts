@@ -8,6 +8,7 @@ export interface UserProfile {
     followingCount: number;
     postsCount: number;
     isFollowing: boolean;
+    isFollowingMe: boolean;
   }
 
 export interface UpdatedUser {

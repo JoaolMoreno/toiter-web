@@ -1,10 +1,29 @@
 import api from './api';
 import { UserProfile, UpdatedUser } from '@/models/UserProfile';
+import { getImageById } from './imageService';
 
 export const getUserProfile = async (username: string): Promise<UserProfile> => {
   try {
     const { data } = await api.get(`/users/${username}`);
-    return data;
+    
+    // Fetch images if IDs exist
+    const headerImageUrl = data.headerImageId ? 
+      await getImageById(data.headerImageId) : '';
+    const profileImageUrl = data.profileImageId ? 
+      await getImageById(data.profileImageId) : '';
+
+    return {
+      username: data.username,
+      displayName: data.username,
+      bio: data.bio,
+      headerImageUrl,
+      profileImageUrl,
+      followersCount: data.followersCount,
+      followingCount: data.followingCount,
+      postsCount: data.postsCount || 0,
+      isFollowing: data.following,
+      isFollowingMe: data.isFollowingMe
+    };
   } catch (error) {
     console.error('Erro ao buscar perfil:', error);
     throw error;
