@@ -1,8 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    //baseURL: 'http://localhost/api',
-    baseURL: 'https://lpmrn.com/api',
+    baseURL: '/api',
     withCredentials: true,
 });
 
@@ -17,7 +16,7 @@ api.interceptors.response.use(
             try {
                 // Solicita um novo token de acesso
                 const { data } = await axios.post(
-                    'http://localhost/api/auth/refresh',
+                    '/auth/refresh',
                     {},
                     { withCredentials: true }
                 );
