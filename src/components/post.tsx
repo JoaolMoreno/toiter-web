@@ -14,10 +14,10 @@ interface PostProps {
 const Post: React.FC<PostProps> = ({ post }) => {
     const [isLiked, setIsLiked] = useState(post.isLiked);
     const [likesCount, setLikesCount] = useState(post.likesCount);
-    const [isReposted, setIsReposted] = useState(post.isReposted); // Estado para indicar repost
+    const [isReposted, setIsReposted] = useState(post.isReposted);
     const [isModalOpen, setModalOpen] = useState(false);
     const [isRepostMenuOpen, setRepostMenuOpen] = useState(false);
-    const [modalType, setModalType] = useState<'reply' | 'repostWithComment'>(); // Tipo de modal
+    const [modalType, setModalType] = useState<'reply' | 'repostWithComment'>();
     const router = useRouter();
 
     const handleLikeToggle = async (postId: number) => {
@@ -40,6 +40,15 @@ const Post: React.FC<PostProps> = ({ post }) => {
         }
     };
 
+    const handleUsernameClick = (e: React.MouseEvent, username: string) => {
+        e.stopPropagation();
+        const currentPath = window.location.pathname;
+        router.push({
+            pathname: `/profile/${username}`,
+            query: { from: currentPath }
+        });
+    };
+
     const handleReply = () => {
         setModalType('reply');
         setModalOpen(true);
@@ -51,8 +60,8 @@ const Post: React.FC<PostProps> = ({ post }) => {
 
     const handleRepostSimple = async () => {
         try {
-            await createRepost(post.id); // Chamada à API para repost simples
-            setIsReposted(true); // Marca o post como repostado
+            await createRepost(post.id);
+            setIsReposted(true);
             setRepostMenuOpen(false);
         } catch (error) {
             console.error('Erro ao repostar:', error);
@@ -72,7 +81,7 @@ const Post: React.FC<PostProps> = ({ post }) => {
             } else if (modalType === 'repostWithComment') {
                 await createRepostWithComment(post.id, content);
             }
-            setModalOpen(false); // Fecha o modal após a postagem
+            setModalOpen(false);
         } catch (error) {
             console.error('Erro ao enviar:', error);
         }
@@ -84,7 +93,7 @@ const Post: React.FC<PostProps> = ({ post }) => {
     const isRepostWithComment = isRepost && post.content && post.content !== '';
     const showData = isRepost && !isRepostWithComment && post.repostPostData
         ? post.repostPostData
-        : post; // Exibe os dados do original para repost simples
+        : post;
 
     return (
         <Page>
@@ -94,15 +103,17 @@ const Post: React.FC<PostProps> = ({ post }) => {
                         🔁 Repostado por <strong>{post.username}</strong>
                     </RepostIndicator>
                 )}
-                <Username>{showData?.username}</Username>
+                <Username onClick={(e) => handleUsernameClick(e, showData?.username)}>
+                    {showData?.username}
+                </Username>
                 <Content>{showData?.content}</Content>
 
                 {/* Container do Post Original */}
                 {isRepostWithComment && post.repostPostData && (
                     <RepostContainer
                         onClick={(e) => {
-                            e.stopPropagation(); // Impede o clique de propagar
-                            handleViewThread(post.repostPostData!.id); // Usa ! para garantir que não seja null
+                            e.stopPropagation();
+                            handleViewThread(post.repostPostData!.id);
                         }}
                     >
                         <Username>{post.repostPostData!.username}</Username>
@@ -212,12 +223,15 @@ const PostContainer = styled.div`
   }
 `;
 
-const Username = styled.h3`
-  color: ${({ theme }) => theme.colors.text};
-  font-size: ${({ theme }) => theme.fontSizes.large};
-  font-weight: 600;
-  margin-bottom: 8px;
+const Username = styled.span`
+  color: ${({ theme }) => theme.colors.primary};
+  font-weight: bold;
+  cursor: pointer;
+  &:hover {
+    text-decoration: underline;
+  }
 `;
+
 
 const Content = styled.p`
   color: ${({ theme }) => theme.colors.text};
@@ -238,10 +252,10 @@ const ButtonRow = styled.div`
 `;
 
 const LikeButton = styled.button`
-    background-color: #f8d7da; /* Rosa claro */
+    background-color: #f8d7da;
     border: none;
     border-radius: 4px;
-    color: #721c24; /* Vermelho escuro */
+    color: #721c24;
     padding: 5px 10px;
     cursor: pointer;
     font-size: 14px;
@@ -250,14 +264,14 @@ const LikeButton = styled.button`
     justify-content: center;
 
     &:hover {
-        background-color: #f5c6cb; /* Rosa mais claro */
+        background-color: #f5c6cb;
     }
 `;
 const ReplyButton = styled.button`
-    background-color: #d4edda; /* Verde claro */
+    background-color: #d4edda;
     border: none;
     border-radius: 4px;
-    color: #155724; /* Verde escuro */
+    color: #155724;
     padding: 5px 10px;
     cursor: pointer;
     font-size: 14px;
@@ -266,14 +280,14 @@ const ReplyButton = styled.button`
     justify-content: center;
 
     &:hover {
-        background-color: #c3e6cb; /* Verde mais claro */
+        background-color: #c3e6cb;
     }
 `;
 const RepostButton = styled.button`
-    background-color: #cce5ff; /* Azul claro */
+    background-color: #cce5ff;
     border: none;
     border-radius: 4px;
-    color: #004085; /* Azul escuro */
+    color: #004085;
     padding: 5px 10px;
     cursor: pointer;
     font-size: 14px;
@@ -282,6 +296,6 @@ const RepostButton = styled.button`
     justify-content: center;
 
     &:hover {
-        background-color: #b8daff; /* Azul mais claro */
+        background-color: #b8daff;
     }
 `;

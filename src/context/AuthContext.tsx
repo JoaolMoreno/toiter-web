@@ -2,43 +2,45 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { login as loginService, logout as logoutService, checkSession } from '../services/auth';
 import api from "@/services/api";
+import { User } from '@/models/UserProfile';
 
 interface AuthContextType {
     isAuthenticated: boolean | undefined;
+    user: User | null;
     login: (email: string, password: string) => Promise<void>;
     logout: () => Promise<void>;
-}
+  }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [isAuthenticated, setIsAuthenticated] = useState<boolean | undefined>(undefined);
+    const [user, setUser] = useState<User | null>(null);
     const router = useRouter();
-
+  
     const verifySession = async () => {
-        console.log("Verificando sessão...");
         try {
             const token = localStorage.getItem('accessToken');
-            console.log("Token recuperado:", token);
-
+            
             if (token) {
                 api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
                 const sessionValid = await checkSession();
-                console.log("Sessão válida:", sessionValid);
-                setIsAuthenticated(sessionValid);
-
-                if (!sessionValid) {
-                    console.warn("Sessão inválida, removendo token.");
-                    localStorage.removeItem('accessToken');
-                    delete api.defaults.headers.common['Authorization'];
+                
+                if (sessionValid) {
+                    const { data } = await api.get('/users/me');
+                    setUser({
+                        username: data.username
+                    });
+                    setIsAuthenticated(true);
+                } else {
+                    clearUserData();
                 }
             } else {
-                console.info("Nenhum token encontrado.");
-                setIsAuthenticated(false);
+                clearUserData();
             }
         } catch (error) {
             console.error("Erro ao verificar sessão:", error);
-            setIsAuthenticated(false);
+            clearUserData();
         }
     };
 
@@ -46,31 +48,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         verifySession();
     }, []);
 
-    useEffect(() => {
-        verifySession();
-    }, []);
+    const clearUserData = () => {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('username');
+        delete api.defaults.headers.common['Authorization'];
+        setUser(null);
+        setIsAuthenticated(false);
+    };
 
     const login = async (email: string, password: string) => {
-        await loginService(email, password);
-        setIsAuthenticated(true);
-        await router.push('/feed');
-    };
-
-    const logout = async () => {
         try {
-            console.log("Fazendo logout...");
-            await logoutService();
-            localStorage.removeItem('accessToken');
-            delete api.defaults.headers.common['Authorization'];
-            setIsAuthenticated(false);
-            await router.push('/auth/login');
-        } catch (error: any) {
-            console.error("Erro ao fazer logout:", error.response?.data || error.message);
+            // Get user data including username from auth service
+            const userData = await loginService(email, password);
+            
+            setUser({ 
+                username: userData.username 
+            });
+            setIsAuthenticated(true);
+            
+            await router.push('/feed');
+        } catch (error) {
+            console.error("Login error:", error);
+            throw error;
         }
     };
+    
+    const logout = async () => {
+        try {
+          await logoutService();
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('username');
+          delete api.defaults.headers.common['Authorization'];
+          setUser(null);
+          setIsAuthenticated(false);
+          await router.push('/auth/login');
+        } catch (error: any) {
+          console.error("Erro ao fazer logout:", error);
+        }
+      };
 
     return (
-        <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
+        <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
             {children}
         </AuthContext.Provider>
     );
