@@ -2,17 +2,26 @@ import api from './api';
 
 export const login = async (email: string, password: string) => {
     try {
-        const { data } = await api.post('/auth/login', { usernameOrEmail: email, password });
+        // 1. Login to get token
+        const { data } = await api.post('/auth/login', { 
+            usernameOrEmail: email, 
+            password 
+        });
 
-        // Salva o token de acesso no localStorage
+        // 2. Set token
         localStorage.setItem('accessToken', data.accessToken);
-
-        // Configura o header de Authorization para futuras requisições
         api.defaults.headers.common['Authorization'] = `Bearer ${data.accessToken}`;
-        console.log('Login bem-sucedido');
+        
+        // 3. Get user data from /me endpoint
+        const userData = await api.get('/users/me');
+        
+        return { 
+            username: userData.data.username 
+        };
+        
     } catch (error) {
-        console.error('Erro ao fazer login:', error);
-        throw new Error('Falha no login');
+        console.error('Login error:', error);
+        throw error;
     }
 };
 
