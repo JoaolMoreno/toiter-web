@@ -44,7 +44,13 @@ const ProfilePage = () => {
     if (!username || !hasMore) return;
     try {
       const data = await getPostsByUser(username as string, page, 10);
-      setPosts(prev => [...prev, ...data.content]);
+      
+      setPosts(prev => {
+        const existingIds = new Set(prev.map(post => post.id));
+        const newPosts = data.content.filter((post: { id: number; }) => !existingIds.has(post.id));
+        return [...prev, ...newPosts];
+      });
+      
       setHasMore(page < data.totalPages - 1);
     } catch (error) {
       console.error('Erro ao carregar posts:', error);
@@ -78,7 +84,6 @@ const ProfilePage = () => {
   useEffect(() => {
     if (username) {
       loadProfile();
-      loadPosts();
     }
   }, [username]);
 
@@ -126,11 +131,8 @@ const ProfilePage = () => {
               Editar Perfil
             </EditButton>
           ) : (
-            <FollowButton
-              isFollowing={profile.isFollowing}
-              onClick={handleFollow}
-            >
-              {profile.isFollowing ? 'Deixar de Seguir' : 'Seguir'}
+            <FollowButton $isFollowing={profile.isFollowing}>
+              {profile.isFollowing ? 'Following' : 'Follow'}
             </FollowButton>
           )}
         </UserInfo>
@@ -281,9 +283,9 @@ const StatItem = styled.div`
   }
 `;
 
-const FollowButton = styled.button<{ isFollowing: boolean }>`
+const FollowButton = styled.button<{ $isFollowing: boolean }>`
   margin-top: 16px;
-  background-color: ${({ isFollowing }) => (isFollowing ? '#657786' : '#1da1f2')};
+  background-color: ${({ $isFollowing }) => ($isFollowing ? '#657786' : '#1da1f2')};
   color: #fff;
   border: none;
   padding: 8px 16px;
