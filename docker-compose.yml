@@ -180,7 +180,7 @@ services:
 
   toiter-front:
     image: lopesz3r4/toiter-front:latest
-    container_name: toiter-front-p
+    container_name: toiter-front
     ports:
       - "3000:3000"
     environment:
