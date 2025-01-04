@@ -101,62 +101,78 @@ const Feed = () => {
 export default withAuth(Feed);
 
 export const Container = styled.div`
-    background-color: #d8f3dc;
-    position: relative;
+  background-color: ${({ theme }) => theme.colors.background};
 `;
 
 export const Header = styled.div`
-    display: flex;
-    justify-content: flex-end;
-    background-color: #95d5b2;
-    padding: 10px 20px;
+  background-color: ${({ theme }) => theme.colors.backgroundElevated};
+  padding: 16px 24px;
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  position: sticky;
+  top: 0;
+  z-index: 10;
 `;
 
 export const LogoutButton = styled.button`
-    background-color: #74c69d;
-    border: none;
-    padding: 10px 15px;
-    border-radius: 4px;
-    color: #081c15;
-    cursor: pointer;
-    font-size: 14px;
-    &:hover {
-        background-color: #52b788;
-    }
+  background-color: ${({ theme }) => theme.colors.primary};
+  color: ${({ theme }) => theme.colors.text};
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: ${({ theme }) => theme.fontSizes.regular};
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: ${({ theme }) => theme.colors.secondary};
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
 `;
 
 export const FeedContainer = styled.div`
     margin: 0 auto;
     padding: 20px;
-    max-width: 600px;
+    max-width: 900px;
 `;
 
 export const FeedTitle = styled.h1`
-    font-size: 24px;
-    color: #081c15;
-    text-align: center;
-    margin-bottom: 20px;
+  color: ${({ theme }) => theme.colors.text};
 `;
 
 export const CreatePostContainer = styled.div`
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-    background-color: #eaf5e6;
-    padding: 10px;
-    border-radius: 8px;
+  background-color: ${({ theme }) => theme.colors.backgroundAlt};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: 12px;
+  padding: 16px;
+  margin: 20px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  &:hover {
+    border-color: ${({ theme }) => theme.colors.primary};
+  }
 `;
 
 export const CreatePostInput = styled.input`
-    flex: 1;
-    border: 1px solid #95d5b2;
-    border-radius: 4px;
-    padding: 10px;
-    font-size: 14px;
-    color: #1b4332;
-    &::placeholder {
-        color: #2d6a4f;
-    }
+  background-color: ${({ theme }) => theme.colors.backgroundElevated};
+  color: ${({ theme }) => theme.colors.text};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: 8px;
+  padding: 12px;
+  font-size: ${({ theme }) => theme.fontSizes.regular};
+  
+  &:focus {
+    outline: none;
+    border-color: ${({ theme }) => theme.colors.primary};
+  }
 `;
 
 export const CreatePostButton = styled.button`

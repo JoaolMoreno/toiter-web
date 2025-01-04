@@ -1,13 +1,57 @@
 import React, { useState } from 'react';
-import api from '../../services/api';
 import { useRouter } from 'next/router';
+import styled from 'styled-components';
+import PasswordInput from './PasswordImput';
+import api from '@/services/api';
+
+const Form = styled.form`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 300px;
+`;
+
+const Input = styled.input`
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  background-color: ${({ theme }) => theme.colors.backgroundAlt};
+  color: ${({ theme }) => theme.colors.text};
+  font-size: ${({ theme }) => theme.fontSizes.regular};
+  margin: 0;
+  height: 44px;
+`;
+
+const Button = styled.button`
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  background-color: ${({ theme }) => theme.colors.primary};
+  color: white;
+  font-size: ${({ theme }) => theme.fontSizes.regular};
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: ${({ theme }) => theme.colors.secondary};
+  }
+`;
+
+const ErrorMessage = styled.p`
+  color: ${({ theme }) => theme.colors.error};
+  font-size: ${({ theme }) => theme.fontSizes.small};
+  text-align: center;
+`;
 
 const RegisterForm = () => {
+    const router = useRouter();
     const [username, setUserName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-    const router = useRouter();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -25,28 +69,27 @@ const RegisterForm = () => {
     };
 
     return (
-        <form onSubmit={handleSubmit}>
-            {error && <p style={{ color: 'red' }}>{error}</p>}
-            <input
+        <Form onSubmit={handleSubmit}>
+            {error && <ErrorMessage>{error}</ErrorMessage>}
+            <Input
                 type="text"
                 placeholder="Nome"
                 value={username}
                 onChange={(e) => setUserName(e.target.value)}
             />
-            <input
+            <Input
                 type="email"
                 placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
             />
-            <input
-                type="password"
-                placeholder="Senha"
+            <PasswordInput
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                placeholder="Senha"
             />
-            <button type="submit">Registrar</button>
-        </form>
+            <Button type="submit">Registrar</Button>
+        </Form>
     );
 };
 

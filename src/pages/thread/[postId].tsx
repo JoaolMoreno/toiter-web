@@ -74,65 +74,69 @@ export default withAuth(PostId);
 
 
 const ThreadContainer = styled.div`
-    display: flex;
-    flex-direction: column;
-    align-content: center;
-    min-height: 100vh;
-    padding: 20px;
-    margin: 0 auto;
-    background-color: #f9f9f9;
+  display: flex;
+  flex-direction: column;
+  align-content: center;
+  min-height: 100vh;
+  padding: 20px;
+  margin: 0 auto;
+  background-color: ${({ theme }) => theme.colors.background};
 `;
 
 const Header = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: #95d5b2;
-  padding: 10px 20px;
-  border-radius: 8px;
+  background-color: ${({ theme }) => theme.colors.backgroundElevated};
+  padding: 16px 24px;
+  border-radius: 12px;
   margin-bottom: 20px;
+  border: 1px solid ${({ theme }) => theme.colors.border};
 `;
 
 const BackButton = styled.button`
-  background-color: #74c69d;
+  background-color: ${({ theme }) => theme.colors.primary};
+  color: white;
   border: none;
-  padding: 10px 15px;
-  border-radius: 4px;
-  color: #081c15;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: ${({ theme }) => theme.fontSizes.regular};
+  font-weight: bold;
   cursor: pointer;
-  font-size: 14px;
+  transition: background-color 0.2s;
 
   &:hover {
-    background-color: #52b788;
+    background-color: ${({ theme }) => theme.colors.secondary};
   }
 `;
 
 const Title = styled.h1`
-  font-size: 20px;
-  color: #081c15;
+  font-size: ${({ theme }) => theme.fontSizes.large};
+  color: ${({ theme }) => theme.colors.text};
+  margin: 0;
 `;
 
 const LoadingMessage = styled.p`
   text-align: center;
-  color: #555;
-  font-size: 16px;
+  color: ${({ theme }) => theme.colors.textLight};
+  font-size: ${({ theme }) => theme.fontSizes.regular};
 `;
 
 const ErrorMessage = styled.p`
   text-align: center;
-  color: red;
-  font-size: 16px;
+  color: ${({ theme }) => theme.colors.error};
+  font-size: ${({ theme }) => theme.fontSizes.regular};
 `;
 
 const RepliesTitle = styled.h2`
-  font-size: 18px;
-  color: #081c15;
-  margin-top: 20px;
+  font-size: ${({ theme }) => theme.fontSizes.large};
+  color: ${({ theme }) => theme.colors.text};
+  margin: 24px 0 16px;
   text-align: center;
 `;
 
 const NoRepliesMessage = styled.p`
   text-align: center;
-  color: #555;
-  font-size: 14px;
+  color: ${({ theme }) => theme.colors.textLight};
+  font-size: ${({ theme }) => theme.fontSizes.regular};
 `;

@@ -184,74 +184,57 @@ export const Page = styled.div`
 `;
 
 const RepostIndicator = styled.div`
-    font-size: 14px;
-    color: #555;
-    margin-bottom: 8px;
-    text-align: left;
-    width: 100%;
+  color: ${({ theme }) => theme.colors.textLight};
+  font-size: ${({ theme }) => theme.fontSizes.small};
+  margin-bottom: 8px;
 `;
 
 const RepostContainer = styled.div`
-    border: 1px solid #98c379;
-    background-color: #f8f9fa; /* Um cinza claro para destacar o repost */
-    border-radius: 8px;
-    padding: 10px;
-    margin-top: 10px;
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    text-align: left;
-    width: 100%;
-
-    &:hover {
-        background-color: #e9ecef; /* Efeito hover */
-    }
+  background-color: ${({ theme }) => theme.colors.backgroundAlt};
+  border: 1px solid ${({ theme }) => theme.colors.primary};
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 12px;
 `;
 
-export const PostContainer = styled.div`
-    max-width: 900px;
-    min-width: 600px;
-    border: 1px solid #98c379;
-    background-color: #eaf5e6;
-    border-radius: 8px;
-    padding: 15px;
-    margin-bottom: 15px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
+const PostContainer = styled.div`
+  width: 100%;
+  max-width: 900px;
+  background-color: ${({ theme }) => theme.colors.background};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  transition: all 0.2s ease;
 
-    &:hover {
-        background-color: #d8f3dc;
-    }
+  &:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
 `;
 
 const Username = styled.h3`
-    margin: 0;
-    color: #2d6a4f;
-    font-size: 18px;
+  color: ${({ theme }) => theme.colors.text};
+  font-size: ${({ theme }) => theme.fontSizes.large};
+  font-weight: 600;
+  margin-bottom: 8px;
 `;
 
 const Content = styled.p`
-    margin: 10px 0;
-    color: #1b4332;
-    font-size: 14px;
-    line-height: 1.6;
+  color: ${({ theme }) => theme.colors.text};
+  font-size: ${({ theme }) => theme.fontSizes.regular};
+  line-height: 1.5;
+  margin-bottom: 16px;
 `;
 
 const Metrics = styled.small`
-    display: block;
-    margin-top: 10px;
-    color: #555;
-    font-size: 12px;
+  color: ${({ theme }) => theme.colors.textLight};
+  font-size: ${({ theme }) => theme.fontSizes.small};
 `;
 
 const ButtonRow = styled.div`
-    display: flex;
-    gap: 10px;
-    margin-top: 10px;
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
 `;
 
 const LikeButton = styled.button`

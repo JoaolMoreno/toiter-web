@@ -28,11 +28,14 @@ const Container = styled.div`
 
 const Title = styled.h1`
   color: ${({ theme }) => theme.colors.primary};
+  font-size: ${({ theme }) => theme.fontSizes.large};
+  margin-bottom: 16px;
 `;
 
 const Subtitle = styled.p`
   margin-bottom: 20px;
   color: ${({ theme }) => theme.colors.text};
+  font-size: ${({ theme }) => theme.fontSizes.regular};
 `;
 
 const Redirect = styled.p`
