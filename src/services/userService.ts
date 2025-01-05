@@ -10,7 +10,7 @@ export const getUserProfile = async (username: string): Promise<UserProfile> => 
     const headerImageUrl = data.headerImageId ? 
       await getImageById(data.headerImageId) : '';
     const profileImageUrl = data.profileImageId ? 
-      await getImageById(data.profileImageId) : '';
+      await getImageById(data.profileImageId) : '/default-profile.png';
 
     return {
       username: data.username,
