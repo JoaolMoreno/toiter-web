@@ -11,6 +11,10 @@ interface PostProps {
     onToggleLike?: (postId: number, isLiked: boolean) => void;
 }
 
+interface ToastProps {
+    visible: boolean;
+}
+
 const Post: React.FC<PostProps> = ({ post }) => {
     const [isLiked, setIsLiked] = useState(post.isLiked);
     const [likesCount, setLikesCount] = useState(post.likesCount);
@@ -19,6 +23,7 @@ const Post: React.FC<PostProps> = ({ post }) => {
     const [isRepostMenuOpen, setRepostMenuOpen] = useState(false);
     const [modalType, setModalType] = useState<'reply' | 'repostWithComment'>();
     const router = useRouter();
+    const [showToast, setShowToast] = useState(false);
 
     const formatTimestamp = (dateString: string): string => {
         const date = new Date(dateString);
@@ -34,7 +39,34 @@ const Post: React.FC<PostProps> = ({ post }) => {
         } else {
           return date.toLocaleDateString('pt-BR');
         }
-      };
+    };
+
+    const handleShare = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        const shareUrl = `${window.location.origin}/thread/${post.id}`;
+        navigator.clipboard.writeText(shareUrl);
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 2000);
+    };
+
+    const ShareIcon = () => (
+        <svg 
+          width="20" 
+          height="20" 
+          viewBox="0 0 24 24" 
+          fill="none" 
+          stroke="currentColor" 
+          strokeWidth="2" 
+          strokeLinecap="round" 
+          strokeLinejoin="round"
+        >
+          <circle cx="18" cy="5" r="3"/>
+          <circle cx="6" cy="12" r="3"/>
+          <circle cx="18" cy="19" r="3"/>
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+        </svg>
+      );
 
     const handleLikeToggle = async (postId: number) => {
         try {
@@ -180,6 +212,12 @@ const Post: React.FC<PostProps> = ({ post }) => {
                     >
                         🔁 Repostar
                     </RepostButton>
+                    <ShareContainer>
+                    <Toast visible={showToast}>Link Copiado!</Toast>
+                        <ShareButton onClick={handleShare}>
+                            <ShareIcon />
+                        </ShareButton>
+                    </ShareContainer>
                 </ButtonRow>
             </PostContainer>
 
@@ -338,6 +376,7 @@ const ReplyButton = styled.button`
         background-color: #c3e6cb;
     }
 `;
+
 const RepostButton = styled.button`
     background-color: #cce5ff;
     border: none;
@@ -353,4 +392,42 @@ const RepostButton = styled.button`
     &:hover {
         background-color: #b8daff;
     }
+`;
+
+const ShareButton = styled.button`
+    background-color: ${({ theme }) => theme.colors.primary};
+    border: none;
+    border-radius: 4px;
+    color: white;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+
+    &:hover {
+        background-color: ${({ theme }) => theme.colors.secondary};
+    }
+`;
+
+const Toast = styled.div<ToastProps>`
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 14px;
+    margin-bottom: 8px;
+    opacity: ${({ visible }) => visible ? '1' : '0'};
+    transition: opacity 0.2s;
+`;
+
+const ShareContainer = styled.div`
+    position: relative;
+    display: inline-block;
 `;
