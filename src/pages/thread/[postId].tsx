@@ -5,80 +5,150 @@ import { PostData } from '@/models/PostData';
 import Post from '@/components/post';
 import styled from 'styled-components';
 import withAuth from "@/hoc/withAuth";
+import { GetServerSideProps } from 'next'
+import Head from 'next/head'
 
-const PostId = () => {
-    const router = useRouter();
-    const { postId, from } = router.query;
+interface ThreadPageProps {
+  metadata: {
+    title: string
+    description: string
+    openGraph: {
+      title: string
+      description: string
+      url: string
+      siteName: string
+      locale: string
+      type: string
+    }
+  }
+}
 
-    const [parentPost, setParentPost] = useState<PostData | null>(null);
-    const [replies, setReplies] = useState<PostData[]>([]);
-    const [loading, setLoading] = useState(true);
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  try {
+    const postId = context.params?.postId as string
 
-    const handleBack = () => {
-      if (from) {
-          router.push(from as string);
-      } else {
-          router.push('/feed');
+    const threadData = await getThread(Number(postId), 0, 1)
+
+    return {
+      props: {
+        metadata: {
+          title: `${threadData.parentPost.username} no Toiter`,
+          description: threadData.parentPost.content,
+          openGraph: {
+            title: `${threadData.parentPost.username} no Toiter`,
+            description: threadData.parentPost.content,
+            url: `https://toiter.lpmrn.com/thread/${postId}`,
+            siteName: 'Toiter',
+            locale: 'pt_BR',
+            type: 'article'
+          }
+        },
+        threadData
       }
+    }
+  } catch (error) {
+    return {
+      props: {
+        metadata: {
+          title: 'Post não encontrado',
+          description: 'O post que você procura não foi encontrado.',
+          openGraph: {
+            title: 'Post não encontrado',
+            description: 'O post que você procura não foi encontrado.',
+            url: `https://toiter.lpmrn.com/thread/${context.params?.postId}`,
+            siteName: 'Toiter',
+            locale: 'pt_BR',
+            type: 'article'
+          }
+        }
+      }
+    }
+  }
+}
+
+const PostId = ({ metadata }: ThreadPageProps) => {
+  const router = useRouter();
+  const { postId, from } = router.query;
+
+  const [parentPost, setParentPost] = useState<PostData | null>(null);
+  const [replies, setReplies] = useState<PostData[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const handleBack = () => {
+    if (from) {
+      router.push(from as string);
+    } else {
+      router.push('/feed');
+    }
   };
 
-    const loadThread = async () => {
-        try {
-            setLoading(true);
-            if (!postId) return;
+  const loadThread = async () => {
+    try {
+      setLoading(true);
+      if (!postId) return;
 
-            const data = await getThread(Number(postId), 0, 10);
-            setParentPost(data.parentPost);
-            setReplies(data.childPosts || []);
-        } catch (error) {
-            console.error("Erro ao carregar a thread:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        loadThread();
-    }, [postId]);
-
-    if (loading) {
-        return <LoadingMessage>Carregando thread...</LoadingMessage>;
+      const data = await getThread(Number(postId), 0, 10);
+      setParentPost(data.parentPost);
+      setReplies(data.childPosts || []);
+    } catch (error) {
+      console.error("Erro ao carregar a thread:", error);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    if (!parentPost) {
-        return <ErrorMessage>Thread não encontrada.</ErrorMessage>;
-    }
+  useEffect(() => {
+    loadThread();
+  }, [postId]);
 
-    return (
-        <ThreadContainer>
-            <Header>
-              <BackButton onClick={handleBack}>Voltar</BackButton>
-                <Title>Visualização de Thread</Title>
-            </Header>
+  if (loading) {
+    return <LoadingMessage>Carregando thread...</LoadingMessage>;
+  }
 
-            {/* Post Principal */}
-            <Post
-                post={parentPost}
-            />
+  if (!parentPost) {
+    return <ErrorMessage>Thread não encontrada.</ErrorMessage>;
+  }
 
-            <RepliesTitle>Respostas</RepliesTitle>
+  return (
+    <ThreadContainer>
+      <Head>
+        <title>{metadata.title}</title>
+        <meta name="description" content={metadata.description} />
+        <meta property="og:title" content={metadata.openGraph.title} />
+        <meta property="og:description" content={metadata.openGraph.description} />
+        <meta property="og:url" content={metadata.openGraph.url} />
+        <meta property="og:site_name" content={metadata.openGraph.siteName} />
+        <meta property="og:locale" content={metadata.openGraph.locale} />
+        <meta property="og:type" content={metadata.openGraph.type} />
+      </Head>
+      <Header>
+        <BackButton onClick={handleBack}>Voltar</BackButton>
+        <Title>Visualização de Thread</Title>
+      </Header>
 
-            {/* Replies */}
-            {replies.length > 0 ? (
-                replies.map((reply) => (
-                    <Post
-                        key={reply.id}
-                        post={reply}
-                    />
-                ))
-            ) : (
-                <NoRepliesMessage>Sem respostas ainda.</NoRepliesMessage>
-            )}
-        </ThreadContainer>
-    );
+      {/* Post Principal */}
+      <Post
+        post={parentPost}
+      />
+
+      <RepliesTitle>Respostas</RepliesTitle>
+
+      {/* Replies */}
+      {replies.length > 0 ? (
+        replies.map((reply) => (
+          <Post
+            key={reply.id}
+            post={reply}
+          />
+        ))
+      ) : (
+        <NoRepliesMessage>Sem respostas ainda.</NoRepliesMessage>
+      )}
+    </ThreadContainer>
+  );
 };
 
-export default withAuth(PostId);
+export default withAuth<ThreadPageProps>(PostId)
 
 
 const ThreadContainer = styled.div`
