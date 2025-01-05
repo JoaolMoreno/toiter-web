@@ -20,6 +20,22 @@ const Post: React.FC<PostProps> = ({ post }) => {
     const [modalType, setModalType] = useState<'reply' | 'repostWithComment'>();
     const router = useRouter();
 
+    const formatTimestamp = (dateString: string): string => {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffMs = now.getTime() - date.getTime();
+        const diffMins = Math.floor(diffMs / (1000 * 60));
+        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+      
+        if (diffMins < 60) {
+          return `${diffMins}m`;
+        } else if (diffHours < 24) {
+          return `${diffHours}h`;
+        } else {
+          return date.toLocaleDateString('pt-BR');
+        }
+      };
+
     const handleLikeToggle = async (postId: number) => {
         try {
             if (isLiked) {
@@ -109,9 +125,12 @@ const Post: React.FC<PostProps> = ({ post }) => {
                         🔁 Repostado por <strong>{post.username}</strong>
                     </RepostIndicator>
                 )}
-                <Username onClick={(e) => handleUsernameClick(e, showData?.username)}>
+                <UserHeader>
+                    <Username onClick={(e) => handleUsernameClick(e, showData?.username)}>
                     {showData?.username}
-                </Username>
+                    </Username>
+                    <TimeStamp>{formatTimestamp(showData?.createdAt)}</TimeStamp>
+                </UserHeader>
                 <Content>{showData?.content}</Content>
 
                 {/* Container do Post Original */}
@@ -122,7 +141,10 @@ const Post: React.FC<PostProps> = ({ post }) => {
                             handleViewThread(post.repostPostData!.id);
                         }}
                     >
-                        <Username>{post.repostPostData!.username}</Username>
+                        <UserHeader>
+                            <Username>{post.repostPostData!.username}</Username>
+                            <TimeStamp>{formatTimestamp(post.repostPostData.createdAt)}</TimeStamp>
+                        </UserHeader>
                         <Content>{post.repostPostData!.content}</Content>
                         <Metrics>
                             Curtidas: {post.repostPostData!.likesCount} | Respostas: {post.repostPostData!.repliesCount} | Reposts: {post.repostPostData!.repostsCount}
@@ -209,24 +231,41 @@ const RepostIndicator = styled.div`
 const RepostContainer = styled.div`
   background-color: ${({ theme }) => theme.colors.backgroundAlt};
   border: 1px solid ${({ theme }) => theme.colors.primary};
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
   border-radius: 8px;
   padding: 12px;
   margin-top: 12px;
+  margin-bottom: 12px;
 `;
 
 const PostContainer = styled.div`
   width: 100%;
-  max-width: 900px;
+  max-width: 600px;
   background-color: ${({ theme }) => theme.colors.background};
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: 12px;
   padding: 16px;
   margin-bottom: 16px;
   transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 
   &:hover {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
+`;
+
+const UserHeader = styled.div`
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 8px;
 `;
 
 const Username = styled.span`
@@ -238,8 +277,14 @@ const Username = styled.span`
   }
 `;
 
+const TimeStamp = styled.span`
+  color: ${({ theme }) => theme.colors.textLight};
+  font-size: ${({ theme }) => theme.fontSizes.small};
+`;
 
 const Content = styled.p`
+  width: 100%;
+  text-align: center;
   color: ${({ theme }) => theme.colors.text};
   font-size: ${({ theme }) => theme.fontSizes.regular};
   line-height: 1.5;
@@ -249,12 +294,16 @@ const Content = styled.p`
 const Metrics = styled.small`
   color: ${({ theme }) => theme.colors.textLight};
   font-size: ${({ theme }) => theme.fontSizes.small};
+  width: 100%;
+  text-align: center;
 `;
 
 const ButtonRow = styled.div`
   display: flex;
   gap: 10px;
   margin-top: 16px;
+  width: 100%;
+  justify-content: center;
 `;
 
 const LikeButton = styled.button`
