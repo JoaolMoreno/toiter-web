@@ -1,5 +1,4 @@
 import React, {useEffect, useState} from 'react';
-import { useRouter } from 'next/router'; 
 import { getFeed } from '@/services/postService';
 import { useAuth } from '@/context/AuthContext';
 import styled from "styled-components";
@@ -8,15 +7,9 @@ import {useFeedContext} from "@/context/FeedProvider";
 import withAuth from "@/hoc/withAuth";
 import Modal from "@/components/modal";
 import { createPost } from '@/services/postService';
-import { getImageById } from '@/services/imageService';
-
-interface ProfileImageProps {
-    imageId: number | null;
-}
 
 const Feed = () => {
-    const router = useRouter();
-    const { isAuthenticated, logout, user } = useAuth();
+    const { isAuthenticated} = useAuth();
     const [inputContent, setInputContent] = useState('');
     const {
         posts, setPosts,
@@ -26,12 +19,6 @@ const Feed = () => {
     } = useFeedContext();
 
     const [isModalOpen, setModalOpen] = useState(false);
-
-    const handleProfileClick = () => {
-        if (user?.username) {
-            router.push(`/profile/${user.username}`);
-        }
-    };
 
     const loadPosts = async () => {
         if (!hasMore || loading) return;
@@ -73,31 +60,6 @@ const Feed = () => {
         return () => window.removeEventListener('scroll', handleScroll);
     }, [hasMore, loading]);
 
-    const ProfileImage = ({ imageId }: ProfileImageProps) => {
-        const [imageUrl, setImageUrl] = useState<string>('');
-    
-        useEffect(() => {
-            const loadImage = async () => {
-                if (imageId) {
-                    try {
-                        const url = await getImageById(imageId);
-                        setImageUrl(url);
-                    } catch (error) {
-                        console.error('Error loading profile image:', error);
-                    }
-                }
-            };
-            loadImage();
-        }, [imageId]);
-    
-        return (
-            <StyledProfileImage 
-                src={imageUrl || '/default-profile.png'} 
-                alt="Profile" 
-            />
-        );
-    };
-
     const handleCreateNewPost = () => {
         setModalOpen(true);
     };
@@ -118,13 +80,6 @@ const Feed = () => {
 
     return (
         <Container>
-            <Header>
-                <ProfileButton onClick={handleProfileClick}>
-                <ProfileImage imageId={user!.profileImageId} />
-                </ProfileButton>
-                <LogoutButton onClick={() => logout()}>Logout</LogoutButton>
-            </Header>
-
             <FeedContainer>
                 <FeedTitle>Seu Feed</FeedTitle>
                 <CreatePostContainer>
@@ -163,46 +118,9 @@ const Feed = () => {
 export default withAuth(Feed);
 
 export const Container = styled.div`
-  background-color: ${({ theme }) => theme.colors.background};
-`;
-
-export const Header = styled.div`
-    background-color: ${({ theme }) => theme.colors.backgroundElevated};
-    padding: 16px 24px;
+    background-color: ${({ theme }) => theme.colors.background};
+    min-height: 100%;
     width: 100%;
-    display: flex;
-    justify-content: space-between; // Change from flex-end to space-between
-    align-items: center;
-    border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-    position: sticky;
-    top: 0;
-    z-index: 10;
-`;
-
-const StyledProfileImage = styled.img`
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid ${({ theme }) => theme.colors.primary};
-`;
-
-export const LogoutButton = styled.button`
-  background-color: ${({ theme }) => theme.colors.primary};
-  color: ${({ theme }) => theme.colors.text};
-  padding: 8px 16px;
-  border: none;
-  border-radius: 8px;
-  font-size: ${({ theme }) => theme.fontSizes.regular};
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background-color: ${({ theme }) => theme.colors.secondary};
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  }
 `;
 
 export const FeedContainer = styled.div`
@@ -287,20 +205,5 @@ export const FloatingButton = styled.button`
     box-shadow: 0 2px 4px rgba(0,0,0,0.3);
     &:hover {
         background-color: #40916c;
-    }
-`;
-
-const ProfileButton = styled.button`
-    background: none;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: opacity 0.2s;
-
-    &:hover {
-        opacity: 0.8;
     }
 `;
