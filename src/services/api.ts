@@ -1,7 +1,15 @@
 import axios from 'axios';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+const servicePostUrl = process.env.SERVICE_POST_URL;
+
+const isServer = typeof window === 'undefined';
+const baseURL = isServer ? servicePostUrl : '/api';
 
 const api = axios.create({
-    baseURL: '/api',
+    baseURL,
     withCredentials: true,
 });
 

@@ -186,10 +186,13 @@ services:
       - "3000:3000"
     environment:
       NODE_ENV: production
+      SERVICE_POST_URL: http://toiter-post-service:9991/
     depends_on:
       - postgres
       - kafka
       - redis
+      - toiter-user-service
+      - toiter-post-service
     mem_limit: 512m
     cpus: "0.5"
 
