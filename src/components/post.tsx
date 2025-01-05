@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { PostData } from '@/models/PostData';
 import styled from 'styled-components';
 import { useRouter } from 'next/router';
-import {createReply, createRepost, createRepostWithComment, likePost, unlikePost} from "@/services/postService";
+import { createReply, createRepost, createRepostWithComment, likePost, unlikePost } from "@/services/postService";
 import Modal from "@/components/modal";
 import RepostMenu from "@/components/RepostMenu";
 
@@ -31,13 +31,13 @@ const Post: React.FC<PostProps> = ({ post }) => {
         const diffMs = now.getTime() - date.getTime();
         const diffMins = Math.floor(diffMs / (1000 * 60));
         const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-      
+
         if (diffMins < 60) {
-          return `${diffMins}m`;
+            return `${diffMins}m`;
         } else if (diffHours < 24) {
-          return `${diffHours}h`;
+            return `${diffHours}h`;
         } else {
-          return date.toLocaleDateString('pt-BR');
+            return date.toLocaleDateString('pt-BR');
         }
     };
 
@@ -50,23 +50,23 @@ const Post: React.FC<PostProps> = ({ post }) => {
     };
 
     const ShareIcon = () => (
-        <svg 
-          width="20" 
-          height="20" 
-          viewBox="0 0 24 24" 
-          fill="none" 
-          stroke="currentColor" 
-          strokeWidth="2" 
-          strokeLinecap="round" 
-          strokeLinejoin="round"
+        <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
         >
-          <circle cx="18" cy="5" r="3"/>
-          <circle cx="6" cy="12" r="3"/>
-          <circle cx="18" cy="19" r="3"/>
-          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
-          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+            <circle cx="18" cy="5" r="3" />
+            <circle cx="6" cy="12" r="3" />
+            <circle cx="18" cy="19" r="3" />
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
         </svg>
-      );
+    );
 
     const handleLikeToggle = async (postId: number) => {
         try {
@@ -159,7 +159,7 @@ const Post: React.FC<PostProps> = ({ post }) => {
                 )}
                 <UserHeader>
                     <Username onClick={(e) => handleUsernameClick(e, showData?.username)}>
-                    {showData?.username}
+                        {showData?.username}
                     </Username>
                     <TimeStamp>{formatTimestamp(showData?.createdAt)}</TimeStamp>
                 </UserHeader>
@@ -213,7 +213,7 @@ const Post: React.FC<PostProps> = ({ post }) => {
                         🔁 Repostar
                     </RepostButton>
                     <ShareContainer>
-                    <Toast visible={showToast}>Link Copiado!</Toast>
+                        <Toast visible={showToast}>Link Copiado!</Toast>
                         <ShareButton onClick={handleShare}>
                             <ShareIcon />
                         </ShareButton>
@@ -251,7 +251,7 @@ const Post: React.FC<PostProps> = ({ post }) => {
     );
 }
 
-    export default Post;
+export default Post;
 
 export const Page = styled.div`
     display: flex;
