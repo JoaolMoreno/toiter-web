@@ -29,7 +29,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 if (sessionValid) {
                     const { data } = await api.get('/users/me');
                     setUser({
-                        username: data.username
+                        username: data.username,
+                        profileImageId: data.profileImageId as number
                     });
                     setIsAuthenticated(true);
                 } else {
@@ -62,7 +63,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const userData = await loginService(email, password);
             
             setUser({ 
-                username: userData.username 
+                username: userData.username,
+                profileImageId: null
             });
             setIsAuthenticated(true);
             

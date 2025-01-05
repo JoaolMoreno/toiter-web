@@ -3,12 +3,20 @@ import { useRouter } from 'next/router';
 import styled from 'styled-components';
 import withAuth from '@/hoc/withAuth';
 import { UserProfile } from '@/models/UserProfile';
-import { getUserProfile, followUser, unfollowUser, updateUserProfile } from '@/services/userService';
+import {
+  getUserProfile,
+  followUser,
+  unfollowUser,
+  updateUserProfile,
+  updateProfileImage,
+  updateHeaderImage
+} from '@/services/userService';
 import { getPostsByUser } from '@/services/postService';
 import Post from '@/components/post';
 import { PostData } from '@/models/PostData';
 import { useAuth } from '@/context/AuthContext';
 import { EditProfileModal } from '@/components/editProfileModal';
+import { EditImageModal } from '@/components/editImageModal';
 
 const ProfilePage = () => {
   const router = useRouter();
@@ -19,8 +27,24 @@ const ProfilePage = () => {
   const [posts, setPosts] = useState<PostData[]>([]);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isProfileModalOpen, setProfileModalOpen] = useState(false);
+  const [isImageModalOpen, setImageModalOpen] = useState(false);
+  const [imageEditType, setImageEditType] = useState<'profile' | 'header'>('profile');
   const isOwnProfile = user?.username === username;
+
+  const handleEditProfile = () => {
+    setProfileModalOpen(true);
+  };
+
+  const handleEditProfileImage = () => {
+    setImageEditType('profile');
+    setImageModalOpen(true);
+  };
+  
+  const handleEditHeaderImage = () => {
+    setImageEditType('header');
+    setImageModalOpen(true);
+  };
 
   const handleBack = () => {
     if (from) {
@@ -101,8 +125,18 @@ const ProfilePage = () => {
         <BackButton onClick={handleBack}>Voltar</BackButton>
       </Header>
       <ProfileHeader imageUrl={profile.headerImageUrl}>
+        {isOwnProfile && (
+          <EditHeaderButton onClick={handleEditHeaderImage}>
+            ✏️ Edit Header
+          </EditHeaderButton>
+        )}
         <ProfileImageWrapper>
-          <ProfileImage src={profile.profileImageUrl} alt={profile.username} />
+          <ProfileImageContainer onClick={isOwnProfile ? handleEditProfileImage : undefined}>
+            <ProfileImage
+                src={profile.profileImageUrl}
+                alt={profile.username}
+            />
+          </ProfileImageContainer>
         </ProfileImageWrapper>
       </ProfileHeader>
       <ProfileInfo>
@@ -127,11 +161,11 @@ const ProfilePage = () => {
             </StatItem>
           </Stats>
           {isOwnProfile ? (
-            <EditButton onClick={() => setIsEditModalOpen(true)}>
+            <EditButton onClick={() => handleEditProfile()}>
               Editar Perfil
             </EditButton>
           ) : (
-            <FollowButton $isFollowing={profile.isFollowing}>
+            <FollowButton $isFollowing={profile.isFollowing} onClick={handleFollow}>
               {profile.isFollowing ? 'Following' : 'Follow'}
             </FollowButton>
           )}
@@ -149,13 +183,13 @@ const ProfilePage = () => {
         )}
       </PostsSection>
       <EditProfileModal 
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
+        isOpen={isProfileModalOpen}
+        onClose={() => setProfileModalOpen(false)}
         onSubmit={async (data) => {
           try {
             await updateUserProfile(data);
-            await loadProfile();
-            setIsEditModalOpen(false);
+            setProfile(prev => prev ? {...prev, ...data} : prev);
+            setProfileModalOpen(false);
           } catch (error) {
             console.error('Erro ao atualizar perfil:', error);
           }
@@ -163,17 +197,31 @@ const ProfilePage = () => {
         currentDisplayName={profile.displayName}
         currentBio={profile.bio}
       />
-    </Container>
+
+    <EditImageModal
+      isOpen={isImageModalOpen}
+      onClose={() => setImageModalOpen(false)}
+      onSubmit={async (file) => {
+        try {
+          if (imageEditType === 'profile') {
+            await updateProfileImage(file);
+          } else {
+            await updateHeaderImage(file);
+          }
+          await loadProfile();
+          setImageModalOpen(false);
+        } catch (error) {
+          console.error('Erro ao atualizar imagem:', error);
+        }
+      }}
+      type={imageEditType}
+      currentImage={imageEditType === 'profile' 
+        ? profile?.profileImageUrl 
+        : profile?.headerImageUrl}
+    />
+  </Container>
   );
 };
-
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  margin: 0 auto;
-  background-color: #000;
-  color: #fff;
-`;
 
 const Header = styled.div`
   display: flex;
@@ -210,6 +258,25 @@ const ProfileHeader = styled.div<{ imageUrl: string }>`
   height: 200px;
   border-radius: 12px 12px 0 0;
   border: 1px solid ${({ theme }) => theme.colors.border};
+  z-index: 1;
+`;
+
+const EditHeaderButton = styled.button`
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  z-index: 2;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.9);
+  }
 `;
 
 const ProfileImageWrapper = styled.div`
@@ -223,13 +290,67 @@ const ProfileImageWrapper = styled.div`
   border-radius: 50%;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  z-index: 2;
+  z-index: 3;
+  pointer-events: auto;
+`;
+
+const ProfileImageContainer = styled.div`
+  position: relative;
+  width: 100%;
+  height: 100%;
+  cursor: ${props => (props.onClick ? 'pointer' : 'default')};
+  z-index: 3;
+
+  &:hover {
+    ${props =>
+      props.onClick &&
+      `
+      &::after {
+        content: '✏️';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.7);
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        z-index: 4;
+      }
+    `}
+  }
 `;
 
 const ProfileImage = styled.img`
   width: 100%;
   height: 100%;
   object-fit: cover;
+`;
+
+// Aplicação do z-index e pointer-events separados, garantindo independência de hover
+const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  margin: 0 auto;
+  background-color: #000;
+  color: #fff;
+  position: relative;
+
+  ${ProfileHeader} {
+    z-index: 1;
+  }
+
+  ${ProfileImageWrapper} {
+    pointer-events: auto;
+  }
+
+  ${ProfileImageContainer} {
+    z-index: 3;
+  }
 `;
 
 const ProfileInfo = styled.div`

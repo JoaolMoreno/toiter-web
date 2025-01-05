@@ -17,4 +17,5 @@ export interface UpdatedUser {
 }
 export interface User {
   username: string;
+  profileImageId: number|null;
 }

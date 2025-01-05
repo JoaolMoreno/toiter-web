@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import { UpdatedUser } from '@/models/UserProfile';
 
-interface Props {
+interface EditProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: UpdatedUser) => void;
@@ -10,9 +10,24 @@ interface Props {
   currentBio: string;
 }
 
-export const EditProfileModal = ({ isOpen, onClose, onSubmit, currentDisplayName, currentBio }: Props) => {
+export const EditProfileModal = ({
+  isOpen,
+  onClose,
+  onSubmit,
+  currentDisplayName,
+  currentBio,
+}: EditProfileModalProps) => {
   const [displayName, setDisplayName] = useState(currentDisplayName);
   const [bio, setBio] = useState(currentBio);
+
+  const handleSubmit = async () => {
+    try {
+      await onSubmit({ displayName, bio });
+      onClose();
+    } catch (error) {
+      console.error('Error updating profile:', error);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -25,14 +40,14 @@ export const EditProfileModal = ({ isOpen, onClose, onSubmit, currentDisplayName
         </Header>
 
         <Form>
-          <InputGroup>
+          {/* <InputGroup>
             <Label>Nome</Label>
             <Input 
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               placeholder="Seu nome"
             />
-          </InputGroup>
+          </InputGroup> */}
 
           <InputGroup>
             <Label>Bio</Label>
@@ -45,9 +60,7 @@ export const EditProfileModal = ({ isOpen, onClose, onSubmit, currentDisplayName
 
           <ButtonGroup>
             <CancelButton onClick={onClose}>Cancelar</CancelButton>
-            <SaveButton onClick={() => onSubmit({ displayName, bio })}>
-              Salvar
-            </SaveButton>
+            <SaveButton onClick={handleSubmit}>Salvar</SaveButton>
           </ButtonGroup>
         </Form>
       </ModalContainer>
@@ -69,11 +82,11 @@ const Overlay = styled.div`
 `;
 
 const ModalContainer = styled.div`
-  background-color: ${({ theme }) => theme.colors.backgroundElevated};
+  background-color: ${({ theme }) => theme.colors.backgroundAlt};
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: 12px;
   width: 500px;
-  padding: 24px;
+  padding: 20px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
 `;
 
@@ -81,7 +94,8 @@ const Header = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
 `;
 
 const Title = styled.h2`
@@ -94,7 +108,7 @@ const CloseButton = styled.button`
   background: none;
   border: none;
   color: ${({ theme }) => theme.colors.text};
-  font-size: 20px;
+  font-size: ${({ theme }) => theme.fontSizes.large};
   cursor: pointer;
   padding: 4px;
   
@@ -104,9 +118,45 @@ const CloseButton = styled.button`
 `;
 
 const Form = styled.div`
+  margin-top: 20px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
+`;
+
+const ButtonGroup = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+`;
+
+const Button = styled.button`
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+`;
+
+const CancelButton = styled(Button)`
+  background: none;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  color: ${({ theme }) => theme.colors.text};
+
+  &:hover {
+    background-color: ${({ theme }) => theme.colors.backgroundElevated};
+  }
+`;
+
+const SaveButton = styled(Button)`
+  background-color: ${({ theme }) => theme.colors.primary};
+  border: none;
+  color: white;
+
+  &:hover {
+    background-color: ${({ theme }) => theme.colors.secondary};
+  }
 `;
 
 const InputGroup = styled.div`
@@ -116,94 +166,38 @@ const InputGroup = styled.div`
 `;
 
 const Label = styled.label`
-  color: ${({ theme }) => theme.colors.textLight};
-  font-size: ${({ theme }) => theme.fontSizes.small};
+  color: ${({ theme }) => theme.colors.text};
+  font-size: ${({ theme }) => theme.fontSizes.medium};
+  font-weight: bold;
 `;
 
 const Input = styled.input`
-  width: 100%;
-  padding: 12px;
+  padding: 10px;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: 8px;
-  background-color: ${({ theme }) => theme.colors.backgroundAlt};
+  background-color: ${({ theme }) => theme.colors.background};
   color: ${({ theme }) => theme.colors.text};
-  font-size: ${({ theme }) => theme.fontSizes.regular};
+  font-size: ${({ theme }) => theme.fontSizes.medium};
   
   &:focus {
-    outline: none;
     border-color: ${({ theme }) => theme.colors.primary};
+    outline: none;
+    box-shadow: 0 0 0 2px ${({ theme }) => theme.colors.primary}33;
   }
 `;
 
 const TextArea = styled.textarea`
-  width: 100%;
-  min-height: 120px;
-  padding: 12px;
+  padding: 10px;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: 8px;
-  background-color: ${({ theme }) => theme.colors.backgroundAlt};
+  background-color: ${({ theme }) => theme.colors.background};
   color: ${({ theme }) => theme.colors.text};
-  font-size: ${({ theme }) => theme.fontSizes.regular};
+  font-size: ${({ theme }) => theme.fontSizes.medium};
   resize: vertical;
   
   &:focus {
-    outline: none;
     border-color: ${({ theme }) => theme.colors.primary};
-  }
-`;
-
-const ButtonGroup = styled.div`
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 12px;
-`;
-
-const Button = styled.button`
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-size: ${({ theme }) => theme.fontSizes.regular};
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.2s;
-`;
-
-const CancelButton = styled(Button)`
-  background-color: transparent;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  color: ${({ theme }) => theme.colors.text};
-  
-  &:hover {
-    background-color: ${({ theme }) => theme.colors.backgroundAlt};
-  }
-`;
-
-const SaveButton = styled(Button)`
-  background-color: ${({ theme }) => theme.colors.primary};
-  border: none;
-  color: white;
-  
-  &:hover {
-    background-color: ${({ theme }) => theme.colors.secondary};
-  }
-`;
-
-const ImageInput = styled.input.attrs({ type: 'file' })`
-  display: none;
-`;
-
-const ImageLabel = styled.label`
-  display: block;
-  padding: 8px 16px;
-  background-color: ${({ theme }) => theme.colors.backgroundAlt};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: 8px;
-  color: ${({ theme }) => theme.colors.text};
-  font-size: ${({ theme }) => theme.fontSizes.small};
-  cursor: pointer;
-  text-align: center;
-  
-  &:hover {
-    background-color: ${({ theme }) => theme.colors.border};
+    outline: none;
+    box-shadow: 0 0 0 2px ${({ theme }) => theme.colors.primary}33;
   }
 `;

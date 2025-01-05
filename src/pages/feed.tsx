@@ -1,4 +1,5 @@
 import React, {useEffect, useState} from 'react';
+import { useRouter } from 'next/router'; 
 import { getFeed } from '@/services/postService';
 import { useAuth } from '@/context/AuthContext';
 import styled from "styled-components";
@@ -7,9 +8,15 @@ import {useFeedContext} from "@/context/FeedProvider";
 import withAuth from "@/hoc/withAuth";
 import Modal from "@/components/modal";
 import { createPost } from '@/services/postService';
+import { getImageById } from '@/services/imageService';
+
+interface ProfileImageProps {
+    imageId: number | null;
+}
 
 const Feed = () => {
-    const { isAuthenticated, logout } = useAuth();
+    const router = useRouter();
+    const { isAuthenticated, logout, user } = useAuth();
     const [inputContent, setInputContent] = useState('');
     const {
         posts, setPosts,
@@ -19,6 +26,37 @@ const Feed = () => {
     } = useFeedContext();
 
     const [isModalOpen, setModalOpen] = useState(false);
+
+    const handleProfileClick = () => {
+        if (user?.username) {
+            router.push(`/profile/${user.username}`);
+        }
+    };
+
+    const ProfileImage = ({ imageId }: ProfileImageProps) => {
+        const [imageUrl, setImageUrl] = useState<string>('');
+    
+        useEffect(() => {
+            const loadImage = async () => {
+                if (imageId) {
+                    try {
+                        const url = await getImageById(imageId);
+                        setImageUrl(url);
+                    } catch (error) {
+                        console.error('Error loading profile image:', error);
+                    }
+                }
+            };
+            loadImage();
+        }, [imageId]);
+    
+        return (
+            <StyledProfileImage 
+                src={imageUrl || '/default-profile.png'} 
+                alt="Profile" 
+            />
+        );
+    };
 
     const handleCreateNewPost = () => {
         setModalOpen(true);
@@ -60,6 +98,9 @@ const Feed = () => {
     return (
         <Container>
             <Header>
+                <ProfileButton onClick={handleProfileClick}>
+                <ProfileImage imageId={user!.profileImageId} />
+                </ProfileButton>
                 <LogoutButton onClick={() => logout()}>Logout</LogoutButton>
             </Header>
 
@@ -105,16 +146,24 @@ export const Container = styled.div`
 `;
 
 export const Header = styled.div`
-  background-color: ${({ theme }) => theme.colors.backgroundElevated};
-  padding: 16px 24px;
-  width: 100%;
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-  position: sticky;
-  top: 0;
-  z-index: 10;
+    background-color: ${({ theme }) => theme.colors.backgroundElevated};
+    padding: 16px 24px;
+    width: 100%;
+    display: flex;
+    justify-content: space-between; // Change from flex-end to space-between
+    align-items: center;
+    border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+    position: sticky;
+    top: 0;
+    z-index: 10;
+`;
+
+const StyledProfileImage = styled.img`
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid ${({ theme }) => theme.colors.primary};
 `;
 
 export const LogoutButton = styled.button`
@@ -218,4 +267,27 @@ export const FloatingButton = styled.button`
     &:hover {
         background-color: #40916c;
     }
+`;
+
+const ProfileButton = styled.button`
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s;
+
+    &:hover {
+        opacity: 0.8;
+    }
+`;
+
+const ProfileImage = styled.img`
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid ${({ theme }) => theme.colors.primary};
 `;
