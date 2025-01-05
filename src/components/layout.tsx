@@ -11,7 +11,7 @@ interface ProfileImageProps {
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
     const router = useRouter();
-    const { user, logout } = useAuth();
+    const { isAuthenticated, user, logout } = useAuth();
     const isAuthPage = router.pathname.startsWith('/auth');
 
     if (isAuthPage) {
@@ -26,7 +26,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
     const ProfileImage = ({ imageId }: ProfileImageProps) => {
         const [imageUrl, setImageUrl] = useState<string>('');
-    
+
         useEffect(() => {
             const loadImage = async () => {
                 if (imageId) {
@@ -40,11 +40,11 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             };
             loadImage();
         }, [imageId]);
-    
+
         return (
-            <StyledProfileImage 
-                src={imageUrl || '/default-profile.png'} 
-                alt="Profile" 
+            <StyledProfileImage
+                src={imageUrl || '/default-profile.png'}
+                alt="Profile"
             />
         );
     };
@@ -52,11 +52,22 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     return (
         <>
             <Header>
-                <ProfileButton onClick={handleProfileClick}>
-                    <ProfileImage imageId={user?.profileImageId} />
-                </ProfileButton>
-                <AppName onClick={() => router.push('/')}>toiter</AppName>
-                <LogoutButton onClick={() => logout()}>Logout</LogoutButton>
+                {isAuthenticated ? (
+                    <>
+                        <ProfileButton onClick={handleProfileClick}>
+                            <ProfileImage imageId={user?.profileImageId} />
+                        </ProfileButton>
+                        <AppName onClick={() => router.push('/')}>toiter</AppName>
+                        <LogoutButton onClick={() => logout()}>Logout</LogoutButton>
+                    </>
+                ) : (
+                    <>
+                        <AppName onClick={() => router.push('/')}>toiter</AppName>
+                        <LoginButton onClick={() => router.push('/auth/login')}>
+                            Login
+                        </LoginButton>
+                    </>
+                )}
             </Header>
             <Main>{children}</Main>
         </>
@@ -66,13 +77,13 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 export default Layout;
 
 const Header = styled.div`
-    background-color: ${({theme}) => theme.colors.backgroundElevated};
+    background-color: ${({ theme }) => theme.colors.backgroundElevated};
     padding: 0 24px;
     width: 100%;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid ${({theme}) => theme.colors.border};
+    border-bottom: 1px solid ${({ theme }) => theme.colors.border};
     position: sticky;
     top: 0;
     z-index: 10;
@@ -135,4 +146,21 @@ const LogoutButton = styled.button`
 
 const Main = styled.main`
     
+`;
+
+const LoginButton = styled.button`
+  background-color: ${({ theme }) => theme.colors.primary};
+  color: ${({ theme }) => theme.colors.text};
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: ${({ theme }) => theme.fontSizes.regular};
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: ${({ theme }) => theme.colors.secondary};
+    transform: translateY(-1px);
+  }
 `;

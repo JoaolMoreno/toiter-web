@@ -106,16 +106,25 @@ export interface ThreadResponse {
     currentPage: number;
 }
 
-export const getThread = async (id: number, page: number, size: number): Promise<ThreadResponse> => {
+export const getThread = async (
+    id: number, 
+    page: number, 
+    size: number,
+    token?: string
+  ): Promise<ThreadResponse> => {
     try {
-        const { data } = await api.get(`posts/thread/${id}`, { params: { page, size } });
-
-        return transformThreadResponse(data);
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const { data } = await api.get(`posts/thread/${id}`, { 
+        params: { page, size },
+        headers
+      });
+  
+      return transformThreadResponse(data);
     } catch (error) {
-        console.error('Erro ao buscar thread:', error);
-        throw error;
+      console.error('Erro ao buscar thread:', error);
+      throw error;
     }
-};
+  };
 
 function transformThreadResponse(response: any): ThreadResponse {
     return {

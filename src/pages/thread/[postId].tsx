@@ -1,12 +1,11 @@
 import { useRouter } from 'next/router';
-import React, { useEffect, useState } from 'react';
-import { getThread } from '@/services/postService';
-import { PostData } from '@/models/PostData';
+import React from 'react';
+import { getThread, ThreadResponse } from '@/services/postService';
 import Post from '@/components/post';
 import styled from 'styled-components';
-import withAuth from "@/hoc/withAuth";
 import { GetServerSideProps } from 'next'
 import Head from 'next/head'
+
 
 interface ThreadPageProps {
   metadata: {
@@ -14,6 +13,7 @@ interface ThreadPageProps {
     description: string
     openGraph: {
       title: string
+      image: string
       description: string
       url: string
       siteName: string
@@ -21,13 +21,14 @@ interface ThreadPageProps {
       type: string
     }
   }
+  threadData: ThreadResponse | null
 }
-
 export const getServerSideProps: GetServerSideProps = async (context) => {
   try {
-    const postId = context.params?.postId as string
+    const postId = context.params?.postId as string;
+    const token = context.req.cookies['accessToken'];
 
-    const threadData = await getThread(Number(postId), 0, 1)
+    const threadData = await getThread(Number(postId), 0, 10, token);
 
     return {
       props: {
@@ -37,42 +38,34 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
           openGraph: {
             title: `${threadData.parentPost.username} no Toiter`,
             description: threadData.parentPost.content,
-            url: `https://toiter.lpmrn.com/thread/${postId}`,
+            url: `${process.env.NEXT_PUBLIC_HOST}/thread/${postId}`,
+            image: threadData.parentPost.profilePicture,
             siteName: 'Toiter',
             locale: 'pt_BR',
             type: 'article'
           }
         },
-        threadData
+        threadData // Pass the full thread data
       }
     }
   } catch (error) {
+    // Handle errors gracefully
     return {
       props: {
         metadata: {
           title: 'Post não encontrado',
           description: 'O post que você procura não foi encontrado.',
-          openGraph: {
-            title: 'Post não encontrado',
-            description: 'O post que você procura não foi encontrado.',
-            url: `https://toiter.lpmrn.com/thread/${context.params?.postId}`,
-            siteName: 'Toiter',
-            locale: 'pt_BR',
-            type: 'article'
-          }
-        }
+          openGraph: {/* ... */}
+        },
+        threadData: null
       }
     }
   }
 }
 
-const PostId = ({ metadata }: ThreadPageProps) => {
+const PostId = ({ metadata, threadData }: ThreadPageProps) => {
   const router = useRouter();
-  const { postId, from } = router.query;
-
-  const [parentPost, setParentPost] = useState<PostData | null>(null);
-  const [replies, setReplies] = useState<PostData[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { from } = router.query;
 
   const handleBack = () => {
     if (from) {
@@ -82,30 +75,7 @@ const PostId = ({ metadata }: ThreadPageProps) => {
     }
   };
 
-  const loadThread = async () => {
-    try {
-      setLoading(true);
-      if (!postId) return;
-
-      const data = await getThread(Number(postId), 0, 10);
-      setParentPost(data.parentPost);
-      setReplies(data.childPosts || []);
-    } catch (error) {
-      console.error("Erro ao carregar a thread:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadThread();
-  }, [postId]);
-
-  if (loading) {
-    return <LoadingMessage>Carregando thread...</LoadingMessage>;
-  }
-
-  if (!parentPost) {
+  if (!threadData) {
     return <ErrorMessage>Thread não encontrada.</ErrorMessage>;
   }
 
@@ -114,32 +84,31 @@ const PostId = ({ metadata }: ThreadPageProps) => {
       <Head>
         <title>{metadata.title}</title>
         <meta name="description" content={metadata.description} />
+        
+        {/* OpenGraph */}
         <meta property="og:title" content={metadata.openGraph.title} />
         <meta property="og:description" content={metadata.openGraph.description} />
         <meta property="og:url" content={metadata.openGraph.url} />
+        <meta property="og:type" content={metadata.openGraph.type} />
         <meta property="og:site_name" content={metadata.openGraph.siteName} />
         <meta property="og:locale" content={metadata.openGraph.locale} />
-        <meta property="og:type" content={metadata.openGraph.type} />
+        <meta property="og:image" content={metadata.openGraph.image} />
+        <meta property="og:image:width" content="200" />
+        <meta property="og:image:height" content="200" />
       </Head>
+      
       <Header>
         <BackButton onClick={handleBack}>Voltar</BackButton>
         <Title>Visualização de Thread</Title>
       </Header>
 
-      {/* Post Principal */}
-      <Post
-        post={parentPost}
-      />
-
+      <Post post={threadData.parentPost} />
+      
       <RepliesTitle>Respostas</RepliesTitle>
-
-      {/* Replies */}
-      {replies.length > 0 ? (
-        replies.map((reply) => (
-          <Post
-            key={reply.id}
-            post={reply}
-          />
+      
+      {threadData.childPosts.length > 0 ? (
+        threadData.childPosts.map((reply) => (
+          <Post key={reply.id} post={reply} />
         ))
       ) : (
         <NoRepliesMessage>Sem respostas ainda.</NoRepliesMessage>
@@ -148,8 +117,7 @@ const PostId = ({ metadata }: ThreadPageProps) => {
   );
 };
 
-export default withAuth<ThreadPageProps>(PostId)
-
+export default PostId;
 
 const ThreadContainer = styled.div`
   display: flex;

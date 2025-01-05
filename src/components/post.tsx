@@ -5,10 +5,12 @@ import { useRouter } from 'next/router';
 import { createReply, createRepost, createRepostWithComment, likePost, unlikePost } from "@/services/postService";
 import Modal from "@/components/modal";
 import RepostMenu from "@/components/RepostMenu";
+import { useAuth } from '@/context/AuthContext';
 
 interface PostProps {
     post: PostData;
     onToggleLike?: (postId: number, isLiked: boolean) => void;
+    isAuthenticated?: boolean;
 }
 
 interface ToastProps {
@@ -16,6 +18,7 @@ interface ToastProps {
 }
 
 const Post: React.FC<PostProps> = ({ post }) => {
+    const { isAuthenticated } = useAuth();
     const [isLiked, setIsLiked] = useState(post.isLiked);
     const [likesCount, setLikesCount] = useState(post.likesCount);
     const [isReposted, setIsReposted] = useState(post.isReposted);
@@ -69,27 +72,41 @@ const Post: React.FC<PostProps> = ({ post }) => {
     );
 
     const handleLikeToggle = async (postId: number) => {
+        console.log(`[${new Date().toISOString()}] Like toggle initiated for post ${postId}`);
+        if (!isAuthenticated) {
+            console.log('User not authenticated, redirecting to login');
+            router.push('/auth/login');
+            return;
+        }
         try {
             if (isLiked) {
+                console.log('Attempting to unlike post');
                 const success = await unlikePost(postId);
+                console.log(`Unlike result: ${success}`);
                 if (success) {
                     setIsLiked(false);
                     setLikesCount(likesCount - 1);
                 }
             } else {
+                console.log('Attempting to like post');
                 const success = await likePost(postId);
+                console.log(`Like result: ${success}`);
                 if (success) {
                     setIsLiked(true);
                     setLikesCount(likesCount + 1);
                 }
             }
         } catch (error) {
-            console.error('Erro ao curtir/descurtir:', error);
+            console.error('[LikeError]', { postId, error, timestamp: new Date().toISOString() });
         }
     };
 
     const handleUsernameClick = (e: React.MouseEvent, username: string) => {
         e.stopPropagation();
+        if (!isAuthenticated) {
+            router.push('/auth/login');
+            return;
+        }
         const currentPath = window.location.pathname;
         router.push({
             pathname: `/profile/${username}`,
@@ -98,15 +115,31 @@ const Post: React.FC<PostProps> = ({ post }) => {
     };
 
     const handleReply = () => {
+        console.log(`[${new Date().toISOString()}] Reply initiated for post ${post.id}`);
+        if (!isAuthenticated) {
+            console.log('User not authenticated, redirecting to login');
+            router.push('/auth/login');
+            return;
+        }
         setModalType('reply');
         setModalOpen(true);
     };
 
     const handleRepost = () => {
+        console.log(`[${new Date().toISOString()}] Repost menu opened for post ${post.id}`);
+        if (!isAuthenticated) {
+            console.log('User not authenticated, redirecting to login');
+            router.push('/auth/login');
+            return;
+        }
         setRepostMenuOpen(true);
     };
 
     const handleRepostSimple = async () => {
+        if (!isAuthenticated) {
+            router.push('/auth/login');
+            return;
+        }
         try {
             await createRepost(post.id);
             setIsReposted(true);
@@ -117,25 +150,40 @@ const Post: React.FC<PostProps> = ({ post }) => {
     };
 
     const handleRepostWithComment = () => {
+        if (!isAuthenticated) {
+            router.push('/auth/login');
+            return;
+        }
         setModalType('repostWithComment');
         setModalOpen(true);
         setRepostMenuOpen(false);
     };
 
     const handleSubmit = async (content: string) => {
+        console.log(`[${new Date().toISOString()}] Submitting ${modalType} for post ${post.id}`);
         try {
             if (modalType === 'reply') {
+                console.log('Creating reply', { content });
                 await createReply(post.id, content);
             } else if (modalType === 'repostWithComment') {
+                console.log('Creating repost with comment', { content });
                 await createRepostWithComment(post.id, content);
             }
+            console.log('Submission successful');
             setModalOpen(false);
         } catch (error) {
-            console.error('Erro ao enviar:', error);
+            console.error('[SubmissionError]', {
+                postId: post.id,
+                modalType,
+                content,
+                error,
+                timestamp: new Date().toISOString()
+            });
         }
     };
 
     const handleViewThread = (postId: number) => {
+        console.log(`[${new Date().toISOString()}] Viewing thread for post ${postId}`);
         const currentPath = window.location.pathname;
         router.push({
             pathname: `/thread/${postId}`,
