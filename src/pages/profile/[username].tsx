@@ -24,6 +24,7 @@ const ProfilePage = () => {
   const { username } = router.query;
   const { from } = router.query;
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(false);
   const [posts, setPosts] = useState<PostData[]>([]);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -65,19 +66,48 @@ const ProfilePage = () => {
   };
 
   const loadPosts = async () => {
-    if (!username || !hasMore) return;
+    if (!username || !hasMore || loading) return;
+    setLoading(true);
+
     try {
-      const data = await getPostsByUser(username as string, page, 10);
-      
-      setPosts(prev => {
-        const existingIds = new Set(prev.map(post => post.id));
-        const newPosts = data.content.filter((post: { id: number; }) => !existingIds.has(post.id));
-        return [...prev, ...newPosts];
-      });
-      
-      setHasMore(page < data.totalPages - 1);
+        const data = await getPostsByUser(username as string, page, 10);
+        
+        // Prevent duplicates by checking IDs
+        setPosts(prev => {
+            const existingIds = new Set(prev.map(post => post.id));
+            const newPosts = data.content.filter((post: { id: number; }) => !existingIds.has(post.id));
+            return [...prev, ...newPosts];
+        });
+        
+        setHasMore(page < data.totalPages - 1);
     } catch (error) {
-      console.error('Erro ao carregar posts:', error);
+        console.error('Erro ao carregar posts:', error);
+    } finally {
+        setLoading(false);
+    }
+  };
+
+  // Add scroll listener
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [hasMore, loading]);
+
+  // Load posts when page changes
+  useEffect(() => {
+    if (username && hasMore) {
+        loadPosts();
+    }
+  }, [page, username]);
+
+  const handleScroll = () => {
+    if (!hasMore || loading) return;
+
+    const scrollPosition = window.innerHeight + document.documentElement.scrollTop;
+    const scrollThreshold = document.documentElement.offsetHeight - 100;
+
+    if (scrollPosition >= scrollThreshold) {
+        setPage(prev => prev + 1);
     }
   };
 

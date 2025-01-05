@@ -33,6 +33,46 @@ const Feed = () => {
         }
     };
 
+    const loadPosts = async () => {
+        if (!hasMore || loading) return;
+        setLoading(true);
+
+        try {
+            console.log("Carregando posts, página:", page);
+            const data = await getFeed(page, 10);
+            
+            // Prevent duplicates
+            setPosts((prev) => {
+                const existingIds = new Set(prev.map(post => post.id));
+                const newPosts = data.content.filter((post: { id: number; }) => !existingIds.has(post.id));
+                return [...prev, ...newPosts];
+            });
+
+            const totalPages = Math.ceil(data.totalElements / 10);
+            setHasMore(page + 1 < totalPages);
+        } catch (error) {
+            console.error("Erro ao carregar posts:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleScroll = () => {
+        if (!hasMore || loading) return;
+
+        const scrollPosition = window.innerHeight + document.documentElement.scrollTop;
+        const scrollThreshold = document.documentElement.offsetHeight - 100;
+
+        if (scrollPosition >= scrollThreshold) {
+            setPage(prev => prev + 1);
+        }
+    };
+
+    useEffect(() => {
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, [hasMore, loading]);
+
     const ProfileImage = ({ imageId }: ProfileImageProps) => {
         const [imageUrl, setImageUrl] = useState<string>('');
     
@@ -69,25 +109,6 @@ const Feed = () => {
             setModalOpen(false);
         } catch (error) {
             console.error('Erro ao criar novo post:', error);
-        }
-    };
-
-    const loadPosts = async () => {
-        if (!hasMore || loading) return;
-        setLoading(true);
-
-        try {
-            console.log("Carregando posts, página:", page);
-            const data = await getFeed(page, 10);
-            setPosts((prev) => [...prev, ...data.content]);
-
-            const totalPages = Math.ceil(data.totalElements / 10);
-            setHasMore(page + 1 < totalPages);
-            console.log("Posts carregados:", data.content.length);
-        } catch (error) {
-            console.error("Erro ao carregar posts:", error);
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -282,12 +303,4 @@ const ProfileButton = styled.button`
     &:hover {
         opacity: 0.8;
     }
-`;
-
-const ProfileImage = styled.img`
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid ${({ theme }) => theme.colors.primary};
 `;
