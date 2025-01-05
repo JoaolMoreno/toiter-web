@@ -2,8 +2,8 @@ import React from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
 
-const withAuth = (WrappedComponent: React.FC) => {
-    const RequiresAuth = (props: any) => {
+const withAuth = <P extends object>(WrappedComponent: React.ComponentType<P>): React.FC<P> => {
+    const RequiresAuth: React.FC<P> = (props) => {
         const { isAuthenticated } = useAuth();
         const router = useRouter();
 
@@ -13,7 +13,7 @@ const withAuth = (WrappedComponent: React.FC) => {
                 console.log("Usuário não autenticado. Redirecionando para login...");
                 router.replace('/auth/login');
             }
-        }, [isAuthenticated]);
+        }, [isAuthenticated, router]);
 
         if (isAuthenticated === undefined) {
             console.log("Autenticação pendente...");
@@ -28,8 +28,11 @@ const withAuth = (WrappedComponent: React.FC) => {
         return null;
     };
 
+    RequiresAuth.displayName = `withAuth(${
+        WrappedComponent.displayName || WrappedComponent.name || 'Component'
+    })`;
+
     return RequiresAuth;
 };
 
 export default withAuth;
-
