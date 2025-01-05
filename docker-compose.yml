@@ -187,6 +187,7 @@ services:
     environment:
       NODE_ENV: production
       SERVICE_POST_URL: http://toiter-post-service:9991/
+      NEXT_PUBLIC_HOST: ${SERVER_URL}
     depends_on:
       - postgres
       - kafka
