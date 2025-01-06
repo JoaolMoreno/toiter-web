@@ -5,9 +5,14 @@ import RegisterForm from '../../components/auth/RegisterForm';
 const RegisterPage = () => {
     return (
         <Container>
+            <head>
+                <meta charSet="UTF-8"/>
+                <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+                <title>Crie sua Conta</title>
+            </head>
             <Title>Toiter</Title>
             <Subtitle>Crie sua conta</Subtitle>
-            <RegisterForm />
+            <RegisterForm/>
             <Redirect>
                 Já tem uma conta? <a href="/auth/login">Faça login</a>
             </Redirect>
@@ -18,12 +23,12 @@ const RegisterPage = () => {
 export default RegisterPage;
 
 const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-  background-color: ${({ theme }) => theme.colors.background};
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background-color: ${({ theme }) => theme.colors.background};
 `;
 
 const Title = styled.h1`

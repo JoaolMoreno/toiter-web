@@ -5,9 +5,14 @@ import LoginForm from '../../components/auth/LoginForm';
 const LoginPage = () => {
     return (
         <Container>
+            <head>
+                <meta charSet="UTF-8"/>
+                <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+                <title>Login</title>
+            </head>
             <Title>Toiter</Title>
             <Subtitle>Faça login na sua conta</Subtitle>
-            <LoginForm />
+            <LoginForm/>
             <Redirect>
                 Não tem uma conta? <a href="/auth/register">Registre-se</a>
             </Redirect>
@@ -18,11 +23,11 @@ const LoginPage = () => {
 export default LoginPage;
 
 const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
   background-color: ${({ theme }) => theme.colors.background};
 `;
 

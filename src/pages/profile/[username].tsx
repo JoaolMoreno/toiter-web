@@ -41,7 +41,7 @@ const ProfilePage = () => {
     setImageEditType('profile');
     setImageModalOpen(true);
   };
-  
+
   const handleEditHeaderImage = () => {
     setImageEditType('header');
     setImageModalOpen(true);
@@ -70,20 +70,20 @@ const ProfilePage = () => {
     setLoading(true);
 
     try {
-        const data = await getPostsByUser(username as string, page, 10);
-        
-        // Prevent duplicates by checking IDs
-        setPosts(prev => {
-            const existingIds = new Set(prev.map(post => post.id));
-            const newPosts = data.content.filter((post: { id: number; }) => !existingIds.has(post.id));
-            return [...prev, ...newPosts];
-        });
-        
-        setHasMore(page < data.totalPages - 1);
+      const data = await getPostsByUser(username as string, page, 10);
+
+      // Prevent duplicates by checking IDs
+      setPosts(prev => {
+        const existingIds = new Set(prev.map(post => post.id));
+        const newPosts = data.content.filter((post: { id: number; }) => !existingIds.has(post.id));
+        return [...prev, ...newPosts];
+      });
+
+      setHasMore(page < data.totalPages - 1);
     } catch (error) {
-        console.error('Erro ao carregar posts:', error);
+      console.error('Erro ao carregar posts:', error);
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
   };
 
@@ -96,7 +96,7 @@ const ProfilePage = () => {
   // Load posts when page changes
   useEffect(() => {
     if (username && hasMore) {
-        loadPosts();
+      loadPosts();
     }
   }, [page, username]);
 
@@ -107,7 +107,7 @@ const ProfilePage = () => {
     const scrollThreshold = document.documentElement.offsetHeight - 100;
 
     if (scrollPosition >= scrollThreshold) {
-        setPage(prev => prev + 1);
+      setPage(prev => prev + 1);
     }
   };
 
@@ -122,12 +122,12 @@ const ProfilePage = () => {
       setProfile(prev =>
         prev
           ? {
-              ...prev,
-              isFollowing: !prev.isFollowing,
-              followersCount: prev.isFollowing
-                ? prev.followersCount - 1
-                : prev.followersCount + 1,
-            }
+            ...prev,
+            isFollowing: !prev.isFollowing,
+            followersCount: prev.isFollowing
+              ? prev.followersCount - 1
+              : prev.followersCount + 1,
+          }
           : null
       );
     } catch (error) {
@@ -151,6 +151,11 @@ const ProfilePage = () => {
 
   return (
     <Container>
+      <head>
+        <meta charSet="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Toiter</title>
+      </head>
       <Header>
         <BackButton onClick={handleBack}>Voltar</BackButton>
       </Header>
@@ -163,8 +168,8 @@ const ProfilePage = () => {
         <ProfileImageWrapper>
           <ProfileImageContainer onClick={isOwnProfile ? handleEditProfileImage : undefined}>
             <ProfileImage
-                src={profile.profileImageUrl}
-                alt={profile.username}
+              src={profile.profileImageUrl}
+              alt={profile.username}
             />
           </ProfileImageContainer>
         </ProfileImageWrapper>
@@ -212,13 +217,13 @@ const ProfilePage = () => {
           </LoadMoreButton>
         )}
       </PostsSection>
-      <EditProfileModal 
+      <EditProfileModal
         isOpen={isProfileModalOpen}
         onClose={() => setProfileModalOpen(false)}
         onSubmit={async (data) => {
           try {
             await updateUserProfile(data);
-            setProfile(prev => prev ? {...prev, ...data} : prev);
+            setProfile(prev => prev ? { ...prev, ...data } : prev);
             setProfileModalOpen(false);
           } catch (error) {
             console.error('Erro ao atualizar perfil:', error);
@@ -228,28 +233,28 @@ const ProfilePage = () => {
         currentBio={profile.bio}
       />
 
-    <EditImageModal
-      isOpen={isImageModalOpen}
-      onClose={() => setImageModalOpen(false)}
-      onSubmit={async (file) => {
-        try {
-          if (imageEditType === 'profile') {
-            await updateProfileImage(file);
-          } else {
-            await updateHeaderImage(file);
+      <EditImageModal
+        isOpen={isImageModalOpen}
+        onClose={() => setImageModalOpen(false)}
+        onSubmit={async (file) => {
+          try {
+            if (imageEditType === 'profile') {
+              await updateProfileImage(file);
+            } else {
+              await updateHeaderImage(file);
+            }
+            await loadProfile();
+            setImageModalOpen(false);
+          } catch (error) {
+            console.error('Erro ao atualizar imagem:', error);
           }
-          await loadProfile();
-          setImageModalOpen(false);
-        } catch (error) {
-          console.error('Erro ao atualizar imagem:', error);
-        }
-      }}
-      type={imageEditType}
-      currentImage={imageEditType === 'profile' 
-        ? profile?.profileImageUrl 
-        : profile?.headerImageUrl}
-    />
-  </Container>
+        }}
+        type={imageEditType}
+        currentImage={imageEditType === 'profile'
+          ? profile?.profileImageUrl
+          : profile?.headerImageUrl}
+      />
+    </Container>
   );
 };
 
@@ -333,8 +338,8 @@ const ProfileImageContainer = styled.div`
 
   &:hover {
     ${props =>
-      props.onClick &&
-      `
+    props.onClick &&
+    `
       &::after {
         content: '✏️';
         position: absolute;
