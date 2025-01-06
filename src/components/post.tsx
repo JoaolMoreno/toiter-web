@@ -278,7 +278,7 @@ const Post: React.FC<PostProps> = ({ post }) => {
                                 <ActionButton onClick={handleShare}>
                                     <ShareIcon />
                                 </ActionButton>
-                                <ToastNotification visible={showToast}>Link Copiado!</ToastNotification>
+                                <ToastNotification $visible={showToast}>Link Copiado!</ToastNotification>
                             </ShareWrapper>
                         </ActionButtons>
                     </RightColumn>
@@ -448,7 +448,7 @@ const ShareWrapper = styled.div`
     position: relative;
 `;
 
-const ToastNotification = styled.div<{ visible: boolean }>`
+const ToastNotification = styled.div<{ $visible: boolean }>`
     position: absolute;
     bottom: 100%;
     left: 50%;
@@ -458,7 +458,8 @@ const ToastNotification = styled.div<{ visible: boolean }>`
     padding: 8px 12px;
     border-radius: 4px;
     font-size: 14px;
-    opacity: ${({ visible }) => (visible ? 1 : 0)};
+    opacity: ${props => props.$visible ? 1 : 0};
+    visibility: ${props => props.$visible ? 'visible' : 'hidden'};
     transition: opacity 0.2s;
     pointer-events: none;
     white-space: nowrap;
