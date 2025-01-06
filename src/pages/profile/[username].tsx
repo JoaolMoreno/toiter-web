@@ -17,6 +17,7 @@ import { PostData } from '@/models/PostData';
 import { useAuth } from '@/context/AuthContext';
 import { EditProfileModal } from '@/components/editProfileModal';
 import { EditImageModal } from '@/components/editImageModal';
+import Head from 'next/head';
 
 const ProfilePage = () => {
   const router = useRouter();
@@ -141,21 +142,15 @@ const ProfilePage = () => {
     }
   }, [username]);
 
-  useEffect(() => {
-    if (username && hasMore) {
-      loadPosts();
-    }
-  }, [page]);
-
   if (!profile) return <LoadingMessage>Carregando perfil...</LoadingMessage>;
 
   return (
     <Container>
-      <head>
+      <Head>
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Toiter</title>
-      </head>
+        <title>{profile.username} no Toiter</title>
+      </Head>
       <Header>
         <BackButton onClick={handleBack}>Voltar</BackButton>
       </Header>
