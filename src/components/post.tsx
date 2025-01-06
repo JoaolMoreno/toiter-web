@@ -20,23 +20,34 @@ const Post: React.FC<PostProps> = ({ post }) => {
     const [isReposted, setIsReposted] = useState(post.isReposted);
     const [isModalOpen, setModalOpen] = useState(false);
     const [isRepostMenuOpen, setRepostMenuOpen] = useState(false);
+    const [isCardClickable, setCardClickable] = useState(true);
     const [modalType, setModalType] = useState<'reply' | 'repostWithComment'>();
     const router = useRouter();
     const [showToast, setShowToast] = useState(false);
 
     const formatTimestamp = (dateString: string): string => {
-        const date = new Date(dateString);
+        const date = new Date(`${dateString}Z`);
         const now = new Date();
+
         const diffMs = now.getTime() - date.getTime();
         const diffMins = Math.floor(diffMs / (1000 * 60));
         const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
 
-        if (diffMins < 60) {
+        if (diffMins < 0) {
+            return 'Agora mesmo';
+        } else if (diffMins < 60) {
             return `${diffMins}m`;
         } else if (diffHours < 24) {
             return `${diffHours}h`;
         } else {
-            return date.toLocaleDateString('pt-BR');
+            return new Intl.DateTimeFormat('pt-BR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                timeZone: 'UTC'
+            }).format(date);
         }
     };
 
@@ -111,6 +122,7 @@ const Post: React.FC<PostProps> = ({ post }) => {
         }
         setModalType('reply');
         setModalOpen(true);
+        setCardClickable(false);
     };
 
     const handleRepost = () => {
@@ -119,6 +131,7 @@ const Post: React.FC<PostProps> = ({ post }) => {
             return;
         }
         setRepostMenuOpen(true);
+        setCardClickable(false);
     };
 
     const handleRepostSimple = async () => {
@@ -130,6 +143,7 @@ const Post: React.FC<PostProps> = ({ post }) => {
             await createRepost(post.id);
             setIsReposted(true);
             setRepostMenuOpen(false);
+            setCardClickable(true);
         } catch (error) {
             console.error('Erro ao repostar:', error);
         }
@@ -143,6 +157,7 @@ const Post: React.FC<PostProps> = ({ post }) => {
         setModalType('repostWithComment');
         setModalOpen(true);
         setRepostMenuOpen(false);
+        setCardClickable(false);
     };
 
     const handleSubmit = async (content: string) => {
@@ -153,12 +168,24 @@ const Post: React.FC<PostProps> = ({ post }) => {
                 await createRepostWithComment(post.id, content);
             }
             setModalOpen(false);
+            setCardClickable(true);
         } catch (error) {
             console.error('Erro ao enviar:', error);
         }
     };
 
+    const handleModalClose = () => {
+        setModalOpen(false);
+        setCardClickable(true);
+    };
+
+    const handleRepostMenuClose = () => {
+        setRepostMenuOpen(false);
+        setCardClickable(true);
+    };
+
     const handleViewThread = (postId: number) => {
+        if (!isCardClickable) return;
         const currentPath = window.location.pathname;
         router.push({
             pathname: `/thread/${postId}`,
@@ -260,14 +287,14 @@ const Post: React.FC<PostProps> = ({ post }) => {
 
                 <RepostMenu
                     isOpen={isRepostMenuOpen}
-                    onClose={() => setRepostMenuOpen(false)}
+                    onClose={handleRepostMenuClose}
                     onRepost={handleRepostSimple}
                     onQuoteRepost={handleRepostWithComment}
                 />
 
                 <Modal
                     isOpen={isModalOpen}
-                    onClose={() => setModalOpen(false)}
+                    onClose={handleModalClose}
                     onSubmit={handleSubmit}
                     postType={modalType!}
                     parentPostContent={showData?.content}
