@@ -7,6 +7,7 @@ import {useFeedContext} from "@/context/FeedProvider";
 import withAuth from "@/hoc/withAuth";
 import Modal from "@/components/modal";
 import { createPost } from '@/services/postService';
+import Head from 'next/head';
 
 const Feed = () => {
     const { isAuthenticated} = useAuth();
@@ -80,11 +81,9 @@ const Feed = () => {
 
     return (
         <Container>
-            <head>
-                <meta charSet="UTF-8"/>
-                <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+            <Head>
                 <title>Feed</title>
-            </head>
+            </Head>
             <FeedContainer>
                 <FeedTitle>Seu Feed</FeedTitle>
                 <CreatePostContainer>

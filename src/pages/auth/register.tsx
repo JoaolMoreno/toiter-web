@@ -1,15 +1,14 @@
 import React from 'react';
 import styled from 'styled-components';
 import RegisterForm from '../../components/auth/RegisterForm';
+import Head from 'next/head';
 
 const RegisterPage = () => {
     return (
         <Container>
-            <head>
-                <meta charSet="UTF-8"/>
-                <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+            <Head>
                 <title>Crie sua Conta</title>
-            </head>
+            </Head>
             <Title>Toiter</Title>
             <Subtitle>Crie sua conta</Subtitle>
             <RegisterForm/>

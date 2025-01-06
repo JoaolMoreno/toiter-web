@@ -1,15 +1,14 @@
 import React from 'react';
 import styled from 'styled-components';
 import LoginForm from '../../components/auth/LoginForm';
+import Head from 'next/head';
 
 const LoginPage = () => {
     return (
         <Container>
-            <head>
-                <meta charSet="UTF-8"/>
-                <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+            <Head>
                 <title>Login</title>
-            </head>
+            </Head>
             <Title>Toiter</Title>
             <Subtitle>Faça login na sua conta</Subtitle>
             <LoginForm/>
