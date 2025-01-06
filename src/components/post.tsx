@@ -2,19 +2,15 @@ import React, { useState } from 'react';
 import { PostData } from '@/models/PostData';
 import styled from 'styled-components';
 import { useRouter } from 'next/router';
-import { createReply, createRepost, createRepostWithComment, likePost, unlikePost } from "@/services/postService";
-import Modal from "@/components/modal";
-import RepostMenu from "@/components/RepostMenu";
+import { createReply, createRepost, createRepostWithComment, likePost, unlikePost } from '@/services/postService';
+import Modal from '@/components/modal';
+import RepostMenu from '@/components/RepostMenu';
 import { useAuth } from '@/context/AuthContext';
 
 interface PostProps {
     post: PostData;
     onToggleLike?: (postId: number, isLiked: boolean) => void;
     isAuthenticated?: boolean;
-}
-
-interface ToastProps {
-    visible: boolean;
 }
 
 const Post: React.FC<PostProps> = ({ post }) => {
@@ -72,36 +68,30 @@ const Post: React.FC<PostProps> = ({ post }) => {
     );
 
     const handleLikeToggle = async (postId: number) => {
-        console.log(`[${new Date().toISOString()}] Like toggle initiated for post ${postId}`);
         if (!isAuthenticated) {
-            console.log('User not authenticated, redirecting to login');
             router.push('/auth/login');
             return;
         }
         try {
             if (isLiked) {
-                console.log('Attempting to unlike post');
                 const success = await unlikePost(postId);
-                console.log(`Unlike result: ${success}`);
                 if (success) {
                     setIsLiked(false);
                     setLikesCount(likesCount - 1);
                 }
             } else {
-                console.log('Attempting to like post');
                 const success = await likePost(postId);
-                console.log(`Like result: ${success}`);
                 if (success) {
                     setIsLiked(true);
                     setLikesCount(likesCount + 1);
                 }
             }
         } catch (error) {
-            console.error('[LikeError]', { postId, error, timestamp: new Date().toISOString() });
+            console.error('Erro ao curtir:', error);
         }
     };
 
-    const handleUsernameClick = (e: React.MouseEvent, username: string) => {
+    const handleProfileClick = (e: React.MouseEvent, username: string) => {
         e.stopPropagation();
         if (!isAuthenticated) {
             router.push('/auth/login');
@@ -115,9 +105,7 @@ const Post: React.FC<PostProps> = ({ post }) => {
     };
 
     const handleReply = () => {
-        console.log(`[${new Date().toISOString()}] Reply initiated for post ${post.id}`);
         if (!isAuthenticated) {
-            console.log('User not authenticated, redirecting to login');
             router.push('/auth/login');
             return;
         }
@@ -126,9 +114,7 @@ const Post: React.FC<PostProps> = ({ post }) => {
     };
 
     const handleRepost = () => {
-        console.log(`[${new Date().toISOString()}] Repost menu opened for post ${post.id}`);
         if (!isAuthenticated) {
-            console.log('User not authenticated, redirecting to login');
             router.push('/auth/login');
             return;
         }
@@ -160,34 +146,23 @@ const Post: React.FC<PostProps> = ({ post }) => {
     };
 
     const handleSubmit = async (content: string) => {
-        console.log(`[${new Date().toISOString()}] Submitting ${modalType} for post ${post.id}`);
         try {
             if (modalType === 'reply') {
-                console.log('Creating reply', { content });
                 await createReply(post.id, content);
             } else if (modalType === 'repostWithComment') {
-                console.log('Creating repost with comment', { content });
                 await createRepostWithComment(post.id, content);
             }
-            console.log('Submission successful');
             setModalOpen(false);
         } catch (error) {
-            console.error('[SubmissionError]', {
-                postId: post.id,
-                modalType,
-                content,
-                error,
-                timestamp: new Date().toISOString()
-            });
+            console.error('Erro ao enviar:', error);
         }
     };
 
     const handleViewThread = (postId: number) => {
-        console.log(`[${new Date().toISOString()}] Viewing thread for post ${postId}`);
         const currentPath = window.location.pathname;
         router.push({
             pathname: `/thread/${postId}`,
-            query: { from: currentPath }
+            query: { from: currentPath },
         });
     };
 
@@ -199,86 +174,97 @@ const Post: React.FC<PostProps> = ({ post }) => {
 
     return (
         <Page>
-            <PostContainer onClick={() => handleViewThread(post.id)}>
+            <PostWrapper onClick={() => handleViewThread(post.id)}>
                 {isRepost && !isRepostWithComment && (
-                    <RepostIndicator>
-                        🔁 Repostado por <strong>{post.username}</strong>
-                    </RepostIndicator>
-                )}
-                <UserHeader>
-                    <Username onClick={(e) => handleUsernameClick(e, showData?.username)}>
-                        {showData?.username}
-                    </Username>
-                    <TimeStamp>{formatTimestamp(showData?.createdAt)}</TimeStamp>
-                </UserHeader>
-                <Content>{showData?.content}</Content>
-
-                {/* Container do Post Original */}
-                {isRepostWithComment && post.repostPostData && (
-                    <RepostContainer
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            handleViewThread(post.repostPostData!.id);
-                        }}
-                    >
-                        <UserHeader>
-                            <Username>{post.repostPostData!.username}</Username>
-                            <TimeStamp>{formatTimestamp(post.repostPostData.createdAt)}</TimeStamp>
-                        </UserHeader>
-                        <Content>{post.repostPostData!.content}</Content>
-                        <Metrics>
-                            Curtidas: {post.repostPostData!.likesCount} | Respostas: {post.repostPostData!.repliesCount} | Reposts: {post.repostPostData!.repostsCount}
-                        </Metrics>
-                    </RepostContainer>
+                    <RepostBanner>
+                        <RepostIcon>🔁</RepostIcon>
+                        <span>Repostado por <strong>{post.username}</strong></span>
+                    </RepostBanner>
                 )}
 
-                <Metrics>
-                    Curtidas: {likesCount} | Respostas: {showData?.repliesCount} | Reposts: {showData?.repostsCount}
-                </Metrics>
+                <MainContent>
+                    <LeftColumn>
+                        <Avatar src={showData.profilePicture || '/default-profile.png'} alt={showData?.username} onClick={(e) => handleProfileClick(e, showData?.username)} />
+                    </LeftColumn>
 
-                <ButtonRow>
-                    <LikeButton onClick={(e) => {
-                        e.stopPropagation();
-                        handleLikeToggle(post.id);
-                    }}>
-                        {isLiked ? '❤️ Descurtir' : '🤍 Curtir'}
-                    </LikeButton>
+                    <RightColumn>
+                        <HeaderRow>
+                            <UserName onClick={(e) => handleProfileClick(e, showData?.username)}>{showData?.username}</UserName>
+                            <PostTime>{formatTimestamp(showData?.createdAt)}</PostTime>
+                        </HeaderRow>
 
-                    <ReplyButton onClick={(e) => {
-                        e.stopPropagation();
-                        handleReply();
-                    }}>
-                        💬 Responder
-                    </ReplyButton>
+                        <PostText>{showData?.content}</PostText>
 
-                    <RepostButton
-                        style={{ backgroundColor: isReposted ? '#95d5b2' : undefined }}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            handleRepost();
-                        }}
-                    >
-                        🔁 Repostar
-                    </RepostButton>
-                    <ShareContainer>
-                        <Toast visible={showToast}>Link Copiado!</Toast>
-                        <ShareButton onClick={handleShare}>
-                            <ShareIcon />
-                        </ShareButton>
-                    </ShareContainer>
-                </ButtonRow>
-            </PostContainer>
+                        {isRepostWithComment && post.repostPostData && (
+                            <QuotedPost>
+                                <QuotedHeader>
+                                    <QuotedAvatar
+                                        src={post.repostPostData.profilePicture || '/default-profile.png'}
+                                        alt={post.repostPostData.username}
+                                        onClick={(e) => {
+                                            if (post.repostPostData?.username) {
+                                                handleProfileClick(e, post.repostPostData.username);
+                                            }
+                                        }}
+                                    />
+                                    <QuotedUserInfo>
+                                        <UserName onClick={(e) => {
+                                            if (post.repostPostData?.username) {
+                                                handleProfileClick(e, post.repostPostData.username);
+                                            }
+                                        }}>{post.repostPostData?.username}</UserName>
+                                        <PostTime>{formatTimestamp(post.repostPostData.createdAt)}</PostTime>
+                                    </QuotedUserInfo>
+                                </QuotedHeader>
+                                <PostText>{post.repostPostData?.content}</PostText>
+                            </QuotedPost>
+                        )}
 
-            {isRepostMenuOpen && (
+                        <ActionButtons>
+                            <ActionButton onClick={(e) => {
+                                e.stopPropagation();
+                                handleLikeToggle(post.id);
+                            }}>
+                                {isLiked ? '❤️' : '🤍'}
+                                <ActionMetric>{likesCount}</ActionMetric>
+                            </ActionButton>
+
+                            <ActionButton onClick={(e) => {
+                                e.stopPropagation();
+                                handleReply();
+                            }}>
+                                💬
+                                <ActionMetric>{showData?.repliesCount}</ActionMetric>
+                            </ActionButton>
+
+                            <ActionButton
+                                isActive={isReposted}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleRepost();
+                                }}
+                            >
+                                🔁
+                                <ActionMetric>{showData?.repostsCount}</ActionMetric>
+                            </ActionButton>
+
+                            <ShareWrapper>
+                                <ActionButton onClick={handleShare}>
+                                    <ShareIcon />
+                                </ActionButton>
+                                <ToastNotification visible={showToast}>Link Copiado!</ToastNotification>
+                            </ShareWrapper>
+                        </ActionButtons>
+                    </RightColumn>
+                </MainContent>
+
                 <RepostMenu
                     isOpen={isRepostMenuOpen}
                     onClose={() => setRepostMenuOpen(false)}
                     onRepost={handleRepostSimple}
                     onQuoteRepost={handleRepostWithComment}
                 />
-            )}
 
-            {isModalOpen && (
                 <Modal
                     isOpen={isModalOpen}
                     onClose={() => setModalOpen(false)}
@@ -286,196 +272,176 @@ const Post: React.FC<PostProps> = ({ post }) => {
                     postType={modalType!}
                     parentPostContent={showData?.content}
                     parentUsername={showData?.username}
-                    title={
-                        modalType === 'reply'
-                            ? 'Responder'
-                            : modalType === 'repostWithComment'
-                                ? 'Repostar com Comentário'
-                                : ''
-                    }
+                    title={modalType === 'reply' ? 'Responder' : 'Repostar com Comentário'}
                 />
-            )}
+            </PostWrapper>
         </Page>
     );
-}
+};
 
 export default Post;
 
-export const Page = styled.div`
+const Page = styled.div`
     display: flex;
     flex-direction: column;
     align-items: center;
     font-family: Arial, sans-serif;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 0 16px;
 `;
 
-const RepostIndicator = styled.div`
-  color: ${({ theme }) => theme.colors.textLight};
-  font-size: ${({ theme }) => theme.fontSizes.small};
-  margin-bottom: 8px;
-`;
-
-const RepostContainer = styled.div`
-  background-color: ${({ theme }) => theme.colors.backgroundAlt};
-  border: 1px solid ${({ theme }) => theme.colors.primary};
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  border-radius: 8px;
-  padding: 12px;
-  margin-top: 12px;
-  margin-bottom: 12px;
-`;
-
-const PostContainer = styled.div`
-  width: 100%;
-  max-width: 600px;
-  background-color: ${({ theme }) => theme.colors.background};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 16px;
-  transition: all 0.2s ease;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-
-  &:hover {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  }
-`;
-
-const UserHeader = styled.div`
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin-bottom: 8px;
-`;
-
-const Username = styled.span`
-  color: ${({ theme }) => theme.colors.primary};
-  font-weight: bold;
-  cursor: pointer;
-  &:hover {
-    text-decoration: underline;
-  }
-`;
-
-const TimeStamp = styled.span`
-  color: ${({ theme }) => theme.colors.textLight};
-  font-size: ${({ theme }) => theme.fontSizes.small};
-`;
-
-const Content = styled.p`
-  width: 100%;
-  text-align: center;
-  color: ${({ theme }) => theme.colors.text};
-  font-size: ${({ theme }) => theme.fontSizes.regular};
-  line-height: 1.5;
-  margin-bottom: 16px;
-`;
-
-const Metrics = styled.small`
-  color: ${({ theme }) => theme.colors.textLight};
-  font-size: ${({ theme }) => theme.fontSizes.small};
-  width: 100%;
-  text-align: center;
-`;
-
-const ButtonRow = styled.div`
-  display: flex;
-  gap: 10px;
-  margin-top: 16px;
-  width: 100%;
-  justify-content: center;
-`;
-
-const LikeButton = styled.button`
-    background-color: #f8d7da;
-    border: none;
-    border-radius: 4px;
-    color: #721c24;
-    padding: 5px 10px;
+const PostWrapper = styled.article`
+    width: 100%;
+    padding: 16px;
+    border-bottom: 1px solid ${({ theme }) => theme.colors.border};
     cursor: pointer;
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    transition: background-color 0.2s;
 
     &:hover {
-        background-color: #f5c6cb;
-    }
-`;
-const ReplyButton = styled.button`
-    background-color: #d4edda;
-    border: none;
-    border-radius: 4px;
-    color: #155724;
-    padding: 5px 10px;
-    cursor: pointer;
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    &:hover {
-        background-color: #c3e6cb;
+        background-color: rgba(0, 0, 0, 0.03);
     }
 `;
 
-const RepostButton = styled.button`
-    background-color: #cce5ff;
-    border: none;
-    border-radius: 4px;
-    color: #004085;
-    padding: 5px 10px;
-    cursor: pointer;
-    font-size: 14px;
+const RepostBanner = styled.div`
     display: flex;
     align-items: center;
-    justify-content: center;
-
-    &:hover {
-        background-color: #b8daff;
-    }
+    gap: 8px;
+    color: ${({ theme }) => theme.colors.textLight};
+    font-size: 14px;
+    margin-bottom: 8px;
 `;
 
-const ShareButton = styled.button`
-    background-color: ${({ theme }) => theme.colors.primary};
-    border: none;
-    border-radius: 4px;
-    color: white;
-    padding: 5px 10px;
-    cursor: pointer;
-    font-size: 14px;
+const MainContent = styled.div`
+    display: grid;
+    grid-template-columns: 48px 1fr;
+    gap: 12px;
+`;
+
+const LeftColumn = styled.div`
+    flex-shrink: 0;
+`;
+
+const RightColumn = styled.div`
     display: flex;
-    align-items: center;
-    justify-content: center;
+    flex-direction: column;
     gap: 4px;
+`;
 
+const Avatar = styled.img`
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+`;
+
+const HeaderRow = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 8px;
+`;
+
+const UserName = styled.span`
+    font-weight: 700;
+    color: ${({ theme }) => theme.colors.text};
+    
     &:hover {
-        background-color: ${({ theme }) => theme.colors.secondary};
+        text-decoration: underline;
     }
 `;
 
-const Toast = styled.div<ToastProps>`
+const PostTime = styled.span`
+    color: ${({ theme }) => theme.colors.textLight};
+    font-size: 14px;
+`;
+
+const PostText = styled.p`
+    color: ${({ theme }) => theme.colors.text};
+    font-size: 16px;
+    line-height: 1.6;
+    margin: 8px 0;
+    white-space: pre-wrap;
+`;
+
+const QuotedPost = styled.div`
+    border: 1px solid ${({ theme }) => theme.colors.border};
+    border-radius: 12px;
+    padding: 12px;
+    margin-top: 8px;
+`;
+
+const QuotedHeader = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+`;
+
+const QuotedAvatar = styled.img`
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+`;
+
+const QuotedUserInfo = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 4px;
+`;
+
+const ActionButtons = styled.div`
+    display: flex;
+    justify-content: space-between;
+    max-width: 425px;
+    margin-top: 12px;
+`;
+
+const ActionButton = styled.button<{ isActive?: boolean }>`
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border: none;
+    background: none;
+    color: ${({ theme, isActive }) => isActive ? theme.colors.primary : theme.colors.textLight};
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 18px;
+
+    &:hover {
+        color: ${({ theme }) => theme.colors.primary};
+        background-color: ${({ theme }) => `${theme.colors.primary}10`};
+        border-radius: 50px;
+    }
+`;
+
+const ActionMetric = styled.span`
+    font-size: 16px;
+`;
+
+const ShareWrapper = styled.div`
+    position: relative;
+`;
+
+const ToastNotification = styled.div<{ visible: boolean }>`
     position: absolute;
     bottom: 100%;
     left: 50%;
     transform: translateX(-50%);
-    background-color: #333;
-    color: white;
+    background-color: ${({ theme }) => theme.colors.text};
+    color: black;
     padding: 8px 12px;
     border-radius: 4px;
     font-size: 14px;
-    margin-bottom: 8px;
-    opacity: ${({ visible }) => visible ? '1' : '0'};
+    opacity: ${({ visible }) => (visible ? 1 : 0)};
     transition: opacity 0.2s;
+    pointer-events: none;
+    white-space: nowrap;
 `;
 
-const ShareContainer = styled.div`
-    position: relative;
-    display: inline-block;
+const RepostIcon = styled.span`
+    color: ${({ theme }) => theme.colors.textLight};
+    font-size: 14px;
+    margin-right: 4px;
+    display: inline-flex;
+    align-items: center;
 `;

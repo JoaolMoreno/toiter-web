@@ -118,61 +118,67 @@ const Feed = () => {
 export default withAuth(Feed);
 
 export const Container = styled.div`
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: Arial, sans-serif;
     background-color: ${({ theme }) => theme.colors.background};
-    min-height: 100%;
-    width: 100%;
+    min-height: 100vh;
 `;
 
 export const FeedContainer = styled.div`
+    width: 100%;
+    max-width: 600px;
     margin: 0 auto;
-    padding: 20px;
-    max-width: 900px;
+    padding: 0 16px;
 `;
 
 export const FeedTitle = styled.h1`
-  color: ${({ theme }) => theme.colors.text};
+    color: ${({ theme }) => theme.colors.text};
+    font-size: ${({ theme }) => theme.fontSizes.xlarge};
+    padding: 16px 0;
+    border-bottom: 1px solid ${({ theme }) => theme.colors.border};
 `;
 
 export const CreatePostContainer = styled.div`
-  background-color: ${({ theme }) => theme.colors.backgroundAlt};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: 12px;
-  padding: 16px;
-  margin: 20px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-
-  &:hover {
-    border-color: ${({ theme }) => theme.colors.primary};
-  }
+    width: 100%;
+    padding: 16px;
+    border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+    background-color: ${({ theme }) => theme.colors.backgroundElevated};
+    border-radius: 8px;
+    margin-bottom: 16px;
 `;
 
-export const CreatePostInput = styled.input`
-  background-color: ${({ theme }) => theme.colors.backgroundElevated};
-  color: ${({ theme }) => theme.colors.text};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: 8px;
-  padding: 12px;
-  font-size: ${({ theme }) => theme.fontSizes.regular};
-  
-  &:focus {
-    outline: none;
-    border-color: ${({ theme }) => theme.colors.primary};
-  }
+const CreatePostInput = styled.textarea`
+    width: 100%;
+    min-height: 100px;
+    padding: 12px;
+    border: 1px solid ${({ theme }) => theme.colors.border};
+    border-radius: 8px;
+    background-color: transparent;
+    color: ${({ theme }) => theme.colors.text};
+    font-size: 16px;
+    resize: none;
+    
+    &:focus {
+        outline: none;
+        border-color: ${({ theme }) => theme.colors.primary};
+    }
 `;
 
-export const CreatePostButton = styled.button`
-    background-color: #95d5b2;
+const CreatePostButton = styled.button`
+    padding: 12px 24px;
     border: none;
-    border-radius: 4px;
-    color: #081c15;
-    padding: 10px 15px;
+    border-radius: 24px;
+    background-color: ${({ theme }) => theme.colors.primary};
+    color: white;
+    font-weight: bold;
     cursor: pointer;
-    font-size: 14px;
+    align-self: flex-end;
+    transition: background-color 0.2s;
+
     &:hover {
-        background-color: #74c69d;
+        background-color: ${({ theme }) => theme.colors.primaryHover};
     }
 `;
 
