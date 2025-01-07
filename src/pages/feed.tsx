@@ -65,6 +65,11 @@ const Feed = () => {
         setModalOpen(true);
     };
 
+    const handleModalClose = () => {
+        setModalOpen(false);
+        setInputContent('');
+    };
+
     const handleSubmitPost = async (content: string) => {
         try {
             const newPost = await createPost(content);
@@ -109,7 +114,7 @@ const Feed = () => {
             {isModalOpen && (
                 <Modal
                     isOpen={isModalOpen}
-                    onClose={() => setModalOpen(false)}
+                    onClose={handleModalClose}
                     onSubmit={handleSubmitPost}
                     title="Criar Novo Post"
                     postType="post"
@@ -204,7 +209,7 @@ export const FloatingButton = styled.button`
     position: fixed;
     bottom: 20px;
     right: 20px;
-    background-color: #52b788;
+    background-color: ${({ theme }) => theme.colors.primary};
     color: #fff;
     font-size: 24px;
     border: none;
@@ -213,7 +218,11 @@ export const FloatingButton = styled.button`
     height: 50px;
     cursor: pointer;
     box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    transition: all 0.2s ease;
+    z-index: 100;
+
     &:hover {
-        background-color: #40916c;
+        background-color: ${({ theme }) => theme.colors.primaryHover};
+        transform: scale(1.05);
     }
 `;
