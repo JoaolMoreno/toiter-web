@@ -47,48 +47,54 @@ export const EditImageModal = ({
     if (e.target.files?.[0]) {
       const file = e.target.files[0];
       const reader = new FileReader();
-  
+
       reader.onloadend = () => {
-        const img = new Image();
-        img.onload = () => {
-          const maxWidth = 500;
-          const maxHeight = 500;
-          let width = img.width;
-          let height = img.height;
-  
-          // Ajustar dimensões para respeitar os limites
-          if (width > maxWidth || height > maxHeight) {
-            const scaleFactor = Math.min(maxWidth / width, maxHeight / height);
-            width = width * scaleFactor;
-            height = height * scaleFactor;
-          }
-  
-          // Redimensionar imagem usando um canvas
-          const canvas = document.createElement('canvas');
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx?.drawImage(img, 0, 0, width, height);
-  
-          // Converter canvas de volta para URL de imagem
-          const resizedImage = canvas.toDataURL('image/jpeg');
-          setPreview(resizedImage);
-  
-          // Atualizar o recorte
-          setCrop({
-            unit: '%',
-            width: 100,
-            height: type === 'profile' ? 100 : 33.33,
-            x: 0,
-            y: 0,
-          });
-        };
-        img.src = reader.result as string;
+        setPreview(reader.result as string);
+        setCrop({
+          unit: '%',
+          width: 100,
+          height: type === 'profile' ? 100 : 33.33,
+          x: 0,
+          y: 0,
+        });
       };
-  
+
       reader.readAsDataURL(file);
     }
-  };  
+  };
+
+  const getCroppedImg = async (imageSrc: string, crop: Crop): Promise<File> => {
+    const image = await createImage(imageSrc);
+    const canvas = document.createElement('canvas');
+    const scaleX = image.naturalWidth / image.width;
+    const scaleY = image.naturalHeight / image.height;
+
+    canvas.width = crop.width as number;
+    canvas.height = crop.height as number;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('No 2d context');
+
+    ctx.drawImage(
+      image,
+      (crop.x as number) * scaleX,
+      (crop.y as number) * scaleY,
+      (crop.width as number) * scaleX,
+      (crop.height as number) * scaleY,
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+
+    return new Promise((resolve) => {
+      canvas.toBlob((blob) => {
+        if (blob) {
+          resolve(new File([blob], 'cropped-image.jpg', { type: 'image/jpeg' }));
+        }
+      }, 'image/jpeg', 1.0);
+    });
+  };
 
   const handleSubmit = async () => {
     try {
@@ -103,37 +109,6 @@ export const EditImageModal = ({
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const getCroppedImg = async (imageSrc: string, crop: Crop): Promise<File> => {
-    const image = await createImage(imageSrc);
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-
-    if (!ctx) throw new Error('No 2d context');
-
-    canvas.width = crop.width as number;
-    canvas.height = crop.height as number;
-
-    ctx.drawImage(
-      image,
-      crop.x as number,
-      crop.y as number,
-      crop.width as number,
-      crop.height as number,
-      0,
-      0,
-      crop.width as number,
-      crop.height as number
-    );
-
-    return new Promise((resolve) => {
-      canvas.toBlob((blob) => {
-        if (blob) {
-          resolve(new File([blob], 'cropped-image.jpg', { type: 'image/jpeg' }));
-        }
-      }, 'image/jpeg');
-    });
   };
 
   const createImage = (url: string): Promise<HTMLImageElement> =>
@@ -164,7 +139,7 @@ export const EditImageModal = ({
           <ImageLabel htmlFor="image-input">
             Escolher imagem
           </ImageLabel>
-          
+
           {preview && (
             <PreviewContainer type={type}>
               <ReactCrop
@@ -178,9 +153,9 @@ export const EditImageModal = ({
           )}
         </Form>
         <ButtonGroup>
-            <CancelButton onClick={handleClose}>Cancelar</CancelButton>
-            <SaveButton onClick={handleSubmit}>Salvar</SaveButton>
-          </ButtonGroup>
+          <CancelButton onClick={handleClose}>Cancelar</CancelButton>
+          <SaveButton onClick={handleSubmit}>Salvar</SaveButton>
+        </ButtonGroup>
       </ModalContainer>
     </Overlay>
   );
@@ -210,10 +185,14 @@ const ModalContainer = styled.div`
   flex-direction: column;
   gap: 16px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  max-height: 90vh;
+  overflow-y: auto;
 
-  media (max-width: 768px) {
+  @media (max-width: 768px) {
     width: 95vw;
     padding: 16px;
+    max-height: 80vh;
   }
 
   @media (min-width: 1024px) {
@@ -275,15 +254,18 @@ const ImageLabel = styled.label`
 `;
 
 const PreviewContainer = styled.div<PreviewContainerProps>`
+  position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
   width: 100%;
-  max-height: ${({ type }) => type === 'profile' ? '500px' : '300px'}; // Adjusted for header
-  aspect-ratio: ${({ type }) => (type === 'profile' ? '1' : '3/1')};
-  
+  max-height: ${({ type }) => (type === 'profile' ? '40vh' : '30vh')};
+  aspect-ratio: ${({ type }) => (type === 'profile' ? '1 / 1' : '3 / 1')};
+  overflow: hidden;
+  border-radius: 8px;
+
   @media (max-width: 768px) {
-    max-height: ${({ type }) => type === 'profile' ? '300px' : '200px'};
+    max-height: ${({ type }) => (type === 'profile' ? '30vh' : '20vh')};
   }
 `;
 
@@ -293,10 +275,9 @@ const PreviewImage = styled.img`
   max-height: 100%;
   width: auto;
   height: auto;
-  object-fit: contain; // Ajuste para evitar overflow
-  margin: auto;
+  object-fit: contain;
+  object-position: center;
 `;
-
 const ButtonGroup = styled.div`
   display: flex;
   justify-content: flex-end;
@@ -322,8 +303,8 @@ const CancelButton = styled(Button)`
   }
 `;
 
-const SaveButton = styled(Button)<{ $isLoading?: boolean }>`
-  background-color: ${({ theme, $isLoading }) => 
+const SaveButton = styled(Button) <{ $isLoading?: boolean }>`
+  background-color: ${({ theme, $isLoading }) =>
     $isLoading ? theme.colors.secondary : theme.colors.primary};
   border: none;
   color: white;
