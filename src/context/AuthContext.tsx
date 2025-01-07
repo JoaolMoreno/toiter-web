@@ -9,6 +9,7 @@ interface AuthContextType {
     user: User | null;
     login: (email: string, password: string) => Promise<void>;
     logout: () => Promise<void>;
+    isLoading: boolean;
   }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -16,9 +17,11 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [isAuthenticated, setIsAuthenticated] = useState<boolean | undefined>(undefined);
     const [user, setUser] = useState<User | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
     const router = useRouter();
   
     const verifySession = async () => {
+        setIsLoading(true);
         try {
             const token = localStorage.getItem('accessToken');
             
@@ -42,6 +45,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } catch (error) {
             console.error("Erro ao verificar sessão:", error);
             clearUserData();
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -58,13 +63,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const login = async (email: string, password: string) => {
+        setIsLoading(true);
         try {
-            // Get user data including username from auth service
             const userData = await loginService(email, password);
             
+            // Fetch user profile data immediately after login
+            const { data } = await api.get('/users/me');
             setUser({ 
-                username: userData.username,
-                profileImageId: null
+                username: data.username,
+                profileImageId: data.profileImageId as number
             });
             setIsAuthenticated(true);
             
@@ -72,6 +79,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } catch (error) {
             console.error("Login error:", error);
             throw error;
+        } finally {
+            setIsLoading(false);
         }
     };
     
@@ -90,7 +99,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
 
     return (
-        <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
+        <AuthContext.Provider value={{ isAuthenticated, user, login, logout, isLoading }}>
             {children}
         </AuthContext.Provider>
     );
