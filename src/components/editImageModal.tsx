@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import ReactCrop, { Crop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
@@ -27,10 +27,21 @@ export const EditImageModal = ({
   const [crop, setCrop] = useState<Crop>({
     unit: '%',
     width: 100,
-    height: type === 'profile' ? 100 : 56.25,
+    height: type === 'profile' ? 100 : 33.33,
     x: 0,
     y: 0
   });
+
+  useEffect(() => {
+    if (!isOpen) {
+      setPreview(undefined);
+    }
+  }, [isOpen, type]);
+
+  const handleClose = () => {
+    setPreview(undefined);
+    onClose();
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.[0]) {
@@ -67,7 +78,7 @@ export const EditImageModal = ({
           setCrop({
             unit: '%',
             width: 100,
-            height: type === 'profile' ? 100 : 56.25,
+            height: type === 'profile' ? 100 : 33.33,
             x: 0,
             y: 0,
           });
@@ -140,7 +151,7 @@ export const EditImageModal = ({
       <ModalContainer>
         <Header>
           <Title>Editar {type === 'profile' ? 'Foto de Perfil' : 'Capa'}</Title>
-          <CloseButton onClick={onClose}>✕</CloseButton>
+          <CloseButton onClick={handleClose}>✕</CloseButton>
         </Header>
 
         <Form>
@@ -159,7 +170,7 @@ export const EditImageModal = ({
               <ReactCrop
                 crop={crop}
                 onChange={newCrop => setCrop(newCrop)}
-                aspect={type === 'profile' ? 1 : 16/9}
+                aspect={type === 'profile' ? 1 : 3}
               >
                 <PreviewImage src={preview} alt="Preview" />
               </ReactCrop>
@@ -167,7 +178,7 @@ export const EditImageModal = ({
           )}
         </Form>
         <ButtonGroup>
-            <CancelButton onClick={onClose}>Cancelar</CancelButton>
+            <CancelButton onClick={handleClose}>Cancelar</CancelButton>
             <SaveButton onClick={handleSubmit}>Salvar</SaveButton>
           </ButtonGroup>
       </ModalContainer>
@@ -200,8 +211,9 @@ const ModalContainer = styled.div`
   gap: 16px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
 
-  @media (min-width: 768px) {
-    width: 50vw;
+  media (max-width: 768px) {
+    width: 95vw;
+    padding: 16px;
   }
 
   @media (min-width: 1024px) {
@@ -267,8 +279,12 @@ const PreviewContainer = styled.div<PreviewContainerProps>`
   justify-content: center;
   align-items: center;
   width: 100%;
-  max-height: 500px; // Limita a altura máxima para telas grandes
-  aspect-ratio: ${({ type }) => (type === 'profile' ? '1' : '16/9')};
+  max-height: ${({ type }) => type === 'profile' ? '500px' : '300px'}; // Adjusted for header
+  aspect-ratio: ${({ type }) => (type === 'profile' ? '1' : '3/1')};
+  
+  @media (max-width: 768px) {
+    max-height: ${({ type }) => type === 'profile' ? '300px' : '200px'};
+  }
 `;
 
 const PreviewImage = styled.img`
