@@ -1,73 +1,78 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 
 interface ModalProps {
-    isOpen: boolean,
-    onClose: () => void,
-    onSubmit: (content: string) => Promise<void>,
-    title: string,
-    postType: 'post' | 'reply' | 'repostWithComment',
-    parentPostContent?: string,
-    parentUsername?: string,
-    initialContent?: string
+  isOpen: boolean,
+  onClose: () => void,
+  onSubmit: (content: string) => Promise<void>,
+  title: string,
+  postType: 'post' | 'reply' | 'repostWithComment',
+  parentPostContent?: string,
+  parentUsername?: string,
+  initialContent?: string
 }
 
 const Modal: React.FC<ModalProps> = ({
-                                         isOpen,
-                                         onClose,
-                                         onSubmit,
-                                         title,
-                                         postType,
-                                         parentPostContent,
-                                         parentUsername,
-                                         initialContent
-                                     }) => {
-    const [content, setContent] = useState(initialContent);
+  isOpen,
+  onClose,
+  onSubmit,
+  title,
+  postType,
+  parentPostContent,
+  parentUsername,
+  initialContent
+}) => {
+  const [content, setContent] = useState(initialContent);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-    if (!isOpen) return null;
+  if (!isOpen) return null;
+  const handleSubmit = async () => {
+    try {
+      if (!content || isSubmitting) return;
+      setIsSubmitting(true);
+      await onSubmit(content);
+      setContent('');
+      onClose();
+    } catch (error) {
+      console.error('Erro ao postar:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
-    const handleSubmit = async () => {
-        try {
-            if (!content) return; // Evita postar conteúdo vazio
-            await onSubmit(content); // Chama a função onSubmit passada como prop
-            setContent(''); // Limpa o conteúdo após o envio
-            onClose(); // Fecha o modal
-        } catch (error) {
-            console.error('Erro ao postar:', error);
-        }
-    };
-
-    return (
-        <Overlay>
-            <ModalContainer>
-                <Header>
-                    <CloseButton onClick={onClose}>Cancelar</CloseButton>
-                    <Title>{title}</Title>
-                    <PostButton onClick={handleSubmit}>Postar</PostButton>
-                </Header>
-                <Body>
-                    {/* Exibição condicional para reply e repost */}
-                    {(postType === 'reply' || postType === 'repostWithComment') && parentUsername && (
-                        <Username>{parentUsername}</Username>
-                    )}
-                    {(postType === 'reply' || postType === 'repostWithComment') && parentPostContent && (
-                        <PostPreview>{parentPostContent}</PostPreview>
-                    )}
-                    <TextArea
-                        placeholder={
-                            postType === 'post'
-                                ? 'No que você está pensando?'
-                                : postType === 'reply'
-                                    ? 'Digite sua resposta...'
-                                    : 'Adicione um comentário...'
-                        }
-                        value={content}
-                        onChange={(e) => setContent(e.target.value)}
-                    />
-                </Body>
-            </ModalContainer>
-        </Overlay>
-    );
+  return (
+    <Overlay>
+      <ModalContainer>
+        <Header>
+          <CloseButton onClick={onClose} disabled={isSubmitting}>Cancelar</CloseButton>
+          <Title>{title}</Title>
+          <PostButton onClick={handleSubmit} disabled={isSubmitting}>
+            {isSubmitting ? 'Postando...' : 'Postar'}
+          </PostButton>
+        </Header>
+        <Body>
+          {/* Exibição condicional para reply e repost */}
+          {(postType === 'reply' || postType === 'repostWithComment') && parentUsername && (
+            <Username>{parentUsername}</Username>
+          )}
+          {(postType === 'reply' || postType === 'repostWithComment') && parentPostContent && (
+            <PostPreview>{parentPostContent}</PostPreview>
+          )}
+          <TextArea
+            placeholder={
+              postType === 'post'
+                ? 'No que você está pensando?'
+                : postType === 'reply'
+                  ? 'Digite sua resposta...'
+                  : 'Adicione um comentário...'
+            }
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+          />
+        </Body>
+      </ModalContainer>
+    </Overlay>
+  );
 };
 
 export default Modal;
@@ -103,15 +108,17 @@ const Header = styled.div`
 `;
 
 const CloseButton = styled.button`
-  background: none;
-  color: ${({ theme }) => theme.colors.text};
-  border: none;
-  font-size: ${({ theme }) => theme.fontSizes.regular};
-  cursor: pointer;
-  
-  &:hover {
-    color: ${({ theme }) => theme.colors.primary};
-  }
+    background: none;
+    color: ${({ theme }) => theme.colors.text};
+    border: none;
+    font-size: ${({ theme }) => theme.fontSizes.regular};
+    cursor: ${({ disabled }) => disabled ? 'not-allowed' : 'pointer'};
+    opacity: ${({ disabled }) => disabled ? 0.7 : 1};
+    
+    &:hover {
+        color: ${({ theme, disabled }) => 
+            disabled ? theme.colors.text : theme.colors.primary};
+    }
 `;
 
 const Title = styled.h2`
@@ -121,18 +128,21 @@ const Title = styled.h2`
 `;
 
 const PostButton = styled.button`
-  background-color: ${({ theme }) => theme.colors.primary};
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 8px 16px;
-  font-size: ${({ theme }) => theme.fontSizes.regular};
-  font-weight: bold;
-  cursor: pointer;
-  
-  &:hover {
-    background-color: ${({ theme }) => theme.colors.secondary};
-  }
+    background-color: ${({ theme, disabled }) => 
+        disabled ? theme.colors.secondary : theme.colors.primary};
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: ${({ theme }) => theme.fontSizes.regular};
+    font-weight: bold;
+    cursor: ${({ disabled }) => disabled ? 'not-allowed' : 'pointer'};
+    opacity: ${({ disabled }) => disabled ? 0.7 : 1};
+    
+    &:hover {
+        background-color: ${({ theme, disabled }) => 
+            disabled ? theme.colors.secondary : theme.colors.primaryHover};
+    }
 `;
 
 const Body = styled.div`
