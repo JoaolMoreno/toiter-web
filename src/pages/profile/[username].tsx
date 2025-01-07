@@ -31,6 +31,7 @@ const ProfilePage = () => {
   const [hasMore, setHasMore] = useState(true);
   const [isProfileModalOpen, setProfileModalOpen] = useState(false);
   const [isImageModalOpen, setImageModalOpen] = useState(false);
+  const [isFollowLoading, setIsFollowLoading] = useState(false);
   const [imageEditType, setImageEditType] = useState<'profile' | 'header'>('profile');
   const isOwnProfile = user?.username === username;
 
@@ -49,6 +50,7 @@ const ProfilePage = () => {
   };
 
   const handleBack = () => {
+    event?.preventDefault();
     if (from) {
       router.push(from as string);
     } else {
@@ -114,6 +116,7 @@ const ProfilePage = () => {
 
   const handleFollow = async () => {
     if (!profile) return;
+    setIsFollowLoading(true);
     try {
       if (profile.isFollowing) {
         await unfollowUser(profile.username);
@@ -133,6 +136,8 @@ const ProfilePage = () => {
       );
     } catch (error) {
       console.error('Erro ao seguir/deixar de seguir:', error);
+    } finally {
+      setIsFollowLoading(false);
     }
   };
 
@@ -147,62 +152,61 @@ const ProfilePage = () => {
   return (
     <Container>
       <Head>
-        <meta charSet="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>{profile.username} no Toiter</title>
       </Head>
-      <Header>
-        <BackButton onClick={handleBack}>Voltar</BackButton>
-      </Header>
-      <ProfileHeader imageUrl={profile.headerImageUrl}>
-        {isOwnProfile && (
-          <EditHeaderButton onClick={handleEditHeaderImage}>
-            ✏️ Edit Header
-          </EditHeaderButton>
-        )}
-        <ProfileImageWrapper>
-          <ProfileImageContainer onClick={isOwnProfile ? handleEditProfileImage : undefined}>
-            <ProfileImage
-              src={profile.profileImageUrl}
-              alt={profile.username}
-            />
-          </ProfileImageContainer>
-        </ProfileImageWrapper>
-      </ProfileHeader>
-      <ProfileInfo>
-        <UserInfo>
-          <DisplayName>{profile.displayName}</DisplayName>
-          <Username>
-            @{profile.username}
-            {profile.isFollowingMe && (
-              <FollowsYouBadge>Segue você</FollowsYouBadge>
-            )}
-          </Username>
-          <Bio>{profile.bio}</Bio>
-          <Stats>
-            <StatItem>
-              <strong>{profile.postsCount}</strong> Posts
-            </StatItem>
-            <StatItem>
-              <strong>{profile.followersCount}</strong> Seguidores
-            </StatItem>
-            <StatItem>
-              <strong>{profile.followingCount}</strong> Seguindo
-            </StatItem>
-          </Stats>
+      <Profile>
+        <ProfileHeader imageUrl={profile.headerImageUrl}>
+          <BackButton onClick={handleBack}>← Voltar</BackButton>
+          {isOwnProfile && (
+            <EditHeaderButton onClick={handleEditHeaderImage}>
+              ✏️ Editar Imagem
+            </EditHeaderButton>
+          )}
+        </ProfileHeader>
+        <ProfileInfo>
           {isOwnProfile ? (
-            <EditButton onClick={() => handleEditProfile()}>
+            <EditProfileButton onClick={() => handleEditProfile()}>
               Editar Perfil
-            </EditButton>
+            </EditProfileButton>
           ) : (
-            <FollowButton $isFollowing={profile.isFollowing} onClick={handleFollow}>
-              {profile.isFollowing ? 'Following' : 'Follow'}
+            <FollowButton $isFollowing={profile.isFollowing}
+              onClick={handleFollow}
+              disabled={isFollowLoading}>
+              {profile.isFollowing ? 'Seguindo' : 'Seguir'}
             </FollowButton>
           )}
-        </UserInfo>
-      </ProfileInfo>
+          <ProfileImageWrapper>
+            <ProfileImageContainer onClick={isOwnProfile ? handleEditProfileImage : undefined}>
+              <ProfileImage
+                src={profile.profileImageUrl}
+                alt={profile.username}
+              />
+            </ProfileImageContainer>
+          </ProfileImageWrapper>
+          <UserInfo>
+            <DisplayName>{profile.displayName}</DisplayName>
+            <Username>
+              @{profile.username}
+              {profile.isFollowingMe && (
+                <FollowsYouBadge>Segue você</FollowsYouBadge>
+              )}
+            </Username>
+            <Bio>{profile.bio}</Bio>
+            <Stats>
+              <StatItem>
+                <strong>{profile.postsCount}</strong> Posts
+              </StatItem>
+              <StatItem>
+                <strong>{profile.followersCount}</strong> Seguidores
+              </StatItem>
+              <StatItem>
+                <strong>{profile.followingCount}</strong> Seguindo
+              </StatItem>
+            </Stats>
+          </UserInfo>
+        </ProfileInfo>
+      </Profile>
       <PostsSection>
-        <PostsTitle>Posts</PostsTitle>
         {posts.map(post => (
           <Post key={post.id} post={post} />
         ))}
@@ -253,30 +257,23 @@ const ProfilePage = () => {
   );
 };
 
-const Header = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background-color: #1a1a1a;
-  padding: 16px 24px;
-  border-radius: 12px;
-  margin-bottom: 20px;
-  border: 1px solid #333;
-  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
-`;
-
-const BackButton = styled.button`
-  background-color: #1da1f2;
+const EditHeaderButton = styled.button`
+  position: absolute;
+  top: 24px;
+  right: 12px;
+  background-color: rgba(0, 0, 0, 0.6);
   color: white;
   border: none;
   padding: 8px 16px;
-  border-radius: 8px;
+  border-radius: 20px;
   font-weight: bold;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s;
+  z-index: 2;
+  opacity: 0;
 
   &:hover {
-    background-color: #0d8ddb;
+    background-color: rgba(0, 0, 0, 0.8);
   }
 `;
 
@@ -285,44 +282,94 @@ const ProfileHeader = styled.div<{ imageUrl: string }>`
   background-image: url(${props => props.imageUrl});
   background-size: cover;
   background-position: center;
-  height: 200px;
+  width: 100%;
+  padding-bottom: 25%;
+  max-height: 280px;
   border-radius: 12px 12px 0 0;
   border: 1px solid ${({ theme }) => theme.colors.border};
   z-index: 1;
-`;
-
-const EditHeaderButton = styled.button`
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  background-color: rgba(0, 0, 0, 0.7);
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  z-index: 2;
-  transition: background-color 0.2s;
+  margin-top: 25px;
 
   &:hover {
-    background-color: rgba(0, 0, 0, 0.9);
+    ${EditHeaderButton} {
+      opacity: 1;
+    }
+  }
+
+  @media (max-width: 768px) {
+    padding-bottom: 33.33%;
   }
 `;
 
-const ProfileImageWrapper = styled.div`
+
+const Profile = styled.div`
+  max-width: 900px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 16px;
+
+  @media (max-width: 768px) {
+    padding: 0 12px;
+  }
+
+  @media (max-width: 480px) {
+    padding: 0 8px;
+  }
+`;
+
+const BackButton = styled.button`
   position: absolute;
-  left: 50%;
-  bottom: -50px;
-  transform: translateX(-50%);
+  top: 24px;
+  left: 12px;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.8);
+  }
+`;
+
+const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  margin: 0 auto;
+  background-color: #000;
+  color: #fff;
+  position: relative;
+`;
+
+const ProfileInfo = styled.div`
+  position: relative;
+  background-color: ${({ theme }) => theme.colors.backgroundElevated};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: 0 0 12px 12px;
+  padding: 40px 24px 24px;
+  margin-top: -12px;
+`;
+
+const ProfileImageWrapper = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: -80px auto 16px;
   width: 100px;
   height: 100px;
-  border: 4px solid ${({ theme }) => theme.colors.background};
+  border: 3px solid ${({ theme }) => theme.colors.background};
   border-radius: 50%;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  z-index: 3;
-  pointer-events: auto;
 `;
+
 
 const ProfileImageContainer = styled.div`
   position: relative;
@@ -361,48 +408,18 @@ const ProfileImage = styled.img`
   object-fit: cover;
 `;
 
-// Aplicação do z-index e pointer-events separados, garantindo independência de hover
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  margin: 0 auto;
-  background-color: #000;
-  color: #fff;
-  position: relative;
-
-  ${ProfileHeader} {
-    z-index: 1;
-  }
-
-  ${ProfileImageWrapper} {
-    pointer-events: auto;
-  }
-
-  ${ProfileImageContainer} {
-    z-index: 3;
-  }
-`;
-
-const ProfileInfo = styled.div`
-  position: relative;
-  background-color: ${({ theme }) => theme.colors.backgroundElevated};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: 0 0 12px 12px;
-  padding: 60px 24px 24px;
-  margin-top: -12px;
-`;
-
 const UserInfo = styled.div`
   text-align: center;
   margin-top: 16px;
 `;
 
 const DisplayName = styled.h1`
-  font-size: 20px;
+  font-size: 18px;
+  margin-bottom: 4px;
 `;
 
 const Username = styled.p`
-  font-size: 16px;
+  font-size: 14px;
   color: #8899a6;
 `;
 
@@ -417,40 +434,58 @@ const FollowsYouBadge = styled.span`
 
 const Bio = styled.p`
   margin: 8px 0;
-  font-size: 14px;
+  font-size: 13px;
+  text-align: center;
 `;
 
 const Stats = styled.div`
   display: flex;
   justify-content: center;
-  gap: 20px;
+  gap: 16px;
   margin-top: 8px;
 `;
 
 const StatItem = styled.div`
-  font-size: 14px;
+  font-size: 13px;
   strong {
-    font-size: 16px;
+    font-size: 14px;
   }
 `;
 
 const FollowButton = styled.button<{ $isFollowing: boolean }>`
-  margin-top: 16px;
+  position: absolute;
+  top: 30px;
+  right: 20px;
   background-color: ${({ $isFollowing }) => ($isFollowing ? '#657786' : '#1da1f2')};
   color: #fff;
   border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 14px;
   cursor: pointer;
+  font-weight: bold;
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: ${({ $isFollowing }) => ($isFollowing ? '#556677' : '#198ae0')};
+  }
+  
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
 `;
 
-const EditButton = styled.button`
-  margin-top: 16px;
+const EditProfileButton = styled.button`
+  position: absolute;
+  top: 30px;
+  right: 20px;
   background-color: transparent;
   color: #1da1f2;
   border: 1px solid #1da1f2;
-  padding: 8px 16px;
-  border-radius: 4px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 14px;
   font-weight: bold;
   cursor: pointer;
   transition: all 0.2s;
@@ -461,29 +496,25 @@ const EditButton = styled.button`
   }
 `;
 
-const PostsSection = styled.div`
-  margin-top: 20px;
-`;
 
-const PostsTitle = styled.h2`
-  font-size: 18px;
-  margin-bottom: 12px;
+const PostsSection = styled.div`
+  margin-top: 16px;
 `;
 
 const LoadMoreButton = styled.button`
   background-color: #1da1f2;
   color: #fff;
   border: none;
-  padding: 8px 16px;
+  padding: 8px 12px;
   border-radius: 4px;
   cursor: pointer;
   display: block;
-  margin: 20px auto;
+  margin: 16px auto;
 `;
 
 const LoadingMessage = styled.p`
   text-align: center;
-  margin: 20px 0;
+  margin: 16px 0;
 `;
 
 export default withAuth(ProfilePage);
