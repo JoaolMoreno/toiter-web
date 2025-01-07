@@ -221,6 +221,10 @@ export const FloatingButton = styled.button`
     transition: all 0.2s ease;
     z-index: 100;
 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
     &:hover {
         background-color: ${({ theme }) => theme.colors.primaryHover};
         transform: scale(1.05);
