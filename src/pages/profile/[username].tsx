@@ -18,6 +18,7 @@ import { useAuth } from '@/context/AuthContext';
 import { EditProfileModal } from '@/components/editProfileModal';
 import { EditImageModal } from '@/components/editImageModal';
 import Head from 'next/head';
+import { debounce } from 'lodash';
 
 const ProfilePage = () => {
   const router = useRouter();
@@ -93,7 +94,10 @@ const ProfilePage = () => {
   // Add scroll listener
   useEffect(() => {
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      handleScroll.cancel();
+    };
   }, [hasMore, loading]);
 
   // Load posts when page changes
@@ -103,7 +107,7 @@ const ProfilePage = () => {
     }
   }, [page, username]);
 
-  const handleScroll = () => {
+  const handleScroll = debounce(() => {
     if (!hasMore || loading) return;
 
     const scrollPosition = window.innerHeight + document.documentElement.scrollTop;
@@ -112,7 +116,7 @@ const ProfilePage = () => {
     if (scrollPosition >= scrollThreshold) {
       setPage(prev => prev + 1);
     }
-  };
+  }, 250);
 
   const handleFollow = async () => {
     if (!profile) return;
