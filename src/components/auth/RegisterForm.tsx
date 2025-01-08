@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import styled from 'styled-components';
 import PasswordInput from './PasswordImput';
 import api from '@/services/api';
+import { toast } from 'react-toastify';
 
 const Form = styled.form`
   display: flex;
@@ -47,50 +48,51 @@ const ErrorMessage = styled.p`
 `;
 
 const RegisterForm = () => {
-    const router = useRouter();
-    const [username, setUserName] = useState('');
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
+  const router = useRouter();
+  const [username, setUserName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        try {
-            await api.post('/auth/register', { username, email, password });
-            alert('Cadastro bem-sucedido!');
-            router.push('/auth/login');
-        } catch (err: any) {
-            const errorMessage = err.response?.data || 'Erro ao registrar';
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await api.post('/auth/register', { username, email, password });
+      toast.success('Cadastro bem-sucedido!');
+      router.push('/auth/login');
+    } catch (err: any) {
+      console.error("Erro ao registrar:", err);
+      if (err.response && err.response.status === 400) {
+        toast.error(err.response.data || 'Erro ao registrar');
+      } else {
+        toast.error('Erro ao registrar');
+      }
+    }
+  };
 
-            console.error('Erro ao registrar:', errorMessage);
-
-            setError(errorMessage);
-        }
-    };
-
-    return (
-        <Form onSubmit={handleSubmit}>
-            {error && <ErrorMessage>{error}</ErrorMessage>}
-            <Input
-                type="text"
-                placeholder="Nome"
-                value={username}
-                onChange={(e) => setUserName(e.target.value)}
-            />
-            <Input
-                type="email"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-            />
-            <PasswordInput
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Senha"
-            />
-            <Button type="submit">Registrar</Button>
-        </Form>
-    );
+  return (
+    <Form onSubmit={handleSubmit}>
+      {error && <ErrorMessage>{error}</ErrorMessage>}
+      <Input
+        type="text"
+        placeholder="Nome"
+        value={username}
+        onChange={(e) => setUserName(e.target.value)}
+      />
+      <Input
+        type="email"
+        placeholder="Email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+      />
+      <PasswordInput
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        placeholder="Senha"
+      />
+      <Button type="submit">Registrar</Button>
+    </Form>
+  );
 };
 
 export default RegisterForm;

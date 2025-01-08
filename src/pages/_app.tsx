@@ -4,6 +4,8 @@ import { AuthProvider } from '@/context/AuthContext';
 import '../globals.css';
 import { FeedProvider } from "@/context/FeedProvider";
 import Layout from '@/components/layout';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const theme = {
   colors: {
@@ -34,6 +36,7 @@ function Toiter({ Component, pageProps }: AppProps) {
         <FeedProvider>
           <Layout>
             <Component {...pageProps} />
+            <ToastContainer />
           </Layout>
         </FeedProvider>
       </ThemeProvider>
