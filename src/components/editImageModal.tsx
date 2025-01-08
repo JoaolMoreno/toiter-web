@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
-import ReactCrop, { Crop } from 'react-image-crop';
+import ReactCrop, { Crop, PercentCrop, centerCrop, makeAspectCrop } from 'react-image-crop';
+import { useDropzone } from 'react-dropzone';
 import 'react-image-crop/dist/ReactCrop.css';
 
 interface EditImageModalProps {
@@ -11,150 +12,213 @@ interface EditImageModalProps {
   currentImage?: string;
 }
 
-interface PreviewContainerProps {
-  type: 'profile' | 'header';
-}
-
 export const EditImageModal = ({
   isOpen,
   onClose,
   onSubmit,
   type,
-  currentImage
+  currentImage,
 }: EditImageModalProps) => {
+  const [image, setImage] = useState<string | null>(null);
+  const [crop, setCrop] = useState<Crop>();
+  const imageRef = useRef<HTMLImageElement>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [preview, setPreview] = useState<string>();
-  const [crop, setCrop] = useState<Crop>({
-    unit: '%',
-    width: 100,
-    height: type === 'profile' ? 100 : 33.33,
-    x: 0,
-    y: 0
-  });
+  const aspectRatio = type === 'profile' ? 1 : 3;
 
   useEffect(() => {
     if (!isOpen) {
-      setPreview(undefined);
+      setImage(null);
+      setCrop(undefined);
     }
-  }, [isOpen, type]);
+  }, [isOpen]);
 
-  const handleClose = () => {
-    setPreview(undefined);
-    onClose();
-  };
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files?.[0]) {
-      const file = e.target.files[0];
-      const reader = new FileReader();
-
-      reader.onloadend = () => {
-        setPreview(reader.result as string);
-        setCrop({
+  const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const img = e.currentTarget as HTMLImageElement;
+  
+    const { width, height, naturalWidth, naturalHeight } = img;
+  
+    const initialCrop = centerCrop(
+      makeAspectCrop(
+        {
           unit: '%',
           width: 100,
-          height: type === 'profile' ? 100 : 33.33,
-          x: 0,
-          y: 0,
-        });
-      };
-
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const getCroppedImg = async (imageSrc: string, crop: Crop): Promise<File> => {
-    const image = await createImage(imageSrc);
-    const canvas = document.createElement('canvas');
-    const scaleX = image.naturalWidth / image.width;
-    const scaleY = image.naturalHeight / image.height;
-
-    canvas.width = crop.width as number;
-    canvas.height = crop.height as number;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) throw new Error('No 2d context');
-
-    ctx.drawImage(
-      image,
-      (crop.x as number) * scaleX,
-      (crop.y as number) * scaleY,
-      (crop.width as number) * scaleX,
-      (crop.height as number) * scaleY,
-      0,
-      0,
-      canvas.width,
-      canvas.height
+        },
+        aspectRatio,
+        width,
+        height
+      ),
+      width,
+      height
     );
+  
+  
+    setCrop(initialCrop);
+  }
+  
+  const handleCropChange = (crop: Crop, percentCrop: PercentCrop) => {
+    setCrop(crop);
+};
 
-    return new Promise((resolve) => {
+  const handleDrop = useCallback((acceptedFiles: File[]) => {
+    const file = acceptedFiles[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => setImage(reader.result as string);
+    reader.readAsDataURL(file);
+  }, []);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop: handleDrop,
+    accept: {
+      'image/*': [],
+    },
+    multiple: false,
+  });
+
+  const getCroppedImg = (image: HTMLImageElement, crop: Crop): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      const normalizedCrop = crop.unit === 'px' ? {
+        unit: '%',
+        x: (crop.x / image.width) * 100,
+        y: (crop.y / image.height) * 100,
+        width: (crop.width / image.width) * 100,
+        height: (crop.height / image.height) * 100
+      } : crop;
+
+      const safeCrop = {
+        x: Math.max(0, Math.min(100, normalizedCrop.x)),
+        y: Math.max(0, Math.min(100, normalizedCrop.y)),
+        width: Math.max(0, Math.min(100 - normalizedCrop.x, normalizedCrop.width)),
+        height: Math.max(0, Math.min(100 - normalizedCrop.y, normalizedCrop.height))
+      };
+  
+      const pixelCrop = {
+        x: Math.round((safeCrop.x * image.naturalWidth) / 100),
+        y: Math.round((safeCrop.y * image.naturalHeight) / 100),
+        width: Math.round((safeCrop.width * image.naturalWidth) / 100),
+        height: Math.round((safeCrop.height * image.naturalHeight) / 100)
+      };  
+  
+      if (pixelCrop.width <= 0 || pixelCrop.height <= 0) {
+        reject(new Error('Invalid crop dimensions'));
+        return;
+      }
+  
+      const canvas = document.createElement('canvas');
+      
+      canvas.width = pixelCrop.width;
+      canvas.height = pixelCrop.height;
+  
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        reject(new Error('No 2d context'));
+        return;
+      }
+  
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+  
+      ctx.drawImage(
+        image,
+        pixelCrop.x,
+        pixelCrop.y,
+        pixelCrop.width,
+        pixelCrop.height,
+        0,
+        0,
+        pixelCrop.width,
+        pixelCrop.height
+      );
+  
       canvas.toBlob((blob) => {
-        if (blob) {
-          resolve(new File([blob], 'cropped-image.jpg', { type: 'image/jpeg' }));
+        if (!blob) {
+          reject(new Error('Canvas is empty'));
+          return;
         }
-      }, 'image/jpeg', 1.0);
+        const file = new File([blob], 'cropped-image.jpeg', { type: 'image/jpeg' });
+        resolve(file);
+      }, 'image/jpeg', 0.95);
     });
   };
 
   const handleSubmit = async () => {
+    if (!imageRef.current || !crop) return;
     try {
       setIsSubmitting(true);
-      if (preview) {
-        const croppedImage = await getCroppedImg(preview, crop);
-        await onSubmit(croppedImage);
-        onClose();
-      }
+  
+      const croppedFile = await getCroppedImg(imageRef.current, crop);
+      
+      await onSubmit(croppedFile);
+      onClose();
     } catch (error) {
-      console.error('Error updating image:', error);
+      console.error('Error cropping image:', error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const createImage = (url: string): Promise<HTMLImageElement> =>
-    new Promise((resolve, reject) => {
-      const image = new Image();
-      image.addEventListener('load', () => resolve(image));
-      image.addEventListener('error', reject);
-      image.src = url;
-    });
-
   if (!isOpen) return null;
 
   return (
     <Overlay>
-      <ModalContainer>
+      <ModalContainer hasImage={!!image}>
         <Header>
           <Title>Editar {type === 'profile' ? 'Foto de Perfil' : 'Capa'}</Title>
-          <CloseButton onClick={handleClose}>✕</CloseButton>
+          <CloseButton onClick={onClose}>✕</CloseButton>
         </Header>
 
-        <Form>
-          <ImageInput
-            type="file"
-            onChange={handleImageChange}
-            accept="image/*"
-            id="image-input"
-          />
-          <ImageLabel htmlFor="image-input">
-            Escolher imagem
-          </ImageLabel>
+        <Content hasImage={!!image}>
+          {/* Área do Dropzone (substitui o input nativo) */}
+          {!image && (
+            <DropzoneArea {...getRootProps()}>
+              <input {...getInputProps()} />
+              {isDragActive ? (
+                <DropzoneText>Solte a imagem aqui...</DropzoneText>
+              ) : (
+                <DropzoneText>Clique ou arraste a imagem aqui</DropzoneText>
+              )}
+            </DropzoneArea>
+          )}
 
-          {preview && (
-            <PreviewContainer type={type}>
+          {/* Se já temos uma imagem selecionada, exibe o crop */}
+          {image && (
+            <CropContainer>
               <ReactCrop
                 crop={crop}
-                onChange={newCrop => setCrop(newCrop)}
-                aspect={type === 'profile' ? 1 : 3}
+                onChange={handleCropChange}
+                aspect={aspectRatio}
+                style={{
+                  width: 'auto',
+                  height: 'auto',
+                  maxWidth: '100%',
+                  objectFit: 'contain',
+                }}
               >
-                <PreviewImage src={preview} alt="Preview" />
+                <img
+                  ref={imageRef}
+                  src={image}
+                  onLoad={handleImageLoad}
+                  alt="Preview"
+                  style={{
+                    width: 'auto',
+                    height: 'auto',
+                    maxHeight: '60vh',
+                    maxWidth: '100%',
+                    display: 'block',
+                    objectFit: 'contain',
+                  }}
+                />
               </ReactCrop>
-            </PreviewContainer>
+            </CropContainer>
           )}
-        </Form>
+        </Content>
+
         <ButtonGroup>
-          <CancelButton onClick={handleClose}>Cancelar</CancelButton>
-          <SaveButton onClick={handleSubmit}>Salvar</SaveButton>
+          <CancelButton onClick={onClose}>Cancelar</CancelButton>
+          <SaveButton onClick={handleSubmit} disabled={!image || isSubmitting}>
+            {isSubmitting ? 'Salvando...' : 'Salvar'}
+          </SaveButton>
         </ButtonGroup>
       </ModalContainer>
     </Overlay>
@@ -174,115 +238,83 @@ const Overlay = styled.div`
   z-index: 1000;
 `;
 
-const ModalContainer = styled.div`
+const ModalContainer = styled.div<{ hasImage: boolean }>`
   background-color: ${({ theme }) => theme.colors.backgroundAlt};
-  border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: 12px;
   width: 90vw;
-  max-width: 450px;
+  max-width: 500px;
   padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 16px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-  overflow: hidden;
-  max-height: 90vh;
-  overflow-y: auto;
-
-  @media (max-width: 768px) {
-    width: 95vw;
-    padding: 16px;
-    max-height: 80vh;
-  }
-
-  @media (min-width: 1024px) {
-    width: 40vw;
-    max-width: 600px;
-  }
+  height: auto;
+  max-height: ${({ hasImage }) => (hasImage ? '90vh' : 'auto')};
+  overflow: visible;
 `;
 
 const Header = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: 16px;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
 `;
 
 const Title = styled.h2`
   color: ${({ theme }) => theme.colors.text};
-  font-size: ${({ theme }) => theme.fontSizes.large};
-  margin: 0;
 `;
 
 const CloseButton = styled.button`
   background: none;
   border: none;
   color: ${({ theme }) => theme.colors.text};
-  font-size: ${({ theme }) => theme.fontSizes.large};
+  font-size: 1.2rem;
   cursor: pointer;
-  padding: 4px;
-  
-  &:hover {
-    color: ${({ theme }) => theme.colors.primary};
-  }
 `;
 
-const Form = styled.div`
+const Content = styled.div<{ hasImage: boolean }>`
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
+  justify-content: ${({ hasImage }) => (hasImage ? 'flex-start' : 'center')};
+  max-height: 100%;
+  overflow: visible;
 `;
 
-const ImageInput = styled.input`
-  display: none;
-`;
-
-const ImageLabel = styled.label`
-  background-color: ${({ theme }) => theme.colors.primary};
-  color: white;
-  padding: 12px 20px;
+const DropzoneArea = styled.div`
+  border: 2px dashed ${({ theme }) => theme.colors.primary};
   border-radius: 8px;
-  cursor: pointer;
+  padding: 40px;
   text-align: center;
-  font-weight: bold;
-  transition: background-color 0.2s;
-
-  &:hover {
-    background-color: ${({ theme }) => theme.colors.secondary};
-  }
+  cursor: pointer;
 `;
 
-const PreviewContainer = styled.div<PreviewContainerProps>`
-  position: relative;
+const DropzoneText = styled.p`
+  color: ${({ theme }) => theme.colors.text};
+  margin: 0;
+`;
+
+const CropContainer = styled.div`
+  width: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 100%;
-  max-height: ${({ type }) => (type === 'profile' ? '40vh' : '30vh')};
-  aspect-ratio: ${({ type }) => (type === 'profile' ? '1 / 1' : '3 / 1')};
-  overflow: hidden;
-  border-radius: 8px;
-
-  @media (max-width: 768px) {
-    max-height: ${({ type }) => (type === 'profile' ? '30vh' : '20vh')};
+  
+  & > div {
+    width: auto !important;
+    height: auto !important;
+  }
+  
+  .ReactCrop__image {
+    max-height: 60vh;
+    width: auto;
+    height: auto;
   }
 `;
 
-const PreviewImage = styled.img`
-  display: block;
-  max-width: 100%;
-  max-height: 100%;
-  width: auto;
-  height: auto;
-  object-fit: contain;
-  object-position: center;
-`;
 const ButtonGroup = styled.div`
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  margin-top: 20px;
+  flex-shrink: 0;
 `;
 
 const Button = styled.button`
@@ -290,28 +322,25 @@ const Button = styled.button`
   border-radius: 8px;
   font-weight: bold;
   cursor: pointer;
-  transition: all 0.2s;
 `;
 
 const CancelButton = styled(Button)`
-  background: none;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  color: ${({ theme }) => theme.colors.text};
+  background-color: #ff4d4f;
+  border: none;
+  color: white;
 
   &:hover {
-    background-color: ${({ theme }) => theme.colors.backgroundElevated};
+    background-color: #ff7875;
   }
 `;
 
-const SaveButton = styled(Button) <{ $isLoading?: boolean }>`
-  background-color: ${({ theme, $isLoading }) =>
-    $isLoading ? theme.colors.secondary : theme.colors.primary};
-  border: none;
+const SaveButton = styled(Button)`
+  background-color: ${({ theme }) => theme.colors.primary};
   color: white;
-  pointer-events: ${props => props.$isLoading ? 'none' : 'auto'};
-  opacity: ${props => props.$isLoading ? 0.7 : 1};
+  border: none;
 
-  &:hover {
-    background-color: ${({ theme }) => theme.colors.secondary};
+  &:disabled {
+    background-color: ${({ theme }) => theme.colors.disabled};
+    cursor: not-allowed;
   }
 `;
