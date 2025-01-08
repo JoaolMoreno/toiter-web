@@ -8,6 +8,7 @@ import withAuth from "@/hoc/withAuth";
 import Modal from "@/components/modal";
 import { createPost } from '@/services/postService';
 import Head from 'next/head';
+import { debounce } from 'lodash';
 
 const Feed = () => {
     const { isAuthenticated} = useAuth();
@@ -45,20 +46,28 @@ const Feed = () => {
         }
     };
 
-    const handleScroll = () => {
-        if (!hasMore || loading) return;
-
-        const scrollPosition = window.innerHeight + document.documentElement.scrollTop;
-        const scrollThreshold = document.documentElement.offsetHeight - 100;
-
-        if (scrollPosition >= scrollThreshold) {
-            setPage(prev => prev + 1);
+    const handleScroll = debounce(() => {
+        try {
+            if (!hasMore || loading) return;
+    
+            const scrollPosition = window.innerHeight + document.documentElement.scrollTop;
+            const scrollThreshold = document.documentElement.offsetHeight * 0.8;
+    
+            if (scrollPosition >= scrollThreshold) {
+                setLoading(true);
+                setPage(prev => prev + 1);
+            }
+        } catch (error) {
+            console.error('Error in scroll handling:', error);
         }
-    };
+    }, 250);
 
     useEffect(() => {
         window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+            handleScroll.cancel();
+        };
     }, [hasMore, loading]);
 
     const handleCreateNewPost = () => {
