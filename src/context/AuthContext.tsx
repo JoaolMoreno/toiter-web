@@ -79,8 +79,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             await router.push('/feed');
         } catch (error: any) {
             console.error("Login error:", error);
-            if (error.response && error.response.status === 400) {
-                toast.error(error.response.data || 'Erro ao fazer login');
+            if (error.response) {
+                if (error.response.status === 400) {
+                    toast.error(error.response.data || 'Erro ao fazer login');
+                } else if (error.response.status >= 500 && error.response.status < 600) {
+                    toast.error('Servidor Indisponível, por favor tente mais tarde');
+                } else {
+                    toast.error('Erro ao fazer login');
+                }
             } else {
                 toast.error('Erro ao fazer login');
             }
