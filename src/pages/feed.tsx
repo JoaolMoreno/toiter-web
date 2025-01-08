@@ -27,7 +27,6 @@ const Feed = () => {
         setLoading(true);
 
         try {
-            console.log("Carregando posts, página:", page);
             const data = await getFeed(page, 10);
             
             // Prevent duplicates
@@ -47,20 +46,15 @@ const Feed = () => {
     };
 
     const handleScroll = debounce(() => {
-        try {
-            if (!hasMore || loading) return;
+        if (!hasMore || loading) return;
     
-            const scrollPosition = window.innerHeight + document.documentElement.scrollTop;
-            const scrollThreshold = document.documentElement.offsetHeight * 0.8;
+        const scrollPosition = window.innerHeight + document.documentElement.scrollTop;
+        const scrollThreshold = document.documentElement.offsetHeight - 100;
     
-            if (scrollPosition >= scrollThreshold) {
-                setLoading(true);
-                setPage(prev => prev + 1);
-            }
-        } catch (error) {
-            console.error('Error in scroll handling:', error);
+        if (scrollPosition >= scrollThreshold) {
+          setPage(prev => prev + 1);
         }
-    }, 250);
+      }, 250);
 
     useEffect(() => {
         window.addEventListener('scroll', handleScroll);
@@ -90,7 +84,10 @@ const Feed = () => {
     };
 
     useEffect(() => {
-        if (isAuthenticated) loadPosts();
+        if (isAuthenticated) {
+            console.log('Loading posts for page:', page);
+            loadPosts();
+        }
     }, [isAuthenticated, page]);
 
     return (
