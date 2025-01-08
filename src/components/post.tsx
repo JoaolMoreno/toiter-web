@@ -15,6 +15,8 @@ interface PostProps {
 
 const Post: React.FC<PostProps> = ({ post }) => {
     const { isAuthenticated } = useAuth();
+    const [repostsCount, setRepostsCount] = useState(post.repostsCount);
+    const [repliesCount, setRepliesCount] = useState(post.repliesCount);
     const [isLiked, setIsLiked] = useState(post.isLiked);
     const [likesCount, setLikesCount] = useState(post.likesCount);
     const [isReposted, setIsReposted] = useState(post.isReposted);
@@ -141,6 +143,7 @@ const Post: React.FC<PostProps> = ({ post }) => {
         try {
             await createRepost(post.id);
             setIsReposted(true);
+            setRepostsCount(repostsCount + 1);
             setRepostMenuOpen(false);
             setCardClickable(true);
         } catch (error) {
@@ -163,8 +166,10 @@ const Post: React.FC<PostProps> = ({ post }) => {
         try {
             if (modalType === 'reply') {
                 await createReply(post.id, content);
+                setRepliesCount(repliesCount + 1);
             } else if (modalType === 'repostWithComment') {
                 await createRepostWithComment(post.id, content);
+                setRepostsCount(repostsCount + 1);
             }
             setModalOpen(false);
             setCardClickable(true);
@@ -260,7 +265,7 @@ const Post: React.FC<PostProps> = ({ post }) => {
                                 handleReply();
                             }}>
                                 💬
-                                <ActionMetric>{showData?.repliesCount}</ActionMetric>
+                                <ActionMetric>{repliesCount}</ActionMetric>
                             </ActionButton>
 
                             <ActionButton
@@ -271,7 +276,7 @@ const Post: React.FC<PostProps> = ({ post }) => {
                                 }}
                             >
                                 🔁
-                                <ActionMetric>{showData?.repostsCount}</ActionMetric>
+                                <ActionMetric>{repostsCount}</ActionMetric>
                             </ActionButton>
 
                             <ShareWrapper>
