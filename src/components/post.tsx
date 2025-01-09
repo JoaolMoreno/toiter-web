@@ -6,6 +6,7 @@ import { createReply, createRepost, createRepostWithComment, likePost, unlikePos
 import Modal from '@/components/modal';
 import RepostMenu from '@/components/RepostMenu';
 import { useAuth } from '@/context/AuthContext';
+import PostText from './postText';
 
 interface PostProps {
     post: PostData;
@@ -215,16 +216,21 @@ const Post: React.FC<PostProps> = ({ post }) => {
 
                 <MainContent>
                     <LeftColumn>
-                        <Avatar src={showData.profilePicture || '/default-profile.png'} alt={showData?.username} onClick={(e) => handleProfileClick(e, showData?.username)} />
+                        <Avatar
+                            src={showData.profilePicture || '/default-profile.png'}
+                            alt={showData?.username}
+                            onClick={(e) => handleProfileClick(e, showData?.username)}
+                        />
                     </LeftColumn>
 
                     <RightColumn>
                         <HeaderRow>
-                            <UserName onClick={(e) => handleProfileClick(e, showData?.username)}>{showData?.username}</UserName>
+                            <UserName onClick={(e) => handleProfileClick(e, showData?.username)}>
+                                {showData?.username}
+                            </UserName>
                             <PostTime>{formatTimestamp(showData?.createdAt)}</PostTime>
                         </HeaderRow>
-
-                        <PostText>{showData?.content}</PostText>
+                        <PostText content={showData?.content || ''} />
 
                         {isRepostWithComment && post.repostPostData && (
                             <QuotedPost>
@@ -243,11 +249,13 @@ const Post: React.FC<PostProps> = ({ post }) => {
                                             if (post.repostPostData?.username) {
                                                 handleProfileClick(e, post.repostPostData.username);
                                             }
-                                        }}>{post.repostPostData?.username}</UserName>
+                                        }}>
+                                            {post.repostPostData?.username}
+                                        </UserName>
                                         <PostTime>{formatTimestamp(post.repostPostData.createdAt)}</PostTime>
                                     </QuotedUserInfo>
                                 </QuotedHeader>
-                                <PostText>{post.repostPostData?.content}</PostText>
+                                <PostText content={post.repostPostData?.content || ''} />
                             </QuotedPost>
                         )}
 
@@ -383,14 +391,6 @@ const UserName = styled.span`
 const PostTime = styled.span`
     color: ${({ theme }) => theme.colors.textLight};
     font-size: 14px;
-`;
-
-const PostText = styled.p`
-    color: ${({ theme }) => theme.colors.text};
-    font-size: 16px;
-    line-height: 1.6;
-    margin: 8px 0;
-    white-space: pre-wrap;
 `;
 
 const QuotedPost = styled.div`
