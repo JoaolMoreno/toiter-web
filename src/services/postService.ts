@@ -59,6 +59,16 @@ export const createPost = async (content: string): Promise<PostData> => {
     }
 };
 
+export const deletePost = async (postId: number) => {
+    try {
+        const response = await api.delete(`/posts/${postId}`);
+        return response.status === 204;
+    } catch (error) {
+        console.error('Erro ao excluir post:', error);
+        throw error;
+    }
+};
+
 export const createRepost = async (repostParentId: number): Promise<PostData> => {
     alert('Calma ai patrão, ainda não implementei essa função');
     return {} as PostData;
