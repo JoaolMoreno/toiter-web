@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { PostData } from '@/models/PostData';
 import styled from 'styled-components';
 import { useRouter } from 'next/router';
-import { createReply, createRepost, createRepostWithComment, likePost, unlikePost } from '@/services/postService';
+import { createReply, createRepost, createRepostWithComment, deletePost, likePost, unlikePost } from '@/services/postService';
 import Modal from '@/components/modal';
 import RepostMenu from '@/components/RepostMenu';
 import { useAuth } from '@/context/AuthContext';
@@ -15,18 +15,30 @@ interface PostProps {
 }
 
 const Post: React.FC<PostProps> = ({ post }) => {
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, user } = useAuth();
+    const router = useRouter();
+
+    // Estados de controle
+    const [isDeleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+    const [isHoveringPost, setIsHoveringPost] = useState(false);
+    const [isMenuOpen, setMenuOpen] = useState(false);
+    const [isRemoved, setIsRemoved] = useState(false);
+
+    // Contadores e flags
     const [repostsCount, setRepostsCount] = useState(post.repostsCount);
     const [repliesCount, setRepliesCount] = useState(post.repliesCount);
     const [isLiked, setIsLiked] = useState(post.isLiked);
     const [likesCount, setLikesCount] = useState(post.likesCount);
     const [isReposted, setIsReposted] = useState(post.isReposted);
+
+    // Modal de reply e repost
     const [isModalOpen, setModalOpen] = useState(false);
     const [isRepostMenuOpen, setRepostMenuOpen] = useState(false);
     const [isCardClickable, setCardClickable] = useState(true);
     const [modalType, setModalType] = useState<'reply' | 'repostWithComment'>();
-    const router = useRouter();
     const [showToast, setShowToast] = useState(false);
+
+    if (isRemoved) return null;
 
     const formatTimestamp = (dateString: string): string => {
         const date = new Date(`${dateString}Z`);
@@ -189,6 +201,22 @@ const Post: React.FC<PostProps> = ({ post }) => {
         setCardClickable(true);
     };
 
+    const handleMenuOpen = () => {
+        setMenuOpen(!isMenuOpen);
+        setTimeout(() => {
+            setMenuOpen(false);
+        }, 3000);
+    };
+
+    const handleDeletePost = async () => {
+        try {
+            await deletePost(post.id);
+            setIsRemoved(true);
+        } catch (error) {
+            console.error('Erro ao excluir post:', error);
+        }
+    };
+
     const handleViewThread = (postId: number) => {
         if (!isCardClickable) return;
         const currentPath = window.location.pathname;
@@ -206,7 +234,12 @@ const Post: React.FC<PostProps> = ({ post }) => {
 
     return (
         <Page>
-            <PostWrapper onClick={() => handleViewThread(post.id)}>
+            <PostWrapper
+                onClick={() => handleViewThread(post.id)}
+                onMouseEnter={() => setIsHoveringPost(true)}
+                onMouseLeave={() => setIsHoveringPost(false)}
+                isHoveringPost={isHoveringPost}
+            >
                 {isRepost && !isRepostWithComment && (
                     <RepostBanner>
                         <RepostIcon>🔁</RepostIcon>
@@ -219,16 +252,89 @@ const Post: React.FC<PostProps> = ({ post }) => {
                         <Avatar
                             src={showData.profilePicture || '/default-profile.png'}
                             alt={showData?.username}
+                            onMouseEnter={(e) => {
+                                e.stopPropagation();
+                                setIsHoveringPost(false);
+                            }}
+                            onMouseLeave={(e) => {
+                                e.stopPropagation();
+                                setIsHoveringPost(true);
+                            }}
                             onClick={(e) => handleProfileClick(e, showData?.username)}
                         />
                     </LeftColumn>
 
                     <RightColumn>
                         <HeaderRow>
-                            <UserName onClick={(e) => handleProfileClick(e, showData?.username)}>
+                            <UserName
+                                onMouseEnter={(e) => {
+                                    e.stopPropagation();
+                                    setIsHoveringPost(false);
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.stopPropagation();
+                                    setIsHoveringPost(true);
+                                }}
+                                onClick={(e) => handleProfileClick(e, showData?.username)}
+                            >
                                 {showData?.username}
                             </UserName>
                             <PostTime>{formatTimestamp(showData?.createdAt)}</PostTime>
+
+                            {showData?.username === user?.username && (
+                                <PostMenu>
+                                    <MenuButton
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleMenuOpen();
+                                        }}
+                                    >
+                                        &#x2026; {/* Ícone de três pontos */}
+                                    </MenuButton>
+                                    {isMenuOpen && (
+                                        <MenuOptions>
+                                            <DeleteOptionButton
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setDeleteConfirmOpen(true);
+                                                }}
+                                            >
+                                                Excluir
+                                            </DeleteOptionButton>
+                                        </MenuOptions>
+                                    )}
+                                </PostMenu>
+                            )}
+                            {isDeleteConfirmOpen && (
+                                <ConfirmationOverlay
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                    }}
+                                >
+                                    <DeleteConfirmationBox>
+                                        <ModalTitle>Deseja mesmo excluir?</ModalTitle>
+                                        <ButtonsRow>
+                                            <DeleteButton
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDeletePost();
+                                                }}
+                                            >
+                                                Sim
+                                            </DeleteButton>
+
+                                            <CancelButton
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setDeleteConfirmOpen(false);
+                                                }}
+                                            >
+                                                Não
+                                            </CancelButton>
+                                        </ButtonsRow>
+                                    </DeleteConfirmationBox>
+                                </ConfirmationOverlay>
+                            )}
                         </HeaderRow>
                         <PostText content={showData?.content || ''} />
 
@@ -239,17 +345,20 @@ const Post: React.FC<PostProps> = ({ post }) => {
                                         src={post.repostPostData.profilePicture || '/default-profile.png'}
                                         alt={post.repostPostData.username}
                                         onClick={(e) => {
+                                            e.stopPropagation();
                                             if (post.repostPostData?.username) {
                                                 handleProfileClick(e, post.repostPostData.username);
                                             }
                                         }}
                                     />
                                     <QuotedUserInfo>
-                                        <UserName onClick={(e) => {
-                                            if (post.repostPostData?.username) {
-                                                handleProfileClick(e, post.repostPostData.username);
-                                            }
-                                        }}>
+                                        <UserName
+                                            onClick={(e) => {
+                                                if (post.repostPostData?.username) {
+                                                    handleProfileClick(e, post.repostPostData.username);
+                                                }
+                                            }}
+                                        >
                                             {post.repostPostData?.username}
                                         </UserName>
                                         <PostTime>{formatTimestamp(post.repostPostData.createdAt)}</PostTime>
@@ -260,24 +369,34 @@ const Post: React.FC<PostProps> = ({ post }) => {
                         )}
 
                         <ActionButtons>
-                            <ActionButton onClick={(e) => {
-                                e.stopPropagation();
-                                handleLikeToggle(post.id);
-                            }}>
+                            <ActionButton
+                                onMouseEnter={() => setIsHoveringPost(false)}
+                                onMouseLeave={() => setIsHoveringPost(true)}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleLikeToggle(post.id);
+                                }}
+                            >
                                 {isLiked ? '❤️' : '🤍'}
                                 <ActionMetric>{likesCount}</ActionMetric>
                             </ActionButton>
 
-                            <ActionButton onClick={(e) => {
-                                e.stopPropagation();
-                                handleReply();
-                            }}>
+                            <ActionButton
+                                onMouseEnter={() => setIsHoveringPost(false)}
+                                onMouseLeave={() => setIsHoveringPost(true)}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleReply();
+                                }}
+                            >
                                 💬
                                 <ActionMetric>{repliesCount}</ActionMetric>
                             </ActionButton>
 
                             <ActionButton
                                 isActive={isReposted}
+                                onMouseEnter={() => setIsHoveringPost(false)}
+                                onMouseLeave={() => setIsHoveringPost(true)}
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     handleRepost();
@@ -288,7 +407,17 @@ const Post: React.FC<PostProps> = ({ post }) => {
                             </ActionButton>
 
                             <ShareWrapper>
-                                <ActionButton onClick={handleShare}>
+                                <ActionButton
+                                    onMouseEnter={(e) => {
+                                        e.stopPropagation();
+                                        setIsHoveringPost(false);
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.stopPropagation();
+                                        setIsHoveringPost(true);
+                                    }}
+                                    onClick={handleShare}
+                                >
                                     <ShareIcon />
                                 </ActionButton>
                                 <ToastNotification $visible={showToast}>Link Copiado!</ToastNotification>
@@ -321,159 +450,275 @@ const Post: React.FC<PostProps> = ({ post }) => {
 export default Post;
 
 const Page = styled.div`
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    font-family: Arial, sans-serif;
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 0 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: Arial, sans-serif;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 0 16px;
 `;
 
-const PostWrapper = styled.article`
-    width: 100%;
-    padding: 16px;
-    border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-    cursor: pointer;
-    transition: background-color 0.2s;
-
-    &:hover {
-        background-color: rgba(0, 0, 0, 0.03);
-    }
+const PostWrapper = styled.article<{ isHoveringPost: boolean }>`
+  width: 100%;
+  padding: 16px;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  cursor: pointer;
+  transition: background-color 0.2s;
+  background-color: ${({ isHoveringPost }) =>
+        isHoveringPost ? 'rgba(0, 0, 0, 0.03)' : 'transparent'};
 `;
 
 const RepostBanner = styled.div`
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: ${({ theme }) => theme.colors.textLight};
-    font-size: 14px;
-    margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: ${({ theme }) => theme.colors.textLight};
+  font-size: 14px;
+  margin-bottom: 8px;
 `;
 
 const MainContent = styled.div`
-    display: grid;
-    grid-template-columns: 48px 1fr;
-    gap: 12px;
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  gap: 12px;
 `;
 
 const LeftColumn = styled.div`
-    flex-shrink: 0;
+  flex-shrink: 0;
 `;
 
 const RightColumn = styled.div`
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 `;
 
 const Avatar = styled.img`
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
 `;
 
 const HeaderRow = styled.div`
-    display: flex;
-    align-items: center;
-    gap: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 `;
 
 const UserName = styled.span`
-    font-weight: 700;
-    color: ${({ theme }) => theme.colors.text};
-    
-    &:hover {
-        text-decoration: underline;
-    }
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.text};
+  &:hover {
+    text-decoration: underline;
+  }
 `;
 
 const PostTime = styled.span`
-    color: ${({ theme }) => theme.colors.textLight};
-    font-size: 14px;
+  color: ${({ theme }) => theme.colors.textLight};
+  font-size: 14px;
 `;
 
 const QuotedPost = styled.div`
-    border: 1px solid ${({ theme }) => theme.colors.border};
-    border-radius: 12px;
-    padding: 12px;
-    margin-top: 8px;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: 12px;
+  padding: 12px;
+  margin-top: 8px;
 `;
 
 const QuotedHeader = styled.div`
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
 `;
 
 const QuotedAvatar = styled.img`
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
 `;
 
 const QuotedUserInfo = styled.div`
-    display: flex;
-    align-items: center;
-    gap: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 `;
 
 const ActionButtons = styled.div`
-    display: flex;
-    justify-content: space-between;
-    max-width: 425px;
-    margin-top: 12px;
+  display: flex;
+  justify-content: space-between;
+  max-width: 425px;
+  margin-top: 12px;
 `;
 
 const ActionButton = styled.button<{ isActive?: boolean }>`
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px;
-    border: none;
-    background: none;
-    color: ${({ theme, isActive }) => isActive ? theme.colors.primary : theme.colors.textLight};
-    cursor: pointer;
-    transition: all 0.2s;
-    font-size: 18px;
-
-    &:hover {
-        color: ${({ theme }) => theme.colors.primary};
-        background-color: ${({ theme }) => `${theme.colors.primary}10`};
-        border-radius: 50px;
-    }
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: none;
+  background: none;
+  color: ${({ theme, isActive }) =>
+        isActive ? theme.colors.primary : theme.colors.textLight};
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 18px;
+  &:hover {
+    color: ${({ theme }) => theme.colors.primary};
+    background-color: ${({ theme }) => `${theme.colors.primary}10`};
+    border-radius: 50px;
+  }
 `;
 
 const ActionMetric = styled.span`
-    font-size: 16px;
+  font-size: 16px;
 `;
 
 const ShareWrapper = styled.div`
-    position: relative;
+  position: relative;
 `;
 
 const ToastNotification = styled.div<{ $visible: boolean }>`
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: ${({ theme }) => theme.colors.text};
-    color: black;
-    padding: 8px 12px;
-    border-radius: 4px;
-    font-size: 14px;
-    opacity: ${props => props.$visible ? 1 : 0};
-    visibility: ${props => props.$visible ? 'visible' : 'hidden'};
-    transition: opacity 0.2s;
-    pointer-events: none;
-    white-space: nowrap;
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: ${({ theme }) => theme.colors.text};
+  color: black;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  opacity: ${({ $visible }) => ($visible ? 1 : 0)};
+  visibility: ${({ $visible }) => ($visible ? 'visible' : 'hidden')};
+  transition: opacity 0.2s;
+  pointer-events: none;
+  white-space: nowrap;
 `;
 
 const RepostIcon = styled.span`
-    color: ${({ theme }) => theme.colors.textLight};
-    font-size: 14px;
-    margin-right: 4px;
-    display: inline-flex;
-    align-items: center;
+  color: ${({ theme }) => theme.colors.textLight};
+  font-size: 14px;
+  margin-right: 4px;
+  display: inline-flex;
+  align-items: center;
+`;
+
+const PostMenu = styled.div`
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  position: relative;
+`;
+
+const MenuButton = styled.button`
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: ${({ theme }) => theme.colors.textLight};
+  &:hover {
+    color: ${({ theme }) => theme.colors.primary};
+  }
+  &:focus {
+    outline: none;
+  }
+`;
+
+const MenuOptions = styled.div`
+  position: absolute;
+  top: 2rem;
+  right: 0;
+  background: ${({ theme }) => theme.colors.background};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: 8px;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+  padding: 0.5rem;
+`;
+
+const ButtonsRow = styled.div`
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+  gap: 0.5rem;
+`;
+
+const DeleteButton = styled.button`
+  background-color: #e53e3e;
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  &:hover {
+    background-color: #c53030;
+  }
+`;
+
+const ConfirmationOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+`;
+
+const DeleteConfirmationBox = styled.div`
+  background: ${({ theme }) => theme.colors.background};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: 8px;
+  padding: 1.5rem 2rem;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+`;
+
+const ModalTitle = styled.p`
+  font-size: 1.1rem;
+  color: ${({ theme }) => theme.colors.text};
+  margin-bottom: 1rem;
+  text-align: center;
+`;
+
+const CancelButton = styled.button`
+  background-color: #e2e8f0;
+  color: #1a202c;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  &:hover {
+    background-color: #cbd5e0;
+  }
+`;
+
+const DeleteOptionButton = styled.button`
+  background-color: #e53e3e;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  width: 100%;
+  text-align: center;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.2s;
+  &:hover {
+    background-color: #c53030;
+    transform: scale(1.05);
+  }
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 5px rgba(229, 62, 62, 0.8);
+  }
+  &:active {
+    transform: scale(0.95);
+  }
 `;
