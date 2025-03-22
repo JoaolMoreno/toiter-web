@@ -42,6 +42,7 @@ class ChatService {
         try {
             const { data } = await api.get('chats/my-chats');
             console.log(`✅ Retrieved ${data.content.length} chats`);
+            localStorage.setItem('my_chats', JSON.stringify(data));
             return data;
         } catch (error) {
             console.error('❌ Error fetching chats:', error);
@@ -73,6 +74,110 @@ class ChatService {
             console.error(`❌ Error starting chat with ${username}:`, error);
             throw error;
         }
+    }
+
+    async syncChatMessages(chatId: number): Promise<Message[]> {
+        console.log(`🔄 Syncing messages for chat ${chatId}`);
+
+        // Recupera mensagens salvas no localStorage
+        const storedMessagesStr = localStorage.getItem(`chat_${chatId}_messages`);
+        let localMessages: Message[] = storedMessagesStr ? JSON.parse(storedMessagesStr) : [];
+
+        // Se não há mensagens locais, busca todas paginadas
+        if (!localMessages.length) {
+            return await this.fetchAllMessages(chatId);
+        }
+
+        // Se há mensagens locais, busca até encontrar uma já existente
+        return await this.fetchMessagesUntilKnown(chatId, localMessages);
+    }
+
+    private async fetchAllMessages(chatId: number): Promise<Message[]> {
+        const allMessages: Message[] = [];
+        let page = 0;
+        const pageSize = 100;
+        let hasMore = true;
+
+        while (hasMore) {
+            try {
+                const response = await api.get(`chats/${chatId}/messages`, {
+                    params: { page, size: pageSize }
+                });
+
+                const messages = response.data.content.map((msg: any) => ({
+                    chatId: msg.chatId,
+                    message: msg.message,
+                    sender: msg.sender,
+                    timestamp: msg.sentDate
+                }));
+
+                allMessages.push(...messages);
+
+                hasMore = !response.data.last;
+                page++;
+
+                // Salva progresso no localStorage
+                localStorage.setItem(`chat_${chatId}_messages`, JSON.stringify(allMessages));
+
+                console.log(`📥 Fetched page ${page} for chat ${chatId}, total messages: ${allMessages.length}`);
+            } catch (error) {
+                console.error(`❌ Error fetching messages page ${page}:`, error);
+                throw error;
+            }
+        }
+
+        return allMessages;
+    }
+
+    private async fetchMessagesUntilKnown(chatId: number, localMessages: Message[]): Promise<Message[]> {
+        let page = 0;
+        const pageSize = 100;
+        let hasMore = true;
+        const allMessages = [...localMessages];
+        const latestLocalId = Math.max(...localMessages.map(m => parseInt(m.timestamp.split('.')[0].replace(/\D/g, ''))));
+
+        while (hasMore) {
+            try {
+                const response = await api.get(`chats/${chatId}/messages`, {
+                    params: { page, size: pageSize }
+                });
+
+                const messages = response.data.content.map((msg: any) => ({
+                    chatId: msg.chatId,
+                    message: msg.message,
+                    sender: '', // Você precisará adicionar o sender no backend
+                    timestamp: msg.sentDate
+                }));
+
+                // Verifica se encontramos uma mensagem já conhecida
+                const hasKnownMessage = messages.some((msg: { timestamp: string; }) => {
+                    const msgId = parseInt(msg.timestamp.split('.')[0].replace(/\D/g, ''));
+                    return msgId <= latestLocalId;
+                });
+
+                allMessages.unshift(...messages.filter((msg: { timestamp: string; }) => {
+                    const msgId = parseInt(msg.timestamp.split('.')[0].replace(/\D/g, ''));
+                    return msgId > latestLocalId;
+                }));
+
+                if (hasKnownMessage) {
+                    hasMore = false;
+                } else {
+                    hasMore = !response.data.last;
+                    page++;
+                }
+
+                // Salva progresso no localStorage
+                localStorage.setItem(`chat_${chatId}_messages`, JSON.stringify(allMessages));
+
+                console.log(`📥 Synced page ${page} for chat ${chatId}, total messages: ${allMessages.length}`);
+            } catch (error) {
+                console.error(`❌ Error syncing messages page ${page}:`, error);
+                throw error;
+            }
+        }
+
+        return allMessages;
     }
 
     connectToWebSocket(jwtToken: string) {

@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import styled from 'styled-components';
-import { chatService, ChatPreview, Message } from '../services/chatService';
+import { chatService, ChatPreview, Message } from '@/services/chatService';
 import NewChat from './newChat';
+import {useAuth} from "@/context/AuthContext";
 
 const ChatContainer = styled.div`
   display: flex;
@@ -29,7 +30,7 @@ const ChatItem = styled.div<{ active: boolean }>`
   border-bottom: 1px solid #eee;
   cursor: pointer;
   background: ${props => props.active ? '#f0f2f5' : 'transparent'};
-  
+
   &:hover {
     background: #f0f2f5;
   }
@@ -54,7 +55,7 @@ const MessageBubble = styled.div<{ isMine: boolean }>`
   max-width: 70%;
   padding: 10px 15px;
   border-radius: 16px;
-  background: ${props => props.isMine ? '#0084ff' : '#f0f2f5'};
+  background: ${props => props.isMine ? '#0084ff' : '#4CAF50'};
   color: ${props => props.isMine ? 'white' : 'black'};
   align-self: ${props => props.isMine ? 'flex-end' : 'flex-start'};
 `;
@@ -72,7 +73,7 @@ const Input = styled.input`
   border: 1px solid #eee;
   border-radius: 20px;
   outline: none;
-  
+
   &:focus {
     border-color: #0084ff;
   }
@@ -85,20 +86,21 @@ const SendButton = styled.button`
   color: white;
   border: none;
   cursor: pointer;
-  
+
   &:hover {
     background: #0073e6;
   }
 `;
 
 const Chat: React.FC = () => {
+  const { user } = useAuth();
   const [chats, setChats] = useState<ChatPreview[]>([]);
   const [selectedChatId, setSelectedChatId] = useState<number | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
-  const [currentUsername] = useState(() => localStorage.getItem('username') || '');
 
   const loadChats = useCallback(async () => {
+    console.log('📬 Loading chats...');
     try {
       const response = await chatService.getMyChats();
       setChats(response.content);
@@ -107,25 +109,51 @@ const Chat: React.FC = () => {
     }
   }, []);
 
+  const loadMessages = useCallback(async (chatId: number) => {
+    try {
+      const syncedMessages = await chatService.syncChatMessages(chatId);
+      setMessages(syncedMessages);
+      console.log(syncedMessages);
+    } catch (error) {
+      console.error('Failed to sync messages:', error);
+    }
+  }, []);
+
   useEffect(() => {
+    const storedChats = localStorage.getItem('my_chats');
+    if (storedChats) {
+      setChats(JSON.parse(storedChats).content);
+    }
+
     loadChats();
     const token = localStorage.getItem('accessToken');
-    console.log(token)
     if (token) {
-        console.log('🔌 Connecting to WebSocket... 3');
+      console.log('🔌 Connecting to WebSocket...');
       chatService.connectToWebSocket(token);
     }
 
     const cleanup = chatService.onMessage((message) => {
-      setMessages(prev => [...prev, message]);
-      loadChats(); // Reload chat list to update last messages
+      setMessages(prev => {
+        const updated = [...prev, message];
+        if (message.chatId === selectedChatId) {
+          localStorage.setItem(`chat_${selectedChatId}_messages`, JSON.stringify(updated));
+        }
+        return updated;
+      });
+      loadChats();
     });
 
     return () => {
       cleanup();
       chatService.disconnectWebSocket();
     };
-  }, [loadChats]);
+  }, [loadChats, selectedChatId]);
+
+  useEffect(() => {
+    if (selectedChatId) {
+      loadMessages(selectedChatId);
+    }
+  }, [selectedChatId, loadMessages]);
 
   const handleSendMessage = async () => {
     if (!selectedChatId || !newMessage.trim()) return;
@@ -149,56 +177,56 @@ const Chat: React.FC = () => {
   };
 
   return (
-    <ChatContainer>
-      <Sidebar>
-        {/* <NewChat onStartChat={handleStartChat} /> */}
-        <ChatList>
-          {chats.map(chat => (
-            <ChatItem
-              key={chat.chatId}
-              active={chat.chatId === selectedChatId}
-              onClick={() => setSelectedChatId(chat.chatId)}
-            >
-              <h4>{chat.receiverUsername}</h4>
-              <p>{chat.lastMessageContent}</p>
-              <small>
-                {new Date(chat.lastMessageSentDate).toLocaleTimeString()}
-              </small>
-            </ChatItem>
-          ))}
-        </ChatList>
-      </Sidebar>
-
-      <ChatWindow>
-        {selectedChatId ? (
-          <>
-            <MessageList>
-              {messages.map((msg, index) => (
-                <MessageBubble
-                  key={index}
-                  isMine={msg.sender === currentUsername}
+      <ChatContainer>
+        <Sidebar>
+          <NewChat onStartChat={handleStartChat} />
+          <ChatList>
+            {chats.map(chat => (
+                <ChatItem
+                    key={chat.chatId}
+                    active={chat.chatId === selectedChatId}
+                    onClick={() => setSelectedChatId(chat.chatId)}
                 >
-                  {msg.message}
-                </MessageBubble>
-              ))}
-            </MessageList>
-            <InputArea>
-              <Input
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                placeholder="Type a message..."
-              />
-              <SendButton onClick={handleSendMessage}>Send</SendButton>
-            </InputArea>
-          </>
-        ) : (
-          <div style={{ padding: 20, textAlign: 'center' }}>
-            Select a chat to start messaging
-          </div>
-        )}
-      </ChatWindow>
-    </ChatContainer>
+                  <h4>{chat.receiverUsername}</h4>
+                  <p>{chat.lastMessageContent}</p>
+                  <small>
+                    {new Date(chat.lastMessageSentDate).toLocaleTimeString()}
+                  </small>
+                </ChatItem>
+            ))}
+          </ChatList>
+        </Sidebar>
+
+        <ChatWindow>
+          {selectedChatId ? (
+              <>
+                <MessageList>
+                  {messages.map((msg, index) => (
+                      <MessageBubble
+                          key={index}
+                          isMine={msg.sender == user?.username}
+                      >
+                        {msg.message}
+                      </MessageBubble>
+                  ))}
+                </MessageList>
+                <InputArea>
+                  <Input
+                      value={newMessage}
+                      onChange={(e) => setNewMessage(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                      placeholder="Type a message..."
+                  />
+                  <SendButton onClick={handleSendMessage}>Send</SendButton>
+                </InputArea>
+              </>
+          ) : (
+              <div style={{ padding: 20, textAlign: 'center' }}>
+                Select a chat to start messaging
+              </div>
+          )}
+        </ChatWindow>
+      </ChatContainer>
   );
 };
 
