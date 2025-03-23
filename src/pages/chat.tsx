@@ -2,6 +2,7 @@ import styled from 'styled-components';
 import dynamic from 'next/dynamic';
 import Head from 'next/head';
 import withAuth from '@/hoc/withAuth';
+import {WebSocketProvider} from "@/context/WebSocketContext";
 
 // Dynamically import chat components to avoid SSR issues with WebSocket
 const ChatComponent = dynamic(() => import('@/components/chat'), {
@@ -23,7 +24,9 @@ const ChatPage = () => {
         <title>Messages | Toiter</title>
       </Head>
       <ChatPageContainer>
-        <ChatComponent />
+          <WebSocketProvider>
+            <ChatComponent />
+          </WebSocketProvider>
       </ChatPageContainer>
     </>
   );

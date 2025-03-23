@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { chatService, ChatPreview, Message } from '@/services/chatService';
 import NewChat from './newChat';
 import { useAuth } from "@/context/AuthContext";
+import { useWebSocket } from '@/context/WebSocketContext';
 
 const ChatContainer = styled.div`
   display: flex;
@@ -94,6 +95,7 @@ const SendButton = styled.button`
 
 const Chat: React.FC = () => {
   const { user } = useAuth();
+  const { sendMessage } = useWebSocket();
   const [chats, setChats] = useState<ChatPreview[]>([]);
   const [selectedChatId, setSelectedChatId] = useState<number | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -114,18 +116,13 @@ const Chat: React.FC = () => {
     try {
       const syncedMessages = await chatService.syncChatMessages(chatId);
       setMessages(syncedMessages);
-      console.log(syncedMessages);
     } catch (error) {
       console.error('Failed to sync messages:', error);
     }
   }, []);
 
   useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    if (token) {
-      console.log('🔌 Connecting to WebSocket...');
-      chatService.connectToWebSocket(token);
-    }
+    // Let WebSocketContext handle the connection
 
     const cleanup = chatService.onMessage((message) => {
       if (message.chatId === selectedChatId) {
@@ -140,15 +137,9 @@ const Chat: React.FC = () => {
 
     return () => {
       cleanup();
-      chatService.disconnectWebSocket();
+      // Disconnection is handled by WebSocketContext
     };
   }, [loadChats, selectedChatId]);
-
-  useEffect(() => {
-    if (selectedChatId) {
-      loadMessages(selectedChatId);
-    }
-  }, [selectedChatId, loadMessages]);
 
   useEffect(() => {
     const storedChats = localStorage.getItem('my_chats');
@@ -173,7 +164,9 @@ const Chat: React.FC = () => {
     if (!selectedChatId || !newMessage.trim()) return;
 
     try {
-      chatService.sendMessage(selectedChatId, newMessage);
+      // Use the context method instead of direct service call
+      sendMessage(selectedChatId, newMessage);
+
       setMessages(prev => [
         ...prev,
         {
