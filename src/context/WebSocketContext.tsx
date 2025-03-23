@@ -19,9 +19,14 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
 
     const connect = (token: string) => {
         if (token && !connected) {
-            chatService.connectToWebSocket(token)
-                .then(() => setConnected(true))
-                .catch(err => console.error('Failed to connect WebSocket:', err));
+            const result = chatService.connectToWebSocket(token);
+            if (result) {
+                result
+                    .then(() => setConnected(true))
+                    .catch(err => console.error('Failed to connect WebSocket:', err));
+            } else {
+                setConnected(true);
+            }
         }
     };
 
