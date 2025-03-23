@@ -1,8 +1,5 @@
-import { useEffect } from 'react';
 import styled from 'styled-components';
-import { useAuth } from '@/context/AuthContext';
 import dynamic from 'next/dynamic';
-import { useRouter } from 'next/router';
 import Head from 'next/head';
 import withAuth from '@/hoc/withAuth';
 
@@ -20,19 +17,6 @@ const ChatPageContainer = styled.div`
 `;
 
 const ChatPage = () => {
-  const { isAuthenticated } = useAuth();
-  const router = useRouter();
-
-//   useEffect(() => {
-//     if (!isAuthenticated) {
-//       router.push('/auth/login');
-//     }
-//   }, [isAuthenticated, router]);
-
-//   if (!isAuthenticated) {
-//     return null;
-//   }
-
   return (
     <>
       <Head>

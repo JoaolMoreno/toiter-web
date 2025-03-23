@@ -1,8 +1,8 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import styled from 'styled-components';
 import { chatService, ChatPreview, Message } from '@/services/chatService';
 import NewChat from './newChat';
-import {useAuth} from "@/context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 
 const ChatContainer = styled.div`
   display: flex;
@@ -98,6 +98,7 @@ const Chat: React.FC = () => {
   const [selectedChatId, setSelectedChatId] = useState<number | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const loadChats = useCallback(async () => {
     console.log('📬 Loading chats...');
@@ -120,12 +121,6 @@ const Chat: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const storedChats = localStorage.getItem('my_chats');
-    if (storedChats) {
-      setChats(JSON.parse(storedChats).content);
-    }
-
-    loadChats();
     const token = localStorage.getItem('accessToken');
     if (token) {
       console.log('🔌 Connecting to WebSocket...');
@@ -133,13 +128,13 @@ const Chat: React.FC = () => {
     }
 
     const cleanup = chatService.onMessage((message) => {
-      setMessages(prev => {
-        const updated = [...prev, message];
-        if (message.chatId === selectedChatId) {
+      if (message.chatId === selectedChatId) {
+        setMessages(prev => {
+          const updated = [...prev, message];
           localStorage.setItem(`chat_${selectedChatId}_messages`, JSON.stringify(updated));
-        }
-        return updated;
-      });
+          return updated;
+        });
+      }
       loadChats();
     });
 
@@ -155,11 +150,39 @@ const Chat: React.FC = () => {
     }
   }, [selectedChatId, loadMessages]);
 
+  useEffect(() => {
+    const storedChats = localStorage.getItem('my_chats');
+    if (storedChats) {
+      setChats(JSON.parse(storedChats).content);
+    }
+
+    loadChats();
+  }, [loadChats]);
+
+  useEffect(() => {
+    if (selectedChatId) {
+      loadMessages(selectedChatId);
+    }
+  }, [selectedChatId, loadMessages]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
   const handleSendMessage = async () => {
     if (!selectedChatId || !newMessage.trim()) return;
 
     try {
       chatService.sendMessage(selectedChatId, newMessage);
+      setMessages(prev => [
+        ...prev,
+        {
+          chatId: selectedChatId,
+          sender: user?.username || 'Unknown',
+          message: newMessage,
+          timestamp: new Date().toISOString()
+        }
+      ]);
       setNewMessage('');
     } catch (error) {
       console.error('Failed to send message:', error);
@@ -201,7 +224,7 @@ const Chat: React.FC = () => {
           {selectedChatId ? (
               <>
                 <MessageList>
-                  {messages.map((msg, index) => (
+                  {messages.filter(msg => msg.chatId === selectedChatId).map((msg, index) => (
                       <MessageBubble
                           key={index}
                           isMine={msg.sender == user?.username}
@@ -209,6 +232,7 @@ const Chat: React.FC = () => {
                         {msg.message}
                       </MessageBubble>
                   ))}
+                  <div ref={messagesEndRef} />
                 </MessageList>
                 <InputArea>
                   <Input

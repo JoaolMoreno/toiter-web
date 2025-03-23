@@ -79,16 +79,16 @@ class ChatService {
     async syncChatMessages(chatId: number): Promise<Message[]> {
         console.log(`🔄 Syncing messages for chat ${chatId}`);
 
-        // Recupera mensagens salvas no localStorage
+        // Retrieve messages saved in localStorage
         const storedMessagesStr = localStorage.getItem(`chat_${chatId}_messages`);
         let localMessages: Message[] = storedMessagesStr ? JSON.parse(storedMessagesStr) : [];
 
-        // Se não há mensagens locais, busca todas paginadas
+        // If there are no local messages, fetch all paginated messages
         if (!localMessages.length) {
             return await this.fetchAllMessages(chatId);
         }
 
-        // Se há mensagens locais, busca até encontrar uma já existente
+        // If there are local messages, fetch until a known message is found
         return await this.fetchMessagesUntilKnown(chatId, localMessages);
     }
 
@@ -116,8 +116,8 @@ class ChatService {
                 hasMore = !response.data.last;
                 page++;
 
-                // Salva progresso no localStorage
-                localStorage.setItem(`chat_${chatId}_messages`, JSON.stringify(allMessages));
+                // Save progress in localStorage in reversed order
+                localStorage.setItem(`chat_${chatId}_messages`, JSON.stringify(allMessages.reverse()));
 
                 console.log(`📥 Fetched page ${page} for chat ${chatId}, total messages: ${allMessages.length}`);
             } catch (error) {
@@ -145,11 +145,11 @@ class ChatService {
                 const messages = response.data.content.map((msg: any) => ({
                     chatId: msg.chatId,
                     message: msg.message,
-                    sender: '', // Você precisará adicionar o sender no backend
+                    sender: msg.sender,
                     timestamp: msg.sentDate
                 }));
 
-                // Verifica se encontramos uma mensagem já conhecida
+                // Check if a known message is found
                 const hasKnownMessage = messages.some((msg: { timestamp: string; }) => {
                     const msgId = parseInt(msg.timestamp.split('.')[0].replace(/\D/g, ''));
                     return msgId <= latestLocalId;
@@ -167,8 +167,8 @@ class ChatService {
                     page++;
                 }
 
-                // Salva progresso no localStorage
-                localStorage.setItem(`chat_${chatId}_messages`, JSON.stringify(allMessages));
+                // Save progress in localStorage in reversed order
+                localStorage.setItem(`chat_${chatId}_messages`, JSON.stringify(allMessages.reverse()));
 
                 console.log(`📥 Synced page ${page} for chat ${chatId}, total messages: ${allMessages.length}`);
             } catch (error) {
