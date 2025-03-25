@@ -51,8 +51,6 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
-    mem_limit: 1g
-    cpus: "1.0"
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
@@ -84,8 +82,6 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
-    mem_limit: 512m
-    cpus: "0.5"
 
   redis:
     image: redis:latest
@@ -100,8 +96,6 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
-    mem_limit: 256m
-    cpus: "0.25"
 
   toiter-user-service:
     image: lopesz3r4/toiter-user-service:latest
@@ -116,7 +110,7 @@ services:
     ports:
       - "9990:9990"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/toiterdb
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
       SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME_USERSERVICE}
       SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD_USERSERVICE}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
@@ -130,8 +124,6 @@ services:
       SERVER_URL: ${SERVER_URL}
     volumes:
       - ./logs:/app/logs
-    mem_limit: 512m
-    cpus: "0.5"
 
   toiter-post-service:
     image: lopesz3r4/toiter-post-service:latest
@@ -146,7 +138,7 @@ services:
     ports:
       - "9991:9991"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/toiterdb
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
       SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
@@ -160,8 +152,6 @@ services:
       SERVER_URL: ${SERVER_URL}
     volumes:
       - ./logs:/app/logs
-    mem_limit: 512m
-    cpus: "0.5"
 
   nginx:
     build:
@@ -195,8 +185,6 @@ services:
       - redis
       - toiter-user-service
       - toiter-post-service
-    mem_limit: 512m
-    cpus: "0.5"
 
 volumes:
   redis_data:
