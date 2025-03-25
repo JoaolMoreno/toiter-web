@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { chatService } from '../services/chatService';
+import { chatService } from '@/services/chatService';
 
 const Container = styled.div`
   padding: 15px;
