@@ -1,11 +1,12 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { chatService } from '@/services/chatService';
+import React, { createContext, useContext, useEffect, useState, ReactNode, useRef } from 'react';
+import { chatService, Message } from '@/services/chatService';
 
 interface WebSocketContextProps {
     connected: boolean;
     connect: (token: string) => void;
     disconnect: () => void;
     sendMessage: (chatId: number, message: string) => void;
+    subscribeToMessages: (handler: (message: Message) => void) => () => void;
 }
 
 interface WebSocketProviderProps {
@@ -16,6 +17,7 @@ const WebSocketContext = createContext<WebSocketContextProps | undefined>(undefi
 
 export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }) => {
     const [connected, setConnected] = useState(false);
+    const handlersRef = useRef<((message: Message) => void)[]>([]);
 
     const connect = (token: string) => {
         if (token && !connected) {
@@ -34,6 +36,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
         if (connected) {
             chatService.disconnectWebSocket();
             setConnected(false);
+            handlersRef.current = [];
         }
     };
 
@@ -43,19 +46,32 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
         }
     };
 
+    const subscribeToMessages = (handler: (message: Message) => void) => {
+        handlersRef.current = [...handlersRef.current, handler];
+        return () => {
+            handlersRef.current = handlersRef.current.filter(h => h !== handler);
+        };
+    };
+
     useEffect(() => {
         const token = localStorage.getItem('accessToken');
         if (token) {
             connect(token);
         }
 
+        // Configura a subscrição ao WebSocket uma vez
+        const unsubscribe = chatService.onMessage((message: Message) => {
+            handlersRef.current.forEach(handler => handler(message));
+        });
+
         return () => {
             disconnect();
+            unsubscribe();
         };
-    }, []);
+    }, []); // Sem dependências, roda apenas na montagem/desmontagem
 
     return (
-        <WebSocketContext.Provider value={{ connected, connect, disconnect, sendMessage }}>
+        <WebSocketContext.Provider value={{ connected, connect, disconnect, sendMessage, subscribeToMessages }}>
             {children}
         </WebSocketContext.Provider>
     );

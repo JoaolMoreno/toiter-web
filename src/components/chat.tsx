@@ -95,11 +95,12 @@ const SendButton = styled.button`
 
 const Chat: React.FC = () => {
   const { user } = useAuth();
-  const { sendMessage } = useWebSocket();
+  const { sendMessage, subscribeToMessages } = useWebSocket();
   const [chats, setChats] = useState<ChatPreview[]>([]);
   const [selectedChatId, setSelectedChatId] = useState<number | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
+  const [syncedChats, setSyncedChats] = useState<Record<number, number>>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const loadChats = useCallback(async () => {
@@ -114,17 +115,44 @@ const Chat: React.FC = () => {
 
   const loadMessages = useCallback(async (chatId: number) => {
     try {
-      const syncedMessages = await chatService.syncChatMessages(chatId);
-      setMessages(syncedMessages);
+      const now = Date.now();
+      const lastSynced = syncedChats[chatId] || 0;
+      const needsSync = now - lastSynced > 5 * 60 * 1000; // 5 minutes
+
+      if (needsSync) {
+        console.log(`Syncing messages for chat ${chatId} (last synced ${lastSynced ? new Date(lastSynced).toLocaleTimeString() : 'never'})`);
+        const syncedMessages = await chatService.syncChatMessages(chatId);
+        setMessages(syncedMessages);
+        setSyncedChats(prev => ({ ...prev, [chatId]: now }));
+      } else {
+        console.log(`Using cached messages for chat ${chatId}`);
+        const storedMessagesStr = localStorage.getItem(`chat_${chatId}_messages`);
+        if (storedMessagesStr) {
+          setMessages(JSON.parse(storedMessagesStr));
+        }
+      }
     } catch (error) {
       console.error('Failed to sync messages:', error);
     }
+  }, [syncedChats]);
+
+  const updateChatPreview = useCallback((message: Message) => {
+    setChats(prevChats =>
+        prevChats.map(chat =>
+            chat.chatId === message.chatId
+                ? {
+                  ...chat,
+                  lastMessageContent: message.message,
+                  lastMessageSender: message.sender,
+                  lastMessageSentDate: message.timestamp
+                }
+                : chat
+        )
+    );
   }, []);
 
   useEffect(() => {
-    // Let WebSocketContext handle the connection
-
-    const cleanup = chatService.onMessage((message) => {
+    const unsubscribe = subscribeToMessages((message: Message) => {
       if (message.chatId === selectedChatId) {
         setMessages(prev => {
           const updated = [...prev, message];
@@ -132,21 +160,17 @@ const Chat: React.FC = () => {
           return updated;
         });
       }
-      loadChats();
+      updateChatPreview(message);
     });
 
-    return () => {
-      cleanup();
-      // Disconnection is handled by WebSocketContext
-    };
-  }, [loadChats, selectedChatId]);
+    return () => unsubscribe();
+  }, [selectedChatId, updateChatPreview, subscribeToMessages]);
 
   useEffect(() => {
     const storedChats = localStorage.getItem('my_chats');
     if (storedChats) {
       setChats(JSON.parse(storedChats).content);
     }
-
     loadChats();
   }, [loadChats]);
 
@@ -164,18 +188,7 @@ const Chat: React.FC = () => {
     if (!selectedChatId || !newMessage.trim()) return;
 
     try {
-      // Use the context method instead of direct service call
       sendMessage(selectedChatId, newMessage);
-
-      setMessages(prev => [
-        ...prev,
-        {
-          chatId: selectedChatId,
-          sender: user?.username || 'Unknown',
-          message: newMessage,
-          timestamp: new Date().toISOString()
-        }
-      ]);
       setNewMessage('');
     } catch (error) {
       console.error('Failed to send message:', error);
@@ -217,14 +230,17 @@ const Chat: React.FC = () => {
           {selectedChatId ? (
               <>
                 <MessageList>
-                  {messages.filter(msg => msg.chatId === selectedChatId).map((msg, index) => (
-                      <MessageBubble
-                          key={index}
-                          isMine={msg.sender == user?.username}
-                      >
-                        {msg.message}
-                      </MessageBubble>
-                  ))}
+                  {messages
+                      .filter(msg => msg.chatId === selectedChatId)
+                      .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+                      .map((msg, index) => (
+                          <MessageBubble
+                              key={index}
+                              isMine={msg.sender === user?.username}
+                          >
+                            {msg.message}
+                          </MessageBubble>
+                      ))}
                   <div ref={messagesEndRef} />
                 </MessageList>
                 <InputArea>

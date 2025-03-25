@@ -11,6 +11,7 @@ export interface ChatPreview {
 }
 
 export interface Message {
+    id: number;
     chatId: number;
     message: string;
     sender: string;
@@ -105,6 +106,7 @@ class ChatService {
                 });
 
                 const messages = response.data.content.map((msg: any) => ({
+                    id: msg.id,
                     chatId: msg.chatId,
                     message: msg.message,
                     sender: msg.sender,
@@ -117,7 +119,7 @@ class ChatService {
                 page++;
 
                 // Save progress in localStorage in reversed order
-                localStorage.setItem(`chat_${chatId}_messages`, JSON.stringify(allMessages.reverse()));
+                localStorage.setItem(`chat_${chatId}_messages`, JSON.stringify(allMessages));
 
                 console.log(`📥 Fetched page ${page} for chat ${chatId}, total messages: ${allMessages.length}`);
             } catch (error) {
@@ -168,7 +170,7 @@ class ChatService {
                 }
 
                 // Save progress in localStorage in reversed order
-                localStorage.setItem(`chat_${chatId}_messages`, JSON.stringify(allMessages.reverse()));
+                localStorage.setItem(`chat_${chatId}_messages`, JSON.stringify(allMessages));
 
                 console.log(`📥 Synced page ${page} for chat ${chatId}, total messages: ${allMessages.length}`);
             } catch (error) {
@@ -204,10 +206,19 @@ class ChatService {
                     console.log('🔗 WebSocket connected successfully');
                     this.stompClient.subscribe('/user/queue/messages', (message: any) => {
                         try {
-                            const parsedMessage = JSON.parse(message.body);
-                            console.log('📨 Received message:', parsedMessage);
-                            console.log(`📨 Message in chat ${parsedMessage.chatId}: ${parsedMessage.message}`);
-                            this.messageHandlers.forEach(handler => handler(parsedMessage));
+                            const receivedMessage = JSON.parse(message.body);
+                            console.log('📨 Received message:', receivedMessage);
+
+                            const formattedMessage: Message = {
+                                id: receivedMessage.id,
+                                chatId: receivedMessage.chatId,
+                                message: receivedMessage.message,
+                                sender: receivedMessage.sender,
+                                timestamp: receivedMessage.sentDate || receivedMessage.timestamp
+                            };
+
+                            console.log(`📨 Message in chat ${formattedMessage.chatId}: ${formattedMessage.message}`);
+                            this.messageHandlers.forEach(handler => handler(formattedMessage));
                         } catch (e) {
                             console.error('❌ Error processing message:', e);
                             console.error('❌ Original message:', message);
