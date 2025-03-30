@@ -9,23 +9,24 @@ import React, { useEffect, useState, useCallback } from 'react';
 const ChatListComponent = dynamic(() => import('@/components/chatList'), { ssr: false });
 const ChatWindowComponent = dynamic(() => import('@/components/chatWindow'), { ssr: false });
 
+const ChatPageContainer = styled.div`
+    width: 100%;
+    height: calc(100vh - 75px);
+    display: flex;
+    flex-direction: column;
+    background: ${props => props.theme.colors.background};
+`;
+
 const ChatContainer = styled.div`
     display: flex;
     height: 100%;
-    max-height: 85vh;
-    background: #fff;
+    background: ${props => props.theme.colors.backgroundElevated};
+    overflow: hidden;
+
     @media (max-width: 768px) {
         display: block;
+        height: 100%;
     }
-`;
-
-const ChatPageContainer = styled.div`
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
 `;
 
 const ChatPageContent: React.FC = () => {

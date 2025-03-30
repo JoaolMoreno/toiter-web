@@ -8,14 +8,17 @@ const ChatWindow = styled.div`
     display: flex;
     flex-direction: column;
     background: #fff;
+    height: 100%;
+    overflow: hidden;
 `;
 
 const Header = styled.div`
     display: flex;
     align-items: center;
-    padding: 10px 15px;
-    border-bottom: 1px solid #eee;
+    padding: 16px;
     background: #fff;
+    border-bottom: 1px solid ${props => props.theme.colors.border};
+    flex-shrink: 0;
 `;
 
 const BackButton = styled.button`
@@ -35,17 +38,19 @@ const Username = styled.h3`
 const MessageList = styled.div`
     flex: 1;
     overflow-y: auto;
-    max-height: calc(100vh - 200px);
     padding: 20px;
     display: flex;
     flex-direction: column;
     gap: 10px;
+    min-height: 0;
 `;
 
 const InputArea = styled.div`
     display: flex;
-    padding: 10px;
-    border-top: 1px solid #eee;
+    padding: 16px;
+    background: ${props => props.theme.colors.backgroundElevated};
+    border-top: 1px solid ${props => props.theme.colors.border};
+    flex-shrink: 0;
 `;
 
 const Input = styled.input`
@@ -93,13 +98,13 @@ interface ChatWindowComponentProps {
 }
 
 const ChatWindowComponent: React.FC<ChatWindowComponentProps> = ({
-                                                                     selectedChatId,
-                                                                     messages,
-                                                                     setMessages,
-                                                                     sendMessage,
-                                                                     onBack,
-                                                                     receiverUsername,
-                                                                 }) => {
+    selectedChatId,
+    messages,
+    setMessages,
+    sendMessage,
+    onBack,
+    receiverUsername,
+}) => {
     const { user } = useAuth();
     const [newMessage, setNewMessage] = useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);

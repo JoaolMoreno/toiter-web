@@ -7,7 +7,14 @@ const Sidebar = styled.div`
     width: 320px;
     display: flex;
     flex-direction: column;
-    background: #f9f9f9;
+    background: white;
+    border-right: 1px solid ${props => props.theme.colors.border};
+    height: 100%;
+
+    @media (max-width: 768px) {
+        width: 100%;
+        height: 100%;
+    }
 `;
 
 const SearchContainer = styled.div`
