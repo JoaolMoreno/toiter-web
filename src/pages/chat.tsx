@@ -12,6 +12,7 @@ const ChatWindowComponent = dynamic(() => import('@/components/chatWindow'), { s
 const ChatContainer = styled.div`
     display: flex;
     height: 100%;
+    max-height: 85vh;
     background: #fff;
 `;
 
