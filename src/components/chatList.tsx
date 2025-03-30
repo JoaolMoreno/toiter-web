@@ -7,7 +7,7 @@ const Sidebar = styled.div`
     width: 320px;
     display: flex;
     flex-direction: column;
-    background: #f9f9f9; // Fundo mais suave
+    background: #f9f9f9;
 `;
 
 const SearchContainer = styled.div`
@@ -21,6 +21,7 @@ const SearchInput = styled.input`
     flex: 1;
     padding: 8px 12px;
     border: 1px solid #ddd;
+    margin-bottom: 0 !important;
     border-radius: 20px;
     background: #fff;
     outline: none;

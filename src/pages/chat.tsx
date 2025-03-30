@@ -14,6 +14,9 @@ const ChatContainer = styled.div`
     height: 100%;
     max-height: 85vh;
     background: #fff;
+    @media (max-width: 768px) {
+        display: block;
+    }
 `;
 
 const ChatPageContainer = styled.div`
@@ -31,6 +34,16 @@ const ChatPageContent: React.FC = () => {
     const [selectedChatId, setSelectedChatId] = useState<number | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
     const [syncedChats, setSyncedChats] = useState<Record<number, number>>({});
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth <= 768);
+        };
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const loadMessages = useCallback(async (chatId: number) => {
         try {
@@ -104,19 +117,44 @@ const ChatPageContent: React.FC = () => {
 
     return (
         <ChatContainer>
-            <ChatListComponent
-                selectedChatId={selectedChatId}
-                onSelectChat={setSelectedChatId}
-                onStartChat={handleStartChat}
-                chats={chats}
-                setChats={setChats}
-            />
-            <ChatWindowComponent
-                selectedChatId={selectedChatId}
-                messages={messages}
-                setMessages={setMessages}
-                sendMessage={sendMessage}
-            />
+            {isMobile ? (
+                selectedChatId ? (
+                    <ChatWindowComponent
+                        selectedChatId={selectedChatId}
+                        messages={messages}
+                        setMessages={setMessages}
+                        sendMessage={sendMessage}
+                        onBack={() => setSelectedChatId(null)}
+                        receiverUsername={chats.find(chat => chat.chatId === selectedChatId)?.receiverUsername}
+                    />
+                ) : (
+                    <ChatListComponent
+                        selectedChatId={selectedChatId}
+                        onSelectChat={setSelectedChatId}
+                        onStartChat={handleStartChat}
+                        chats={chats}
+                        setChats={setChats}
+                    />
+                )
+            ) : (
+                <>
+                    <ChatListComponent
+                        selectedChatId={selectedChatId}
+                        onSelectChat={setSelectedChatId}
+                        onStartChat={handleStartChat}
+                        chats={chats}
+                        setChats={setChats}
+                    />
+                    <ChatWindowComponent
+                        selectedChatId={selectedChatId}
+                        messages={messages}
+                        setMessages={setMessages}
+                        sendMessage={sendMessage}
+                        onBack={() => setSelectedChatId(null)}
+                        receiverUsername={chats.find(chat => chat.chatId === selectedChatId)?.receiverUsername}
+                    />
+                </>
+            )}
         </ChatContainer>
     );
 };
