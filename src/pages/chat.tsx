@@ -10,20 +10,18 @@ const ChatListComponent = dynamic(() => import('@/components/chatList'), { ssr: 
 const ChatWindowComponent = dynamic(() => import('@/components/chatWindow'), { ssr: false });
 
 const ChatContainer = styled.div`
-  display: flex;
-  height: calc(100vh - 60px);
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+    display: flex;
+    height: 100%;
+    background: #fff;
 `;
 
 const ChatPageContainer = styled.div`
-  width: 100%;
-  max-width: 1200px;
-  height: calc(100vh - 60px);
-  margin: 0 auto;
-  padding: 20px;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
 `;
 
 const ChatPageContent: React.FC = () => {
@@ -64,7 +62,7 @@ const ChatPageContent: React.FC = () => {
                         ...chat,
                         lastMessageContent: message.message,
                         lastMessageSender: message.sender,
-                        lastMessageSentDate: message.timestamp
+                        lastMessageSentDate: message.timestamp,
                     }
                     : chat
             )
