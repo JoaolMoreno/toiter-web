@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import type { PostData } from '../models/PostData'
 import { useAuthStore } from '../stores/auth'
@@ -19,6 +19,10 @@ const repliesCount = ref(props.post.repliesCount)
 const repostsCount = ref(props.post.repostsCount)
 const isRemoved = ref(false)
 const showToast = ref(false)
+
+const profilePicture = computed(() => {
+  return import.meta.env.DEV ? props.post.profilePicture.replace('https://', 'http://') : props.post.profilePicture
+})
 
 const formatTimestamp = (dateString: string): string => {
   const date = new Date(`${dateString}Z`)
@@ -93,6 +97,7 @@ const handleShare = (e: Event) => {
   <div v-if="!isRemoved" class="post-card" @click="handlePostClick">
     <div class="post-header">
       <div class="user-info" @click="handleProfileClick">
+        <img :src="profilePicture" alt="Profile picture" class="profile-pic" />
         <strong>{{ post.username }}</strong>
         <span class="timestamp">· {{ formatTimestamp(post.createdAt) }}</span>
       </div>
@@ -252,5 +257,12 @@ const handleShare = (e: Event) => {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
   }
+}
+
+.profile-pic {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
 }
 </style>
