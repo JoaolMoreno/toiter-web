@@ -49,6 +49,28 @@ export const unlikePost = async (postId: number) => {
     }
 };
 
+export const getPostById = async (postId: number): Promise<PostData> => {
+    try {
+        const { data } = await api.get(`posts/${postId}`);
+        return data;
+    } catch (error) {
+        console.error('Erro ao buscar post:', error);
+        throw error;
+    }
+};
+
+export const getReplies = async (postId: number, page: number, size: number) => {
+    try {
+        const { data } = await api.get(`posts/${postId}/replies`, {
+            params: { page, size },
+        });
+        return data;
+    } catch (error) {
+        console.error('Erro ao buscar respostas:', error);
+        throw error;
+    }
+};
+
 export const createPost = async (content: string): Promise<PostData> => {
     try {
         const response = await api.post('/posts', { content });
