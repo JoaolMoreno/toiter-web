@@ -14,10 +14,10 @@ export default defineConfig({
     }
   },
   build: {
+    ssrManifest: true,
     rollupOptions: {
-      input: {
-        main: path.resolve(__dirname, 'index.html'),
-        server: path.resolve(__dirname, 'src/entry-server.ts')
+      output: {
+        manualChunks: undefined
       }
     }
   },

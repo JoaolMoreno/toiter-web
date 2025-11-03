@@ -13,20 +13,32 @@ RUN npm install
 # Copiando todo o projeto
 COPY . .
 
-# Build do projeto Vite
+# Build do projeto Vite com SSR
 RUN npm run build
 
-# Production stage with nginx
-FROM nginx:alpine
+# Production stage
+FROM node:20-slim
 
-# Copiar o build para o nginx
-COPY --from=build /app/dist /usr/share/nginx/html
+WORKDIR /app
 
-# Copiar configuração customizada do nginx se necessário
-# COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copiar package files
+COPY package*.json ./
 
-# Expõe a porta padrão do nginx
-EXPOSE 80
+# Install production dependencies only
+RUN npm install --production
 
-# Comando para iniciar nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Copy built assets from build stage
+COPY --from=build /app/dist ./dist
+COPY --from=build /app/server.js ./
+
+# Copy necessary files
+COPY index.html ./
+
+# Expõe a porta da aplicação
+EXPOSE 3000
+
+# Set environment to production
+ENV NODE_ENV=production
+
+# Comando para iniciar o servidor SSR
+CMD ["node", "server.js"]
