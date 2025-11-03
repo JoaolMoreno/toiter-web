@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, onServerPrefetch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getPostById, getReplies, createReply } from '../services/postService'
 import type { PostData } from '../models/PostData'
@@ -61,7 +61,7 @@ onMounted(() => {
   loadReplies()
   
   if (typeof document !== 'undefined') {
-    document.title = 'Thread - Toiter'
+    document.title = post.value ? `${post.value.username} no Toiter` : 'Thread - Toiter'
   }
 })
 </script>
@@ -69,10 +69,13 @@ onMounted(() => {
 <template>
   <div class="container">
     <div class="thread-container">
-      <button class="back-button" @click="handleBack">
-        ← Voltar
-      </button>
-      
+      <div class="header">
+        <button class="back-button" @click="handleBack">
+          <span class="back-icon">←</span>
+          <span class="back-text">Voltar</span>
+        </button>
+      </div>
+
       <div v-if="post" class="main-post">
         <Post :post="post" />
         <button class="reply-button" @click="handleReply">
@@ -82,7 +85,7 @@ onMounted(() => {
       
       <div class="replies-section">
         <h2 v-if="replies.length > 0" class="section-title">
-          Respostas ({{ replies.length }})
+          Respostas
         </h2>
         <Post
           v-for="reply in replies"
@@ -128,17 +131,40 @@ onMounted(() => {
   padding: 0 16px;
 }
 
+.header {
+  display: flex;
+  align-items: center;
+  padding: 12px 0;
+  margin-bottom: 16px;
+}
+
 .back-button {
-  background: none;
+  background: transparent;
   border: none;
-  color: var(--color-primary);
+  color: var(--color-text-secondary);
   cursor: pointer;
-  font-size: var(--font-size-regular);
-  padding: 16px 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
 }
 
 .back-button:hover {
-  text-decoration: underline;
+  color: var(--color-text);
+  background-color: var(--color-background-elevated);
+}
+
+.back-icon {
+  font-size: 1.125rem;
+  line-height: 1;
+}
+
+.back-text {
+  line-height: 1;
 }
 
 .main-post {
@@ -153,7 +179,7 @@ onMounted(() => {
   border-radius: 8px;
   background-color: transparent;
   color: var(--color-primary);
-  font-weight: bold;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -170,7 +196,8 @@ onMounted(() => {
 
 .section-title {
   color: var(--color-text);
-  font-size: var(--font-size-large);
+  font-size: 1.25rem;
+  font-weight: 700;
   margin-bottom: 16px;
 }
 
@@ -181,4 +208,3 @@ onMounted(() => {
   padding: 24px;
 }
 </style>
-

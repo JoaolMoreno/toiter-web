@@ -50,7 +50,7 @@ export function useWebSocket() {
 
 // Initialize WebSocket connection on app mount
 export function initWebSocket() {
-  const token = localStorage.getItem('accessToken')
+  const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
   if (token) {
     const { connect } = useWebSocket()
     connect(token)

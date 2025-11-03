@@ -117,6 +117,7 @@ const handleClose = () => {
   color: var(--color-text);
   border: none;
   font-size: var(--font-size-regular);
+  font-weight: 600;
   cursor: pointer;
 }
 
@@ -142,7 +143,7 @@ const handleClose = () => {
   border-radius: 8px;
   padding: 8px 16px;
   font-size: var(--font-size-regular);
-  font-weight: bold;
+  font-weight: 600;
   cursor: pointer;
 }
 
@@ -162,7 +163,7 @@ const handleClose = () => {
 
 .username {
   font-size: var(--font-size-regular);
-  font-weight: bold;
+  font-weight: 700;
   color: var(--color-text);
   margin-bottom: 8px;
 }

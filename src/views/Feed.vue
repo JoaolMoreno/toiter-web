@@ -163,7 +163,8 @@ watch(() => feedStore.page, () => {
 
 .feed-title {
   color: var(--color-text);
-  font-size: var(--font-size-xlarge);
+  font-size: 1.75rem;
+  font-weight: 700;
   padding: 16px 0;
   border-bottom: 1px solid var(--color-border);
 }
@@ -201,7 +202,7 @@ watch(() => feedStore.page, () => {
   border-radius: 24px;
   background-color: var(--color-primary);
   color: white;
-  font-weight: bold;
+  font-weight: 600;
   cursor: pointer;
   align-self: flex-end;
   transition: background-color 0.2s;
@@ -221,7 +222,7 @@ watch(() => feedStore.page, () => {
 .end-message {
   text-align: center;
   color: #1b4332;
-  font-weight: bold;
+  font-weight: 700;
   font-size: 16px;
   margin-top: 20px;
 }

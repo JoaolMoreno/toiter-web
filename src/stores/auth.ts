@@ -14,8 +14,10 @@ export const useAuthStore = defineStore('auth', () => {
   const toast = useToast()
 
   const clearUserData = () => {
-    localStorage.removeItem('accessToken')
-    localStorage.removeItem('username')
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('accessToken')
+      localStorage.removeItem('username')
+    }
     delete api.defaults.headers.common['Authorization']
     user.value = null
     isAuthenticated.value = false
@@ -24,6 +26,13 @@ export const useAuthStore = defineStore('auth', () => {
   const verifySession = async () => {
     isLoading.value = true
     try {
+      // Skip on server-side rendering
+      if (typeof window === 'undefined') {
+        isAuthenticated.value = false
+        isLoading.value = false
+        return
+      }
+
       const token = localStorage.getItem('accessToken')
 
       if (token) {

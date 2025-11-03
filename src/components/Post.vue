@@ -166,7 +166,8 @@ const handleShare = (e: Event) => {
 }
 
 .user-info strong {
-  font-weight: bold;
+  font-weight: 700;
+  color: var(--color-text);
 }
 
 .user-info strong:hover {
@@ -174,8 +175,8 @@ const handleShare = (e: Event) => {
 }
 
 .timestamp {
-  color: var(--color-text-light);
-  font-size: var(--font-size-small);
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
 }
 
 .delete-button {
@@ -193,6 +194,8 @@ const handleShare = (e: Event) => {
 
 .post-content {
   color: var(--color-text);
+  font-size: 1rem;
+  font-weight: 400;
   margin-bottom: 12px;
   line-height: 1.5;
   white-space: pre-wrap;

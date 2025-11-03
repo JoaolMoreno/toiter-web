@@ -49,7 +49,7 @@ if (typeof document !== 'undefined') {
 .redirect a {
   color: var(--color-primary);
   text-decoration: none;
-  font-weight: bold;
+  font-weight: 600;
 }
 
 .redirect a:hover {

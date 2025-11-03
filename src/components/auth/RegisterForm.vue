@@ -99,7 +99,7 @@ const handleSubmit = async (e: Event) => {
   background-color: var(--color-primary);
   color: white;
   font-size: var(--font-size-regular);
-  font-weight: bold;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
 }

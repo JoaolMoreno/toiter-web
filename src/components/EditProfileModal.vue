@@ -45,6 +45,15 @@ const handleSubmit = async () => {
 
       <form class="form" @submit.prevent="handleSubmit">
         <div class="input-group">
+          <label class="label">Nome de Exibição</label>
+          <input
+            v-model="displayName"
+            type="text"
+            class="input"
+            placeholder="Seu nome de exibição"
+          />
+        </div>
+        <div class="input-group">
           <label class="label">Bio</label>
           <textarea
             v-model="bio"
@@ -135,22 +144,22 @@ const handleSubmit = async () => {
   color: var(--color-text);
   font-size: var(--font-size-regular);
   margin-bottom: 8px;
-  font-weight: bold;
+  font-weight: 600;
 }
 
+.input,
 .text-area {
   width: 100%;
-  min-height: 100px;
   padding: 12px;
   border: 1px solid var(--color-border);
   border-radius: 8px;
   background-color: var(--color-background);
   color: var(--color-text);
   font-size: var(--font-size-regular);
-  resize: vertical;
   font-family: inherit;
 }
 
+.input:focus,
 .text-area:focus {
   outline: none;
   border-color: var(--color-primary);
@@ -167,7 +176,7 @@ const handleSubmit = async () => {
   padding: 10px 20px;
   border-radius: 8px;
   font-size: var(--font-size-regular);
-  font-weight: bold;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
 }

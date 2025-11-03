@@ -264,7 +264,7 @@ const handleSubmit = async () => {
   padding: 10px 20px;
   border-radius: 8px;
   font-size: var(--font-size-regular);
-  font-weight: bold;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
 }

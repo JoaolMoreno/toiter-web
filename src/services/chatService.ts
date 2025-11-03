@@ -43,7 +43,9 @@ class ChatService {
         try {
             const { data } = await api.get('chats/my-chats');
             console.log(`✅ Retrieved ${data.content.length} chats`);
-            localStorage.setItem('my_chats', JSON.stringify(data));
+            if (typeof window !== 'undefined') {
+                localStorage.setItem('my_chats', JSON.stringify(data));
+            }
             return data;
         } catch (error) {
             console.error('❌ Error fetching chats:', error);
@@ -81,7 +83,7 @@ class ChatService {
         console.log(`🔄 Syncing messages for chat ${chatId}`);
 
         // Retrieve messages saved in localStorage
-        const storedMessagesStr = localStorage.getItem(`chat_${chatId}_messages`);
+        const storedMessagesStr = typeof window !== 'undefined' ? localStorage.getItem(`chat_${chatId}_messages`) : null;
         let localMessages: Message[] = storedMessagesStr ? JSON.parse(storedMessagesStr) : [];
 
         // If there are no local messages, fetch all paginated messages
@@ -119,7 +121,9 @@ class ChatService {
                 page++;
 
                 // Save progress in localStorage in reversed order
-                localStorage.setItem(`chat_${chatId}_messages`, JSON.stringify(allMessages));
+                if (typeof window !== 'undefined') {
+                    localStorage.setItem(`chat_${chatId}_messages`, JSON.stringify(allMessages));
+                }
 
                 console.log(`📥 Fetched page ${page} for chat ${chatId}, total messages: ${allMessages.length}`);
             } catch (error) {
@@ -175,7 +179,9 @@ class ChatService {
                 }
 
                 // Save progress in localStorage in reversed order
-                localStorage.setItem(`chat_${chatId}_messages`, JSON.stringify(allMessages));
+                if (typeof window !== 'undefined') {
+                    localStorage.setItem(`chat_${chatId}_messages`, JSON.stringify(allMessages));
+                }
 
                 console.log(`📥 Synced page ${page} for chat ${chatId}, total messages: ${allMessages.length}`);
             } catch (error) {

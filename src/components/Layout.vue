@@ -117,7 +117,7 @@ onMounted(() => {
 .app-name {
   color: var(--color-primary);
   font-size: var(--font-size-xlarge);
-  font-weight: bold;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
   padding-bottom: 2px;
@@ -161,7 +161,7 @@ onMounted(() => {
   border: none;
   border-radius: 8px;
   font-size: var(--font-size-regular);
-  font-weight: bold;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
 }

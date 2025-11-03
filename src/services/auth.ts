@@ -9,7 +9,9 @@ export const login = async (email: string, password: string) => {
         });
 
         // 2. Set token
-        localStorage.setItem('accessToken', data.accessToken);
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('accessToken', data.accessToken);
+        }
         api.defaults.headers.common['Authorization'] = `Bearer ${data.accessToken}`;
         
         // 3. Get user data from /me endpoint
@@ -39,7 +41,9 @@ export const checkSession = async () => {
         const { data } = await api.get('/auth/check-session');
 
         // Atualiza o token e o localStorage, se necessário
-        localStorage.setItem('accessToken', data.accessToken);
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('accessToken', data.accessToken);
+        }
         api.defaults.headers.common['Authorization'] = `Bearer ${data.accessToken}`;
         console.log('Sessão válida');
         return true;

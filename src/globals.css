@@ -7,11 +7,12 @@
 :root {
   --color-primary: #4CAF50;
   --color-secondary: #1B5E20;
-  --color-accent: #2196F3;
+  --color-accent: #34D399;
   --color-background: #121212;
   --color-background-alt: #1E1E1E;
   --color-background-elevated: #242424;
-  --color-text: #E0E0E0;
+  --color-text: #EFEFEF;
+  --color-text-secondary: #888888;
   --color-text-light: #9E9E9E;
   --color-border: #333333;
   --color-button-hover: #388E3C;
@@ -21,10 +22,12 @@
   --font-size-regular: 1rem;
   --font-size-large: 1.25rem;
   --font-size-xlarge: 1.5rem;
+  --font-size-page-title: 1.75rem;
+  --font-size-profile-name: 1.5rem;
 }
 
 body {
-  font-family: Arial, Roboto, "Open Sans", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   background-color: var(--color-background);
   color: var(--color-text);
   line-height: 1.6;
