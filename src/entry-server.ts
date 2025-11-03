@@ -22,7 +22,7 @@ function createApp() {
   return { app, router, pinia }
 }
 
-export async function render(url: string, manifest?: string) {
+export async function render(url: string, _manifest?: string) {
   const { app, router } = createApp()
 
   // Set the router to the desired URL before rendering
@@ -38,7 +38,7 @@ export async function render(url: string, manifest?: string) {
     if (currentRoute.name === 'Profile' && currentRoute.params.username) {
       const username = currentRoute.params.username as string
       try {
-        const API_BASE = process.env.VITE_API_BASE || process.env.API_BASE || 'http://toiter-user-service:9990'
+        const API_BASE = import.meta.env.VITE_API_BASE || process.env.API_BASE || 'http://toiter-user-service:9990'
         const response = await axios.get(`${API_BASE}/user/${username}`)
         const user = response.data
         
@@ -46,7 +46,7 @@ export async function render(url: string, manifest?: string) {
           ? `${API_BASE}/image/${user.profileImageId}`
           : '/default-profile.png'
         
-        const serverUrl = process.env.VITE_PUBLIC_HOST || process.env.SERVER_URL || 'http://localhost:3000'
+        const serverUrl = import.meta.env.VITE_PUBLIC_HOST || process.env.SERVER_URL || 'http://localhost:5173'
         
         head = `
     <title>@${username} - Toiter</title>
@@ -72,7 +72,7 @@ export async function render(url: string, manifest?: string) {
     if (currentRoute.name === 'Thread' && currentRoute.params.postId) {
       const postId = currentRoute.params.postId as string
       try {
-        const API_BASE = process.env.VITE_API_BASE || process.env.API_BASE || 'http://toiter-post-service:9991'
+        const API_BASE = import.meta.env.VITE_API_BASE || process.env.API_BASE || 'http://localhost:9991'
         const response = await axios.get(`${API_BASE}/post/${postId}`)
         const post = response.data
         
@@ -80,7 +80,7 @@ export async function render(url: string, manifest?: string) {
           ? `http://toiter-user-service:9990/image/${post.profileImageId}`
           : '/default-profile.png'
         
-        const serverUrl = process.env.VITE_PUBLIC_HOST || process.env.SERVER_URL || 'http://localhost:3000'
+        const serverUrl = import.meta.env.VITE_PUBLIC_HOST || process.env.SERVER_URL || 'http://localhost:5173'
         const description = post.content.substring(0, 200) + (post.content.length > 200 ? '...' : '')
         
         head = `

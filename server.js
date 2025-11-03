@@ -8,7 +8,7 @@ import sirv from 'sirv'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const isProduction = process.env.NODE_ENV === 'production'
-const port = process.env.PORT || 3000
+const port = process.env.PORT || 5173
 const base = process.env.BASE || '/'
 
 const templateHtml = isProduction
@@ -37,7 +37,7 @@ if (!isProduction) {
 }
 
 // Serve HTML
-app.use('*', async (req, res) => {
+app.use(async (req, res) => {
   try {
     const url = req.originalUrl.replace(base, '')
 
