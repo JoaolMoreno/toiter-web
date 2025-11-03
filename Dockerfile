@@ -1,5 +1,5 @@
-# Usando uma imagem oficial do Node.js
-FROM node:18
+# Build stage
+FROM node:18 AS build
 
 # Definindo o diretório de trabalho na imagem
 WORKDIR /app
@@ -13,11 +13,20 @@ RUN npm install
 # Copiando todo o projeto
 COPY . .
 
-# Build do projeto Next.js
+# Build do projeto Vite
 RUN npm run build
 
-# Expõe a porta padrão do Next.js
-EXPOSE 3000
+# Production stage with nginx
+FROM nginx:alpine
 
-# Comando para iniciar a aplicação
-CMD ["npm", "start"]
+# Copiar o build para o nginx
+COPY --from=build /app/dist /usr/share/nginx/html
+
+# Copiar configuração customizada do nginx se necessário
+# COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Expõe a porta padrão do nginx
+EXPOSE 80
+
+# Comando para iniciar nginx
+CMD ["nginx", "-g", "daemon off;"]
