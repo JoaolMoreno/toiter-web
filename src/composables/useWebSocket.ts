@@ -1,5 +1,5 @@
-import { ref, onMounted, onUnmounted } from 'vue'
-import { chatService, Message } from '../services/chatService'
+import { ref, onUnmounted } from 'vue'
+import { chatService, type Message } from '../services/chatService'
 
 const connected = ref(false)
 const handlers = ref<((message: Message) => void)[]>([])

@@ -136,7 +136,7 @@ class ChatService {
         const pageSize = 100;
         let hasMore = true;
         const allMessages = [...localMessages];
-        const latestLocalId = Math.max(...localMessages.map(m => parseInt(m.timestamp.split('.')[0].replace(/\D/g, ''))));
+        const latestLocalId = Math.max(...localMessages.map(m => parseInt((m.timestamp?.split('.')[0] || '0').replace(/\D/g, ''))));
 
         while (hasMore) {
             try {
@@ -153,12 +153,12 @@ class ChatService {
 
                 // Check if a known message is found
                 const hasKnownMessage = messages.some((msg: { timestamp: string; }) => {
-                    const msgId = parseInt(msg.timestamp.split('.')[0].replace(/\D/g, ''));
+                    const msgId = parseInt((msg.timestamp?.split('.')[0] || '0').replace(/\D/g, ''));
                     return msgId <= latestLocalId;
                 });
 
                 allMessages.unshift(...messages.filter((msg: { timestamp: string; }) => {
-                    const msgId = parseInt(msg.timestamp.split('.')[0].replace(/\D/g, ''));
+                    const msgId = parseInt((msg.timestamp?.split('.')[0] || '0').replace(/\D/g, ''));
                     return msgId > latestLocalId;
                 }));
 

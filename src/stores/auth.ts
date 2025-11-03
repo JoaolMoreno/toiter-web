@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { login as loginService, logout as logoutService, checkSession } from '../services/auth'
 import api from '../services/api'
-import { User } from '../models/UserProfile'
+import type { User } from '../models/UserProfile'
 import { useToast } from 'vue-toastification'
 
 export const useAuthStore = defineStore('auth', () => {

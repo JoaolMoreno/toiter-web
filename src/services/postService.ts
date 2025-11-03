@@ -1,5 +1,5 @@
 import api from './api';
-import {PostData} from '@/models/PostData';
+import type {PostData} from '@/models/PostData';
 
 export const getPostsByUser = async (username: string, page: number, size: number) => {
     try {
@@ -69,7 +69,7 @@ export const deletePost = async (postId: number) => {
     }
 };
 
-export const createRepost = async (repostParentId: number): Promise<PostData> => {
+export const createRepost = async (_repostParentId: number): Promise<PostData> => {
     alert('Calma ai patrão, ainda não implementei essa função');
     return {} as PostData;
     // try {
