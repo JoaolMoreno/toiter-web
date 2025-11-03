@@ -131,12 +131,17 @@ class ChatService {
         return allMessages;
     }
 
+    // Helper function to parse timestamp to numeric ID
+    private parseTimestampToId(timestamp?: string): number {
+        return parseInt((timestamp?.split('.')[0] || '0').replace(/\D/g, ''));
+    }
+
     private async fetchMessagesUntilKnown(chatId: number, localMessages: Message[]): Promise<Message[]> {
         let page = 0;
         const pageSize = 100;
         let hasMore = true;
         const allMessages = [...localMessages];
-        const latestLocalId = Math.max(...localMessages.map(m => parseInt((m.timestamp?.split('.')[0] || '0').replace(/\D/g, ''))));
+        const latestLocalId = Math.max(...localMessages.map(m => this.parseTimestampToId(m.timestamp)));
 
         while (hasMore) {
             try {
@@ -153,12 +158,12 @@ class ChatService {
 
                 // Check if a known message is found
                 const hasKnownMessage = messages.some((msg: { timestamp: string; }) => {
-                    const msgId = parseInt((msg.timestamp?.split('.')[0] || '0').replace(/\D/g, ''));
+                    const msgId = this.parseTimestampToId(msg.timestamp);
                     return msgId <= latestLocalId;
                 });
 
                 allMessages.unshift(...messages.filter((msg: { timestamp: string; }) => {
-                    const msgId = parseInt((msg.timestamp?.split('.')[0] || '0').replace(/\D/g, ''));
+                    const msgId = this.parseTimestampToId(msg.timestamp);
                     return msgId > latestLocalId;
                 }));
 
