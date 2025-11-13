@@ -1,37 +1,142 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { chatService, type ChatPreview, type Message } from '../services/chatService'
+import { useWebSocket } from '../composables/useWebSocket'
+import { useAuthStore } from '../stores/auth'
+import ChatList from '../components/ChatList.vue'
+import ChatWindow from '../components/ChatWindow.vue'
 
 const router = useRouter()
+const authStore = useAuthStore()
+const { connect, disconnect, sendMessage: wsSendMessage, subscribeToMessages } = useWebSocket()
+
+const chats = ref<ChatPreview[]>([])
+const messages = ref<Message[]>([])
+const selectedChatId = ref<number | null>(null)
+const receiverUsername = ref<string>('')
 
 const handleBack = () => {
   router.push('/feed')
 }
 
-onMounted(() => {
+const loadChats = async () => {
+  try {
+    const response = await chatService.getMyChats()
+    chats.value = response.content
+  } catch (error) {
+    console.error('Failed to load chats:', error)
+  }
+}
+
+const selectChat = async (chatId: number) => {
+  selectedChatId.value = chatId
+  const chat = chats.value.find(c => c.chatId === chatId)
+  if (chat) {
+    receiverUsername.value = chat.receiverUsername
+    await loadMessages(chatId)
+  }
+}
+
+const loadMessages = async (chatId: number) => {
+  try {
+    const msgs = await chatService.syncChatMessages(chatId)
+    // Filter messages for this chat and sort by timestamp
+    messages.value = msgs
+      .filter(msg => msg.chatId === chatId)
+      .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+  } catch (error) {
+    console.error('Failed to load messages:', error)
+  }
+}
+
+const sendMessage = async (chatId: number, message: string) => {
+  try {
+    wsSendMessage(chatId, message)
+    // Optimistically add the message
+    const newMsg: Message = {
+      id: Date.now(), // Temporary ID
+      chatId,
+      message,
+      sender: authStore.user?.username || '',
+      timestamp: new Date().toISOString()
+    }
+    messages.value.push(newMsg)
+  } catch (error) {
+    console.error('Failed to send message:', error)
+  }
+}
+
+const startChat = async (username: string) => {
+  try {
+    const chatId = await chatService.startChat(username)
+    await loadChats() // Reload chats to include the new one
+    selectChat(chatId)
+  } catch (error) {
+    console.error('Failed to start chat:', error)
+  }
+}
+
+const updateChats = (newChats: ChatPreview[]) => {
+  chats.value = newChats
+}
+
+const backToList = () => {
+  selectedChatId.value = null
+  receiverUsername.value = ''
+}
+
+onMounted(async () => {
   if (typeof document !== 'undefined') {
     document.title = 'Chat - Toiter'
   }
+
+  await loadChats()
+
+  if (authStore.user) {
+    const token = localStorage.getItem('accessToken')
+    if (token) {
+      connect(token)
+      subscribeToMessages((message: Message) => {
+        messages.value.push(message)
+        // Update last message in chats
+        const chatIndex = chats.value.findIndex(c => c.chatId === message.chatId)
+        if (chatIndex !== -1) {
+          chats.value[chatIndex].lastMessageContent = message.message
+          chats.value[chatIndex].lastMessageSentDate = message.timestamp
+          chats.value[chatIndex].lastMessageSender = message.sender
+        }
+      })
+    }
+  }
+})
+
+onUnmounted(() => {
+  disconnect()
 })
 </script>
 
 <template>
   <div class="container">
-    <div class="chat-container">
-      <button class="back-button" @click="handleBack">
-        ← Voltar para Feed
-      </button>
-      
-      <div class="content">
-        <h1 class="title">Chat</h1>
-        <p class="message">
-          Funcionalidade de chat em desenvolvimento.
-        </p>
-        <p class="submessage">
-          Em breve você poderá conversar com outros usuários aqui!
-        </p>
-      </div>
+    <div class="chat-layout">
+      <ChatList
+        :selectedChatId="selectedChatId"
+        :chats="chats"
+        @selectChat="selectChat"
+        @startChat="startChat"
+        @updateChats="updateChats"
+      />
+      <ChatWindow
+        :selectedChatId="selectedChatId"
+        :messages="messages"
+        :receiverUsername="receiverUsername"
+        @sendMessage="sendMessage"
+        @back="backToList"
+      />
     </div>
+    <button class="back-button" @click="handleBack">
+      ← Voltar para Feed
+    </button>
   </div>
 </template>
 
@@ -39,16 +144,14 @@ onMounted(() => {
 .container {
   display: flex;
   flex-direction: column;
-  align-items: center;
   background-color: var(--color-background);
   min-height: 100vh;
 }
 
-.chat-container {
-  width: 100%;
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 0 16px;
+.chat-layout {
+  display: flex;
+  flex: 1;
+  height: calc(100vh - 60px); /* Adjust for back button */
 }
 
 .back-button {
@@ -57,33 +160,17 @@ onMounted(() => {
   color: var(--color-primary);
   cursor: pointer;
   font-size: var(--font-size-regular);
-  padding: 16px 0;
+  padding: 16px;
+  align-self: flex-start;
 }
 
 .back-button:hover {
   text-decoration: underline;
 }
 
-.content {
-  text-align: center;
-  padding: 48px 24px;
-}
-
-.title {
-  color: var(--color-text);
-  font-size: var(--font-size-xlarge);
-  margin-bottom: 24px;
-}
-
-.message {
-  color: var(--color-text);
-  font-size: var(--font-size-large);
-  margin-bottom: 16px;
-}
-
-.submessage {
-  color: var(--color-text-light);
-  font-size: var(--font-size-regular);
+@media (max-width: 768px) {
+  .chat-layout {
+    flex-direction: column;
+  }
 }
 </style>
-
