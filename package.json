@@ -2,34 +2,41 @@
   "name": "toiter",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "dev": "node server.js",
+    "build": "npm run build:client && npm run build:server",
+    "build:client": "vite build --outDir dist/client --ssrManifest",
+    "build:server": "vite build --ssr src/entry-server.ts --outDir dist/server",
+    "preview": "cross-env NODE_ENV=production node server.js"
   },
   "dependencies": {
     "@stomp/stompjs": "^7.0.1",
     "@types/lodash": "^4.17.14",
     "@types/sockjs-client": "^1.5.4",
     "axios": "^1.7.9",
+    "compression": "^1.8.1",
     "dotenv": "^16.4.7",
-    "framer-motion": "^11.16.1",
+    "express": "^5.1.0",
     "lodash": "^4.17.21",
-    "next": "^15.0.4",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "react-dropzone": "^14.3.5",
-    "react-image-crop": "^11.0.7",
-    "react-toastify": "^11.0.2",
+    "pinia": "^2.3.0",
+    "sirv": "^3.0.2",
     "sockjs-client": "^1.6.1",
     "stompjs": "^2.3.3",
-    "styled-components": "^6.1.13"
+    "vue": "^3.5.22",
+    "vue-router": "^4.5.0",
+    "vue-toastification": "^2.0.0-rc.5"
   },
   "devDependencies": {
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "typescript": "^5"
+    "@types/compression": "^1.8.1",
+    "@types/express": "^5.0.5",
+    "@types/node": "^24.10.0",
+    "@vitejs/plugin-vue": "^6.0.1",
+    "@vue/tsconfig": "^0.8.1",
+    "cross-env": "^10.1.0",
+    "sass": "^1.77.8",
+    "typescript": "~5.9.3",
+    "vite": "^7.1.7",
+    "vue-tsc": "^3.1.0"
   }
 }

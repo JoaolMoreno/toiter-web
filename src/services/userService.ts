@@ -1,5 +1,5 @@
 import api from './api';
-import { UserProfile, UpdatedUser } from '@/models/UserProfile';
+import type { UserProfile, UpdatedUser } from '@/models/UserProfile';
 import { getImageById } from './imageService';
 
 export const getUserProfile = async (username: string): Promise<UserProfile> => {

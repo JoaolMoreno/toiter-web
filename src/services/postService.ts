@@ -1,5 +1,5 @@
 import api from './api';
-import {PostData} from '@/models/PostData';
+import type {PostData} from '@/models/PostData';
 
 export const getPostsByUser = async (username: string, page: number, size: number) => {
     try {
@@ -49,6 +49,28 @@ export const unlikePost = async (postId: number) => {
     }
 };
 
+export const getPostById = async (postId: number): Promise<PostData> => {
+    try {
+        const { data } = await api.get(`posts/${postId}`);
+        return data;
+    } catch (error) {
+        console.error('Erro ao buscar post:', error);
+        throw error;
+    }
+};
+
+export const getReplies = async (postId: number, page: number, size: number) => {
+    try {
+        const { data } = await api.get(`posts/${postId}/replies`, {
+            params: { page, size },
+        });
+        return data;
+    } catch (error) {
+        console.error('Erro ao buscar respostas:', error);
+        throw error;
+    }
+};
+
 export const createPost = async (content: string): Promise<PostData> => {
     try {
         const response = await api.post('/posts', { content });
@@ -69,7 +91,7 @@ export const deletePost = async (postId: number) => {
     }
 };
 
-export const createRepost = async (repostParentId: number): Promise<PostData> => {
+export const createRepost = async (_repostParentId: number): Promise<PostData> => {
     alert('Calma ai patrão, ainda não implementei essa função');
     return {} as PostData;
     // try {

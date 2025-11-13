@@ -1,12 +1,7 @@
 import axios from 'axios';
-import dotenv from 'dotenv';
-
-dotenv.config();
-
-const servicePostUrl = process.env.SERVICE_POST_URL;
 
 const isServer = typeof window === 'undefined';
-const baseURL = isServer ? servicePostUrl : '/api';
+const baseURL = isServer ? import.meta.env.SERVICE_POST_URL : '/api';
 
 const api = axios.create({
     baseURL,
@@ -29,7 +24,9 @@ api.interceptors.response.use(
                     { withCredentials: true }
                 );
 
-                localStorage.setItem('accessToken', data.accessToken);
+                if (typeof window !== 'undefined') {
+                    localStorage.setItem('accessToken', data.accessToken);
+                }
 
                 api.defaults.headers.common['Authorization'] = `Bearer ${data.accessToken}`;
                 originalRequest.headers['Authorization'] = `Bearer ${data.accessToken}`;

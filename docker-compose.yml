@@ -174,11 +174,11 @@ services:
     image: lopesz3r4/toiter-front:latest
     container_name: toiter-front
     ports:
-      - "3000:3000"
+      - "5173:5173"
     environment:
       NODE_ENV: production
       SERVICE_POST_URL: http://toiter-post-service:9991/
-      NEXT_PUBLIC_HOST: ${SERVER_URL}
+      VITE_PUBLIC_HOST: ${SERVER_URL}
     depends_on:
       - postgres
       - kafka

@@ -43,7 +43,9 @@ class ChatService {
         try {
             const { data } = await api.get('chats/my-chats');
             console.log(`✅ Retrieved ${data.content.length} chats`);
-            localStorage.setItem('my_chats', JSON.stringify(data));
+            if (typeof window !== 'undefined') {
+                localStorage.setItem('my_chats', JSON.stringify(data));
+            }
             return data;
         } catch (error) {
             console.error('❌ Error fetching chats:', error);
@@ -81,7 +83,7 @@ class ChatService {
         console.log(`🔄 Syncing messages for chat ${chatId}`);
 
         // Retrieve messages saved in localStorage
-        const storedMessagesStr = localStorage.getItem(`chat_${chatId}_messages`);
+        const storedMessagesStr = typeof window !== 'undefined' ? localStorage.getItem(`chat_${chatId}_messages`) : null;
         let localMessages: Message[] = storedMessagesStr ? JSON.parse(storedMessagesStr) : [];
 
         // If there are no local messages, fetch all paginated messages
@@ -119,7 +121,9 @@ class ChatService {
                 page++;
 
                 // Save progress in localStorage in reversed order
-                localStorage.setItem(`chat_${chatId}_messages`, JSON.stringify(allMessages));
+                if (typeof window !== 'undefined') {
+                    localStorage.setItem(`chat_${chatId}_messages`, JSON.stringify(allMessages));
+                }
 
                 console.log(`📥 Fetched page ${page} for chat ${chatId}, total messages: ${allMessages.length}`);
             } catch (error) {
@@ -131,12 +135,17 @@ class ChatService {
         return allMessages;
     }
 
+    // Helper function to parse timestamp to numeric ID
+    private parseTimestampToId(timestamp?: string): number {
+        return parseInt((timestamp?.split('.')[0] || '0').replace(/\D/g, ''));
+    }
+
     private async fetchMessagesUntilKnown(chatId: number, localMessages: Message[]): Promise<Message[]> {
         let page = 0;
         const pageSize = 100;
         let hasMore = true;
         const allMessages = [...localMessages];
-        const latestLocalId = Math.max(...localMessages.map(m => parseInt(m.timestamp.split('.')[0].replace(/\D/g, ''))));
+        const latestLocalId = Math.max(...localMessages.map(m => this.parseTimestampToId(m.timestamp)));
 
         while (hasMore) {
             try {
@@ -153,12 +162,12 @@ class ChatService {
 
                 // Check if a known message is found
                 const hasKnownMessage = messages.some((msg: { timestamp: string; }) => {
-                    const msgId = parseInt(msg.timestamp.split('.')[0].replace(/\D/g, ''));
+                    const msgId = this.parseTimestampToId(msg.timestamp);
                     return msgId <= latestLocalId;
                 });
 
                 allMessages.unshift(...messages.filter((msg: { timestamp: string; }) => {
-                    const msgId = parseInt(msg.timestamp.split('.')[0].replace(/\D/g, ''));
+                    const msgId = this.parseTimestampToId(msg.timestamp);
                     return msgId > latestLocalId;
                 }));
 
@@ -170,7 +179,9 @@ class ChatService {
                 }
 
                 // Save progress in localStorage in reversed order
-                localStorage.setItem(`chat_${chatId}_messages`, JSON.stringify(allMessages));
+                if (typeof window !== 'undefined') {
+                    localStorage.setItem(`chat_${chatId}_messages`, JSON.stringify(allMessages));
+                }
 
                 console.log(`📥 Synced page ${page} for chat ${chatId}, total messages: ${allMessages.length}`);
             } catch (error) {
