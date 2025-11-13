@@ -5,7 +5,8 @@ import { useAuthStore } from '../stores/auth'
 import { useFeedStore } from '../stores/feed'
 import Post from '../components/Post.vue'
 import Modal from '../components/Modal.vue'
-import { debounce } from 'lodash'
+import pkg from 'lodash'
+const { debounce } = pkg
 
 const authStore = useAuthStore()
 const feedStore = useFeedStore()
@@ -252,4 +253,3 @@ watch(() => feedStore.page, () => {
   transform: scale(1.05);
 }
 </style>
-
