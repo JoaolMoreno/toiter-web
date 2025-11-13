@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { chatService, type ChatPreview, type Message } from '../services/chatService'
-import { useWebSocket } from '../composables/useWebSocket'
-import { useAuthStore } from '../stores/auth'
+import {onMounted, onUnmounted, ref} from 'vue'
+import {useRouter} from 'vue-router'
+import {type ChatPreview, chatService, type Message} from '../services/chatService'
+import {useWebSocket} from '../composables/useWebSocket'
+import {useAuthStore} from '../stores/auth'
 import ChatList from '../components/ChatList.vue'
 import ChatWindow from '../components/ChatWindow.vue'
 
@@ -15,6 +15,9 @@ const chats = ref<ChatPreview[]>([])
 const messages = ref<Message[]>([])
 const selectedChatId = ref<number | null>(null)
 const receiverUsername = ref<string>('')
+
+const syncedChats = ref<Record<number, number>>({})
+const isMobile = ref(false)
 
 const handleBack = () => {
   router.push('/feed')
@@ -40,13 +43,23 @@ const selectChat = async (chatId: number) => {
 
 const loadMessages = async (chatId: number) => {
   try {
-    const msgs = await chatService.syncChatMessages(chatId)
-    // Filter messages for this chat and sort by timestamp
-    messages.value = msgs
-      .filter(msg => msg.chatId === chatId)
-      .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+    const now = Date.now()
+    const lastSynced = syncedChats.value[chatId] || 0
+    const needsSync = now - lastSynced > 5 * 60 * 1000 // 5 minutes
+
+    if (needsSync) {
+      console.log(`Syncing messages for chat ${chatId} (last synced ${lastSynced ? new Date(lastSynced).toLocaleTimeString() : 'never'})`)
+      messages.value = await chatService.syncChatMessages(chatId)
+      syncedChats.value[chatId] = now
+    } else {
+      console.log(`Using cached messages for chat ${chatId}`)
+      const storedMessagesStr = localStorage.getItem(`chat_${chatId}_messages`)
+      if (storedMessagesStr) {
+        messages.value = JSON.parse(storedMessagesStr)
+      }
+    }
   } catch (error) {
-    console.error('Failed to load messages:', error)
+    console.error('Failed to sync messages:', error)
   }
 }
 
@@ -86,6 +99,10 @@ const backToList = () => {
   receiverUsername.value = ''
 }
 
+const handleResize = () => {
+  isMobile.value = window.innerWidth <= 768
+}
+
 onMounted(async () => {
   if (typeof document !== 'undefined') {
     document.title = 'Chat - Toiter'
@@ -98,41 +115,68 @@ onMounted(async () => {
     if (token) {
       connect(token)
       subscribeToMessages((message: Message) => {
-        messages.value.push(message)
+        if (message.chatId === selectedChatId.value) {
+          messages.value.push(message)
+          localStorage.setItem(`chat_${selectedChatId.value}_messages`, JSON.stringify(messages.value))
+        }
         // Update last message in chats
-        const chatIndex = chats.value.findIndex(c => c.chatId === message.chatId)
-        if (chatIndex !== -1) {
-          chats.value[chatIndex].lastMessageContent = message.message
-          chats.value[chatIndex].lastMessageSentDate = message.timestamp
-          chats.value[chatIndex].lastMessageSender = message.sender
+        const chat = chats.value.find(c => c.chatId === message.chatId)
+        if (chat) {
+          chat.lastMessageContent = message.message
+          chat.lastMessageSentDate = message.timestamp
+          chat.lastMessageSender = message.sender
         }
       })
     }
   }
+
+  handleResize()
+  window.addEventListener('resize', handleResize)
 })
 
 onUnmounted(() => {
   disconnect()
+  window.removeEventListener('resize', handleResize)
 })
 </script>
 
 <template>
   <div class="container">
     <div class="chat-layout">
-      <ChatList
-        :selectedChatId="selectedChatId"
-        :chats="chats"
-        @selectChat="selectChat"
-        @startChat="startChat"
-        @updateChats="updateChats"
-      />
-      <ChatWindow
-        :selectedChatId="selectedChatId"
-        :messages="messages"
-        :receiverUsername="receiverUsername"
-        @sendMessage="sendMessage"
-        @back="backToList"
-      />
+      <template v-if="isMobile">
+        <ChatWindow
+          v-if="selectedChatId"
+          :selectedChatId="selectedChatId"
+          :messages="messages"
+          :receiverUsername="receiverUsername"
+          @sendMessage="sendMessage"
+          @back="backToList"
+        />
+        <ChatList
+          v-else
+          :selectedChatId="selectedChatId"
+          :chats="chats"
+          @selectChat="selectChat"
+          @startChat="startChat"
+          @updateChats="updateChats"
+        />
+      </template>
+      <template v-else>
+        <ChatList
+          :selectedChatId="selectedChatId"
+          :chats="chats"
+          @selectChat="selectChat"
+          @startChat="startChat"
+          @updateChats="updateChats"
+        />
+        <ChatWindow
+          :selectedChatId="selectedChatId"
+          :messages="messages"
+          :receiverUsername="receiverUsername"
+          @sendMessage="sendMessage"
+          @back="backToList"
+        />
+      </template>
     </div>
     <button class="back-button" @click="handleBack">
       ← Voltar para Feed
@@ -152,6 +196,8 @@ onUnmounted(() => {
   display: flex;
   flex: 1;
   height: calc(100vh - 60px); /* Adjust for back button */
+  background: var(--color-background-elevated);
+  overflow: hidden;
 }
 
 .back-button {
@@ -166,11 +212,5 @@ onUnmounted(() => {
 
 .back-button:hover {
   text-decoration: underline;
-}
-
-@media (max-width: 768px) {
-  .chat-layout {
-    flex-direction: column;
-  }
 }
 </style>
