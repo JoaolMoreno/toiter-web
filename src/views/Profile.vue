@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getUserProfile, followUser, unfollowUser, updateUserProfile, updateProfileImage, updateHeaderImage } from '../services/userService'
 import { getPostsByUser } from '../services/postService'
@@ -26,6 +26,24 @@ const isImageModalOpen = ref(false)
 const imageEditType = ref<'profile' | 'header'>('profile')
 
 const isOwnProfile = computed(() => authStore.user?.username === username.value)
+
+const profileImageUrl = computed(() => {
+  if (!profile.value?.profileImageUrl) {
+    return '/default-profile.png'
+  }
+  return import.meta.env.DEV
+    ? profile.value.profileImageUrl.replace('https://', 'http://')
+    : profile.value.profileImageUrl
+})
+
+const headerImageUrl = computed(() => {
+  if (!profile.value?.headerImageUrl) {
+    return ''
+  }
+  return import.meta.env.DEV
+    ? profile.value.headerImageUrl.replace('https://', 'http://')
+    : profile.value.headerImageUrl
+})
 
 const loadProfile = async () => {
   if (!username.value) return
@@ -54,6 +72,24 @@ const loadPosts = async () => {
     console.error('Erro ao carregar posts:', error)
   } finally {
     loading.value = false
+  }
+}
+
+const resetAndLoad = async () => {
+  // Reset state
+  profile.value = null
+  posts.value = []
+  page.value = 0
+  hasMore.value = true
+  loading.value = false
+  
+  // Load new data
+  await loadProfile()
+  await loadPosts()
+  
+  // Update document title
+  if (typeof document !== 'undefined') {
+    document.title = `@${username.value} - Toiter`
   }
 }
 
@@ -124,11 +160,13 @@ const handleUpdateImage = async (file: File) => {
 }
 
 onMounted(() => {
-  loadProfile()
-  loadPosts()
-  
-  if (typeof document !== 'undefined') {
-    document.title = `@${username.value} - Toiter`
+  resetAndLoad()
+})
+
+// Watch for route changes to reload profile when navigating between different profiles
+watch(() => route.params.username, (newUsername, oldUsername) => {
+  if (newUsername && newUsername !== oldUsername) {
+    resetAndLoad()
   }
 })
 </script>
@@ -136,7 +174,7 @@ onMounted(() => {
 <template>
   <div class="container">
     <div class="profile-container">
-      <div v-if="profile" class="profile-header" :style="{ backgroundImage: `url(${profile.headerImageUrl})` }">
+      <div v-if="profile" class="profile-header" :style="{ backgroundImage: headerImageUrl ? `url(${headerImageUrl})` : 'none' }">
         <button class="back-button" @click="handleBack">
           ← Voltar
         </button>
@@ -165,7 +203,7 @@ onMounted(() => {
 
         <div class="profile-image-wrapper">
           <div class="profile-image-container" @click="isOwnProfile ? handleEditProfileImage() : null">
-            <img :src="profile.profileImageUrl" alt="Profile" class="profile-image" />
+            <img :src="profileImageUrl" alt="Profile" class="profile-image" />
           </div>
         </div>
 
@@ -217,7 +255,7 @@ onMounted(() => {
         @close="isImageModalOpen = false"
         @submit="handleUpdateImage"
         :type="imageEditType"
-        :current-image="imageEditType === 'profile' ? profile?.profileImageUrl : profile?.headerImageUrl"
+        :current-image="imageEditType === 'profile' ? profileImageUrl : headerImageUrl"
       />
     </div>
   </div>
@@ -256,8 +294,8 @@ onMounted(() => {
   position: absolute;
   top: 24px;
   left: 12px;
-  background-color: rgba(0, 0, 0, 0.6);
-  color: white;
+  background-color: var(--color-overlay);
+  color: var(--color-button-text);
   border: none;
   padding: 8px 16px;
   border-radius: 20px;
@@ -271,15 +309,15 @@ onMounted(() => {
 }
 
 .back-button:hover {
-  background-color: rgba(0, 0, 0, 0.8);
+  background-color: var(--color-overlay-hover);
 }
 
 .edit-header-button {
   position: absolute;
   top: 24px;
   right: 12px;
-  background-color: rgba(0, 0, 0, 0.6);
-  color: white;
+  background-color: var(--color-overlay);
+  color: var(--color-button-text);
   border: none;
   padding: 8px 16px;
   border-radius: 20px;
@@ -295,7 +333,7 @@ onMounted(() => {
 }
 
 .edit-header-button:hover {
-  background-color: rgba(0, 0, 0, 0.8);
+  background-color: var(--color-overlay-hover);
 }
 
 .profile-info {
@@ -313,7 +351,7 @@ onMounted(() => {
   top: 30px;
   right: 20px;
   background-color: var(--color-primary);
-  color: white;
+  color: var(--color-button-text);
   border: none;
   padding: 6px 12px;
   border-radius: 8px;
@@ -324,15 +362,15 @@ onMounted(() => {
 }
 
 .follow-button.following {
-  background-color: #657786;
+  background-color: var(--color-following-button);
 }
 
 .follow-button:hover {
-  background-color: #198ae0;
+  background-color: var(--color-button-hover);
 }
 
 .follow-button.following:hover {
-  background-color: #556677;
+  background-color: var(--color-following-button-hover);
 }
 
 .follow-button:disabled {
@@ -348,7 +386,7 @@ onMounted(() => {
 
 .edit-button:hover {
   background-color: var(--color-primary);
-  color: white;
+  color: var(--color-button-text);
 }
 
 .profile-image-wrapper {
@@ -378,14 +416,14 @@ onMounted(() => {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: rgba(0, 0, 0, 0.7);
+  background: var(--color-overlay-hover);
   width: 30px;
   height: 30px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: var(--color-button-text);
   z-index: 4;
 }
 

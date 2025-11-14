@@ -124,7 +124,7 @@ onMounted(() => {
   padding: 10px 18px;
   border-radius: 999px;
   background: var(--color-primary);
-  color: #fff;
+  color: var(--color-button-text);
   border: none;
   cursor: pointer;
   font-size: 0.9rem;

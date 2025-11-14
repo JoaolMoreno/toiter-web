@@ -2,11 +2,13 @@
 import { computed, ref, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import { useThemeStore } from '../stores/theme'
 import { getImageById } from '../services/imageService'
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const themeStore = useThemeStore()
 
 const imageUrl = ref<string>('')
 const imageLoading = ref(true)
@@ -49,6 +51,10 @@ const handleHomeClick = () => {
   router.push('/')
 }
 
+const handleThemeToggle = () => {
+  themeStore.toggleTheme()
+}
+
 watch(() => authStore.user, () => {
   if (authStore.user) {
     loadProfileImage()
@@ -65,23 +71,35 @@ onMounted(() => {
 <template>
   <div v-if="!isAuthPage">
     <header class="header">
-      <button v-if="authStore.isAuthenticated" class="profile-button" @click="handleProfileClick">
-        <div v-if="imageLoading" class="loading-profile-image" />
-        <img 
-          v-else
-          :src="imageUrl"
-          alt="Profile"
-          class="profile-image"
-          @error="imageUrl = '/default-profile.png'"
-        />
-      </button>
+      <div class="header-left">
+        <button v-if="authStore.isAuthenticated" class="profile-button" @click="handleProfileClick">
+          <div v-if="imageLoading" class="loading-profile-image" />
+          <img 
+            v-else
+            :src="imageUrl"
+            alt="Profile"
+            class="profile-image"
+            @error="imageUrl = '/default-profile.png'"
+          />
+        </button>
+        <button 
+          class="theme-toggle" 
+          @click="handleThemeToggle"
+          :aria-label="themeStore.theme === 'dark' ? 'Mudar para tema claro' : 'Mudar para tema escuro'"
+          :title="themeStore.theme === 'dark' ? 'Mudar para tema claro' : 'Mudar para tema escuro'"
+        >
+          {{ themeStore.theme === 'dark' ? '☀️' : '🌙' }}
+        </button>
+      </div>
       <h1 class="app-name" @click="handleHomeClick">toiter</h1>
-      <button v-if="authStore.isAuthenticated" class="logout-button" @click="handleLogout">
-        Logout
-      </button>
-      <button v-else class="login-button" @click="handleLogin">
-        Login
-      </button>
+      <div class="header-right">
+        <button v-if="authStore.isAuthenticated" class="logout-button" @click="handleLogout">
+          Logout
+        </button>
+        <button v-else class="login-button" @click="handleLogin">
+          Login
+        </button>
+      </div>
     </header>
   </div>
   
@@ -151,6 +169,36 @@ onMounted(() => {
 
 .profile-button:hover {
   opacity: 0.8;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.theme-toggle {
+  background: none;
+  border: none;
+  padding: 8px;
+  font-size: 22px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  opacity: 0.7;
+}
+
+.theme-toggle:hover {
+  opacity: 1;
+  transform: scale(1.1);
 }
 
 .logout-button,

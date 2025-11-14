@@ -186,7 +186,7 @@ onMounted(() => {
 
 .reply-button:hover {
   background-color: var(--color-primary);
-  color: white;
+  color: var(--color-button-text);
 }
 
 .replies-section {

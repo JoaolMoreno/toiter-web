@@ -41,7 +41,7 @@ const handleQuoteRepost = () => {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: var(--color-overlay);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -49,18 +49,19 @@ const handleQuoteRepost = () => {
 }
 
 .menu-container {
-  background-color: #1c1c1e;
+  background-color: var(--color-menu-background);
   border-radius: 10px;
   width: 300px;
   padding: 10px;
   display: flex;
   flex-direction: column;
+  border: 1px solid var(--color-border);
 }
 
 .menu-item {
   background: none;
   border: none;
-  color: white;
+  color: var(--color-text);
   padding: 10px;
   text-align: left;
   cursor: pointer;
@@ -69,6 +70,6 @@ const handleQuoteRepost = () => {
 }
 
 .menu-item:hover {
-  background-color: #2c2c2e;
+  background-color: var(--color-menu-hover);
 }
 </style>
