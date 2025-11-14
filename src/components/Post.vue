@@ -231,7 +231,7 @@ const handleShare = (e: Event) => {
 }
 
 .action-button.liked {
-  color: #e74c3c;
+  color: var(--color-like);
 }
 
 .toast {
@@ -240,7 +240,7 @@ const handleShare = (e: Event) => {
   left: 50%;
   transform: translateX(-50%);
   background-color: var(--color-primary);
-  color: white;
+  color: var(--color-button-text);
   padding: 12px 24px;
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);

@@ -2,11 +2,13 @@
 import { computed, ref, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import { useThemeStore } from '../stores/theme'
 import { getImageById } from '../services/imageService'
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const themeStore = useThemeStore()
 
 const imageUrl = ref<string>('')
 const imageLoading = ref(true)
@@ -49,6 +51,10 @@ const handleHomeClick = () => {
   router.push('/')
 }
 
+const handleThemeToggle = () => {
+  themeStore.toggleTheme()
+}
+
 watch(() => authStore.user, () => {
   if (authStore.user) {
     loadProfileImage()
@@ -76,12 +82,22 @@ onMounted(() => {
         />
       </button>
       <h1 class="app-name" @click="handleHomeClick">toiter</h1>
-      <button v-if="authStore.isAuthenticated" class="logout-button" @click="handleLogout">
-        Logout
-      </button>
-      <button v-else class="login-button" @click="handleLogin">
-        Login
-      </button>
+      <div class="header-right">
+        <button 
+          class="theme-toggle" 
+          @click="handleThemeToggle"
+          :aria-label="themeStore.theme === 'dark' ? 'Mudar para tema claro' : 'Mudar para tema escuro'"
+          :title="themeStore.theme === 'dark' ? 'Mudar para tema claro' : 'Mudar para tema escuro'"
+        >
+          {{ themeStore.theme === 'dark' ? '☀️' : '🌙' }}
+        </button>
+        <button v-if="authStore.isAuthenticated" class="logout-button" @click="handleLogout">
+          Logout
+        </button>
+        <button v-else class="login-button" @click="handleLogin">
+          Login
+        </button>
+      </div>
     </header>
   </div>
   
@@ -151,6 +167,30 @@ onMounted(() => {
 
 .profile-button:hover {
   opacity: 0.8;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.theme-toggle {
+  background: none;
+  border: 2px solid var(--color-border);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.theme-toggle:hover {
+  border-color: var(--color-primary);
+  transform: scale(1.05);
 }
 
 .logout-button,

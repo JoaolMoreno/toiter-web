@@ -142,7 +142,7 @@ const handleSubmit = async () => {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: var(--color-overlay-hover);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -282,7 +282,7 @@ const handleSubmit = async () => {
 .save-button {
   background-color: var(--color-primary);
   border: none;
-  color: white;
+  color: var(--color-button-text);
 }
 
 .save-button:hover:not(:disabled) {

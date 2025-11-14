@@ -5,6 +5,18 @@
 }
 
 :root {
+  /* Font sizes */
+  --font-size-small: 0.875rem;
+  --font-size-regular: 1rem;
+  --font-size-large: 1.25rem;
+  --font-size-xlarge: 1.5rem;
+  --font-size-page-title: 1.75rem;
+  --font-size-profile-name: 1.5rem;
+}
+
+/* Dark Theme (Default) */
+:root,
+:root[data-theme="dark"] {
   --color-primary: #4CAF50;
   --color-secondary: #1B5E20;
   --color-accent: #34D399;
@@ -17,13 +29,34 @@
   --color-border: #333333;
   --color-button-hover: #388E3C;
   --color-error: #CF6679;
-  
-  --font-size-small: 0.875rem;
-  --font-size-regular: 1rem;
-  --font-size-large: 1.25rem;
-  --font-size-xlarge: 1.5rem;
-  --font-size-page-title: 1.75rem;
-  --font-size-profile-name: 1.5rem;
+  --color-like: #e74c3c;
+  --color-overlay: rgba(0, 0, 0, 0.6);
+  --color-overlay-hover: rgba(0, 0, 0, 0.8);
+  --color-button-text: #FFFFFF;
+  --color-following-button: #657786;
+  --color-following-button-hover: #556677;
+}
+
+/* Light Theme */
+:root[data-theme="light"] {
+  --color-primary: #4CAF50;
+  --color-secondary: #2E7D32;
+  --color-accent: #66BB6A;
+  --color-background: #FFFFFF;
+  --color-background-alt: #F5F5F5;
+  --color-background-elevated: #FAFAFA;
+  --color-text: #1A1A1A;
+  --color-text-secondary: #666666;
+  --color-text-light: #757575;
+  --color-border: #E0E0E0;
+  --color-button-hover: #66BB6A;
+  --color-error: #D32F2F;
+  --color-like: #e74c3c;
+  --color-overlay: rgba(0, 0, 0, 0.3);
+  --color-overlay-hover: rgba(0, 0, 0, 0.5);
+  --color-button-text: #FFFFFF;
+  --color-following-button: #9E9E9E;
+  --color-following-button-hover: #757575;
 }
 
 body {

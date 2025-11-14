@@ -256,8 +256,8 @@ onMounted(() => {
   position: absolute;
   top: 24px;
   left: 12px;
-  background-color: rgba(0, 0, 0, 0.6);
-  color: white;
+  background-color: var(--color-overlay);
+  color: var(--color-button-text);
   border: none;
   padding: 8px 16px;
   border-radius: 20px;
@@ -271,15 +271,15 @@ onMounted(() => {
 }
 
 .back-button:hover {
-  background-color: rgba(0, 0, 0, 0.8);
+  background-color: var(--color-overlay-hover);
 }
 
 .edit-header-button {
   position: absolute;
   top: 24px;
   right: 12px;
-  background-color: rgba(0, 0, 0, 0.6);
-  color: white;
+  background-color: var(--color-overlay);
+  color: var(--color-button-text);
   border: none;
   padding: 8px 16px;
   border-radius: 20px;
@@ -295,7 +295,7 @@ onMounted(() => {
 }
 
 .edit-header-button:hover {
-  background-color: rgba(0, 0, 0, 0.8);
+  background-color: var(--color-overlay-hover);
 }
 
 .profile-info {
@@ -313,7 +313,7 @@ onMounted(() => {
   top: 30px;
   right: 20px;
   background-color: var(--color-primary);
-  color: white;
+  color: var(--color-button-text);
   border: none;
   padding: 6px 12px;
   border-radius: 8px;
@@ -324,15 +324,15 @@ onMounted(() => {
 }
 
 .follow-button.following {
-  background-color: #657786;
+  background-color: var(--color-following-button);
 }
 
 .follow-button:hover {
-  background-color: #198ae0;
+  background-color: var(--color-button-hover);
 }
 
 .follow-button.following:hover {
-  background-color: #556677;
+  background-color: var(--color-following-button-hover);
 }
 
 .follow-button:disabled {
@@ -348,7 +348,7 @@ onMounted(() => {
 
 .edit-button:hover {
   background-color: var(--color-primary);
-  color: white;
+  color: var(--color-button-text);
 }
 
 .profile-image-wrapper {
