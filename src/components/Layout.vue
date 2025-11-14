@@ -185,20 +185,20 @@ onMounted(() => {
 
 .theme-toggle {
   background: none;
-  border: 2px solid var(--color-border);
-  padding: 8px 12px;
-  border-radius: 8px;
-  font-size: 20px;
+  border: none;
+  padding: 8px;
+  font-size: 22px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
+  opacity: 0.7;
 }
 
 .theme-toggle:hover {
-  border-color: var(--color-primary);
-  transform: scale(1.05);
+  opacity: 1;
+  transform: scale(1.1);
 }
 
 .logout-button,

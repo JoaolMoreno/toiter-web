@@ -27,6 +27,24 @@ const imageEditType = ref<'profile' | 'header'>('profile')
 
 const isOwnProfile = computed(() => authStore.user?.username === username.value)
 
+const profileImageUrl = computed(() => {
+  if (!profile.value?.profileImageUrl) {
+    return '/default-profile.png'
+  }
+  return import.meta.env.DEV
+    ? profile.value.profileImageUrl.replace('https://', 'http://')
+    : profile.value.profileImageUrl
+})
+
+const headerImageUrl = computed(() => {
+  if (!profile.value?.headerImageUrl) {
+    return ''
+  }
+  return import.meta.env.DEV
+    ? profile.value.headerImageUrl.replace('https://', 'http://')
+    : profile.value.headerImageUrl
+})
+
 const loadProfile = async () => {
   if (!username.value) return
   try {
@@ -156,7 +174,7 @@ watch(() => route.params.username, (newUsername, oldUsername) => {
 <template>
   <div class="container">
     <div class="profile-container">
-      <div v-if="profile" class="profile-header" :style="{ backgroundImage: `url(${profile.headerImageUrl})` }">
+      <div v-if="profile" class="profile-header" :style="{ backgroundImage: headerImageUrl ? `url(${headerImageUrl})` : 'none' }">
         <button class="back-button" @click="handleBack">
           ← Voltar
         </button>
@@ -185,7 +203,7 @@ watch(() => route.params.username, (newUsername, oldUsername) => {
 
         <div class="profile-image-wrapper">
           <div class="profile-image-container" @click="isOwnProfile ? handleEditProfileImage() : null">
-            <img :src="profile.profileImageUrl" alt="Profile" class="profile-image" />
+            <img :src="profileImageUrl" alt="Profile" class="profile-image" />
           </div>
         </div>
 
@@ -237,7 +255,7 @@ watch(() => route.params.username, (newUsername, oldUsername) => {
         @close="isImageModalOpen = false"
         @submit="handleUpdateImage"
         :type="imageEditType"
-        :current-image="imageEditType === 'profile' ? profile?.profileImageUrl : profile?.headerImageUrl"
+        :current-image="imageEditType === 'profile' ? profileImageUrl : headerImageUrl"
       />
     </div>
   </div>

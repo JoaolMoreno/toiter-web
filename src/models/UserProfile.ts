@@ -2,8 +2,8 @@ export interface UserProfile {
     username: string;
     displayName: string;
     bio: string;
-    headerImageUrl: string;
-    profileImageUrl: string;
+    headerImageUrl: string | null;
+    profileImageUrl: string | null;
     followersCount: number;
     followingCount: number;
     postsCount: number;

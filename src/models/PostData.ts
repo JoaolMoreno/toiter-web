@@ -3,7 +3,7 @@ export interface PostData {
     parentPostId?: number | null;
     repostParentId?: number | null;
     username: string;
-    profilePicture: string;
+    profilePicture: string | null;
     content: string;
     mediaUrl?: string | null;
     likesCount: number;

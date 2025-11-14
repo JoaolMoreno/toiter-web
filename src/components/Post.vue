@@ -21,6 +21,9 @@ const isRemoved = ref(false)
 const showToast = ref(false)
 
 const profilePicture = computed(() => {
+  if (!props.post.profilePicture) {
+    return '/default-profile.png'
+  }
   return import.meta.env.DEV ? props.post.profilePicture.replace('https://', 'http://') : props.post.profilePicture
 })
 
