@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { chatService, type ChatPreview } from '../services/chatService'
 import NewChatModal from './NewChatModal.vue'
+import { getSafeImageUrl, onImgError } from '../utils/image'
 
 interface Props {
   selectedChatId: number | null
@@ -34,6 +35,9 @@ const filteredChats = computed(() => {
   )
 })
 
+const getProfileImageUrl = (chat: ChatPreview): string => getSafeImageUrl(chat.receiverProfileImageUrl)
+const onAvatarError = (e: Event) => onImgError(e)
+
 onMounted(() => {
   const storedChats = localStorage.getItem('my_chats')
   if (storedChats) {
@@ -64,7 +68,7 @@ onMounted(() => {
         @click="emit('selectChat', chat.chatId)"
       >
         <div class="chat-avatar">
-          <img src="/default-profile.png" alt="Profile" />
+          <img :src="getProfileImageUrl(chat)" @error="onAvatarError" alt="Profile" loading="lazy" />
         </div>
         <div class="chat-info">
           <div class="chat-header">

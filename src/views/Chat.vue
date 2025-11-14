@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {onMounted, onUnmounted, ref} from 'vue'
+import {onMounted, onUnmounted, ref, computed} from 'vue'
 import {type ChatPreview, chatService, type Message} from '../services/chatService'
 import {useWebSocket} from '../composables/useWebSocket'
 import {useAuthStore} from '../stores/auth'
@@ -97,6 +97,11 @@ const handleResize = () => {
   isMobile.value = window.innerWidth <= 768
 }
 
+const receiverImageUrl = computed(() => {
+  const chat = chats.value.find(c => c.chatId === selectedChatId.value)
+  return chat?.receiverProfileImageUrl ?? null
+})
+
 onMounted(async () => {
   if (typeof document !== 'undefined') {
     document.title = 'Chat - Toiter'
@@ -143,6 +148,7 @@ onUnmounted(() => {
           :selectedChatId="selectedChatId"
           :messages="messages"
           :receiverUsername="receiverUsername"
+          :receiverImageUrl="receiverImageUrl"
           @sendMessage="sendMessage"
           @back="backToList"
         />
@@ -167,6 +173,7 @@ onUnmounted(() => {
           :selectedChatId="selectedChatId"
           :messages="messages"
           :receiverUsername="receiverUsername"
+          :receiverImageUrl="receiverImageUrl"
           @sendMessage="sendMessage"
           @back="backToList"
         />

@@ -8,6 +8,9 @@ export interface ChatPreview {
     lastMessageSender: string;
     lastMessageContent: string;
     lastMessageSentDate: string;
+    // New optional fields for receiver profile image
+    receiverProfileImageUrl: string | null;
+    receiverProfileImageId: number | null;
 }
 
 export interface Message {
@@ -16,6 +19,13 @@ export interface Message {
     message: string;
     sender: string;
     timestamp: string;
+}
+
+export interface FollowData {
+    username: string;
+    profileImageUrl: string | null;
+    followDate: string;
+    profileImageId: number | null;
 }
 
 export interface ChatsResponse {
@@ -27,7 +37,7 @@ export interface ChatsResponse {
 }
 
 export interface FollowingResponse {
-    content: string[];
+    content: FollowData[];
     totalPages: number;
     totalElements: number;
     size: number;
@@ -60,7 +70,7 @@ class ChatService {
                 params: { username, page, size }
             });
             console.log(`✅ Found ${data.content.length} following users`);
-            return data;
+            return data as FollowingResponse;
         } catch (error) {
             console.error('❌ Error fetching following users:', error);
             throw error;

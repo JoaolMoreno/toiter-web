@@ -19,6 +19,7 @@ const repliesCount = ref(props.post.repliesCount)
 const repostsCount = ref(props.post.repostsCount)
 const isRemoved = ref(false)
 const showToast = ref(false)
+const isActionHovered = ref(false)
 
 const profilePicture = computed(() => {
   if (!props.post.profilePicture) {
@@ -97,7 +98,7 @@ const handleShare = (e: Event) => {
 </script>
 
 <template>
-  <div v-if="!isRemoved" class="post-card" @click="handlePostClick">
+  <div v-if="!isRemoved" class="post-card" :class="{ 'no-hover': isActionHovered }" @click="handlePostClick">
     <div class="post-header">
       <div class="user-info" @click="handleProfileClick">
         <img :src="profilePicture" alt="Profile picture" class="profile-pic" />
@@ -107,6 +108,8 @@ const handleShare = (e: Event) => {
       <button
         v-if="authStore.user?.username === post.username"
         class="delete-button"
+        @mouseenter="isActionHovered = true"
+        @mouseleave="isActionHovered = false"
         @click.stop="handleDelete"
       >
         🗑️
@@ -118,20 +121,22 @@ const handleShare = (e: Event) => {
     </div>
     
     <div class="post-actions">
-      <button class="action-button" @click.stop>
+      <button class="action-button reply" @mouseenter="isActionHovered = true" @mouseleave="isActionHovered = false" @click.stop>
         💬 {{ repliesCount }}
       </button>
-      <button class="action-button" @click.stop>
+      <button class="action-button repost" @mouseenter="isActionHovered = true" @mouseleave="isActionHovered = false" @click.stop>
         🔄 {{ repostsCount }}
       </button>
       <button
-        class="action-button"
+        class="action-button like"
         :class="{ liked: isLiked }"
+        @mouseenter="isActionHovered = true"
+        @mouseleave="isActionHovered = false"
         @click="handleLikeToggle"
       >
         {{ isLiked ? '❤️' : '🤍' }} {{ likesCount }}
       </button>
-      <button class="action-button" @click="handleShare">
+      <button class="action-button share" @mouseenter="isActionHovered = true" @mouseleave="isActionHovered = false" @click="handleShare">
         📤
       </button>
     </div>
@@ -153,7 +158,7 @@ const handleShare = (e: Event) => {
   transition: all 0.2s;
 }
 
-.post-card:hover {
+.post-card:hover:not(.no-hover) {
   border-color: var(--color-primary);
   transform: translateY(-2px);
 }
@@ -192,12 +197,17 @@ const handleShare = (e: Event) => {
   border: none;
   cursor: pointer;
   font-size: 18px;
-  opacity: 0.7;
-  transition: opacity 0.2s;
+  color: var(--color-text-light);
+  padding: 6px;
+  border-radius: 9999px;
+  transition: color 0.2s, background-color 0.2s, opacity 0.2s;
 }
 
-.delete-button:hover {
-  opacity: 1;
+.delete-button:hover,
+.delete-button:focus-visible {
+  color: var(--color-error);
+  background-color: rgba(207, 102, 121, 0.15); /* from --color-error */
+  outline: none;
 }
 
 .post-content {
@@ -226,14 +236,45 @@ const handleShare = (e: Event) => {
   align-items: center;
   gap: 4px;
   font-size: var(--font-size-small);
-  transition: color 0.2s;
+  padding: 6px 8px;
+  border-radius: 9999px;
+  line-height: 1;
+  transition: color 0.2s, background-color 0.2s;
 }
 
-.action-button:hover {
+/* Per-action emphasis on hover/focus */
+.action-button.reply:hover,
+.action-button.reply:focus-visible {
   color: var(--color-primary);
+  background-color: rgba(76, 175, 80, 0.15); /* from --color-primary (dark) */
+  outline: none;
 }
 
-.action-button.liked {
+.action-button.repost:hover,
+.action-button.repost:focus-visible {
+  color: var(--color-accent);
+  background-color: rgba(52, 211, 153, 0.15); /* from --color-accent */
+  outline: none;
+}
+
+.action-button.like:hover,
+.action-button.like:focus-visible {
+  color: var(--color-like);
+  background-color: rgba(231, 76, 60, 0.15); /* from --color-like */
+  outline: none;
+}
+
+.action-button.share:hover,
+.action-button.share:focus-visible {
+  color: var(--color-primary);
+  background-color: rgba(76, 175, 80, 0.12); /* from --color-primary, a bit lighter */
+  outline: none;
+}
+
+/* Keep liked state emphasized even when not hovering */
+.action-button.liked,
+.action-button.liked:hover,
+.action-button.liked:focus-visible {
   color: var(--color-like);
 }
 

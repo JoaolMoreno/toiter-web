@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
 import { getFeed, createPost } from '../services/postService'
 import { useAuthStore } from '../stores/auth'
 import { useFeedStore } from '../stores/feed'
@@ -163,6 +163,12 @@ const backToList = () => {
   receiverUsername.value = ''
 }
 
+// Compute the selected receiver's image URL to pass to ChatWindow
+const receiverImageUrl = computed(() => {
+  const chat = chats.value.find(c => c.chatId === selectedChatId.value)
+  return chat?.receiverProfileImageUrl ?? null
+})
+
 onMounted(() => {
   window.addEventListener('scroll', handleScroll)
   if (authStore.isAuthenticated) {
@@ -272,6 +278,7 @@ watch(() => feedStore.page, () => {
             :selectedChatId="selectedChatId"
             :messages="messages"
             :receiverUsername="receiverUsername"
+            :receiverImageUrl="receiverImageUrl"
             @sendMessage="sendMessage"
             @back="backToList"
           />

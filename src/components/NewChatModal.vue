@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { chatService } from '../services/chatService'
+import { chatService, type FollowData } from '../services/chatService'
+import { getSafeImageUrl, onImgError } from '../utils/image'
 
 interface Props {
   isOpen: boolean
@@ -13,7 +14,7 @@ const emit = defineEmits<{
 }>()
 
 const search = ref('')
-const users = ref<string[]>([])
+const users = ref<FollowData[]>([])
 
 let timeoutId: ReturnType<typeof setTimeout> | null = null
 
@@ -37,6 +38,9 @@ const handleStartChat = (username: string) => {
   emit('startChat', username)
   emit('close')
 }
+
+const getProfileImageUrl = (u: FollowData): string => getSafeImageUrl(u.profileImageUrl)
+const onAvatarError = (e: Event) => onImgError(e)
 </script>
 
 <template>
@@ -59,15 +63,15 @@ const handleStartChat = (username: string) => {
       </div>
       <div class="user-list">
         <div
-          v-for="username in users"
-          :key="username"
+          v-for="u in users"
+          :key="u.username"
           class="user-item"
-          @click="handleStartChat(username)"
+          @click="handleStartChat(u.username)"
         >
           <div class="user-avatar">
-            <img src="/default-profile.png" alt="Avatar" />
+            <img :src="getProfileImageUrl(u)" @error="onAvatarError" alt="Avatar" />
           </div>
-          <div class="user-name">{{ username }}</div>
+          <div class="user-name">{{ u.username }}</div>
         </div>
       </div>
     </div>

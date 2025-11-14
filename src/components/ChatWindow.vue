@@ -2,11 +2,13 @@
 import { ref, watch, nextTick, computed } from 'vue'
 import type { Message } from '../services/chatService'
 import { useAuthStore } from '../stores/auth'
+import { getSafeImageUrl, onImgError } from '../utils/image'
 
 interface Props {
   selectedChatId: number | null
   messages: Message[]
   receiverUsername?: string
+  receiverImageUrl?: string | null
 }
 
 const props = defineProps<Props>()
@@ -56,6 +58,10 @@ const formatTime = (timestamp: string): string => {
     hour12: false
   })
 }
+
+const safeReceiverImageUrl = computed(() => getSafeImageUrl(props.receiverImageUrl || null))
+
+const onHeaderAvatarError = (e: Event) => onImgError(e)
 </script>
 
 <template>
@@ -65,7 +71,7 @@ const formatTime = (timestamp: string): string => {
         ←
       </button>
       <div class="header-avatar">
-        <img src="/default-profile.png" alt="Profile" />
+        <img :src="safeReceiverImageUrl" alt="Profile" @error="onHeaderAvatarError" />
       </div>
       <h3 class="username">{{ receiverUsername }}</h3>
     </div>
