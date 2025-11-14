@@ -64,6 +64,9 @@ const formatTime = (timestamp: string): string => {
       <button class="back-button" @click="emit('back')" aria-label="Voltar para lista de chats">
         ←
       </button>
+      <div class="header-avatar">
+        <img src="/default-profile.png" alt="Profile" />
+      </div>
       <h3 class="username">{{ receiverUsername }}</h3>
     </div>
     
@@ -118,6 +121,7 @@ const formatTime = (timestamp: string): string => {
   background: var(--color-background-elevated);
   border-bottom: 1px solid var(--color-border);
   flex-shrink: 0;
+  gap: 12px;
 }
 
 .back-button {
@@ -129,8 +133,8 @@ const formatTime = (timestamp: string): string => {
   font-size: 1rem;
   color: var(--color-text);
   cursor: pointer;
-  margin-right: 12px;
   transition: background 0.2s ease, border-color 0.2s ease;
+  flex-shrink: 0;
 }
 
 .back-button:hover {
@@ -138,10 +142,26 @@ const formatTime = (timestamp: string): string => {
   border-color: var(--color-text);
 }
 
+.header-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--color-background-alt);
+  flex-shrink: 0;
+}
+
+.header-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .username {
   flex: 1;
   margin: 0;
   font-size: 1rem;
+  font-weight: 600;
   color: var(--color-text);
   text-align: left;
 }
@@ -156,14 +176,6 @@ const formatTime = (timestamp: string): string => {
   min-height: 0;
 }
 
-.message-list::-webkit-scrollbar {
-  width: 6px;
-}
-
-.message-list::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 999px;
-}
 
 .input-area {
   padding: 20px 24px;

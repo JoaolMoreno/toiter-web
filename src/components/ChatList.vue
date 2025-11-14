@@ -63,11 +63,16 @@ onMounted(() => {
         :class="['chat-item', { active: chat.chatId === selectedChatId }]"
         @click="emit('selectChat', chat.chatId)"
       >
-        <h4>{{ chat.receiverUsername }}</h4>
-        <p>{{ chat.lastMessageContent }}</p>
-        <small>
-          {{ new Date(chat.lastMessageSentDate).toLocaleTimeString() }}
-        </small>
+        <div class="chat-avatar">
+          <img src="/default-profile.png" alt="Profile" />
+        </div>
+        <div class="chat-info">
+          <div class="chat-header">
+            <h4>{{ chat.receiverUsername }}</h4>
+            <small>{{ new Date(chat.lastMessageSentDate).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) }}</small>
+          </div>
+          <p>{{ chat.lastMessageContent }}</p>
+        </div>
       </div>
     </div>
     <NewChatModal
@@ -80,19 +85,20 @@ onMounted(() => {
 
 <style scoped>
 .sidebar {
-  width: 320px;
+  width: 100%;
   display: flex;
   flex-direction: column;
   background: var(--color-background-elevated);
   border-right: 1px solid var(--color-border);
   height: 100%;
+  flex: 1;
+  overflow: hidden;
   color: var(--color-text);
 }
 
 @media (max-width: 768px) {
   .sidebar {
-    width: 100%;
-    height: 100%;
+    border-right: none;
   }
 }
 
@@ -141,40 +147,79 @@ onMounted(() => {
 }
 
 .chat-item {
-  padding: 16px;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--color-border);
   cursor: pointer;
   background: transparent;
-  transition: background 0.2s ease, border-left 0.2s ease;
+  transition: background 0.2s ease;
   color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .chat-item.active {
   background: rgba(255, 255, 255, 0.05);
-  border-left: 3px solid var(--color-primary);
 }
 
 .chat-item:hover {
   background: rgba(255, 255, 255, 0.03);
 }
 
-.chat-item h4 {
-  margin: 0;
-  font-size: 1rem;
-  color: var(--color-text);
+.chat-avatar {
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--color-background-alt);
 }
 
-.chat-item p {
-  margin: 6px 0 0;
-  font-size: 0.9rem;
-  color: var(--color-text-secondary);
+.chat-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.chat-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.chat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.chat-item h4 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+.chat-item p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 400;
+}
+
 .chat-item small {
   font-size: 0.75rem;
   color: var(--color-text-secondary);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 </style>
