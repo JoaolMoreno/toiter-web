@@ -34,6 +34,7 @@ Todas as cores são definidas como variáveis CSS e mudam automaticamente de aco
   * `--color-border`: #333333
   * `--color-button-hover`: #388E3C
   * `--color-error`: #CF6679
+  * `--color-like`: #e74c3c
 
 #### Tema Claro (Light)
 * **Cores Principais:**
@@ -52,6 +53,7 @@ Todas as cores são definidas como variáveis CSS e mudam automaticamente de aco
   * `--color-border`: #E0E0E0
   * `--color-button-hover`: #66BB6A
   * `--color-error`: #D32F2F
+  * `--color-like`: #e74c3c
 
 ### 1.3. Como Usar as Variáveis
 

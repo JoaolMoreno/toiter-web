@@ -213,7 +213,7 @@ const handleShare = (e: Event) => {
 .delete-button:hover,
 .delete-button:focus-visible {
   color: var(--color-error);
-  background-color: rgba(207, 102, 121, 0.15); /* from --color-error */
+  background-color: var(--color-error-bg);
   outline: none;
 }
 
@@ -253,28 +253,28 @@ const handleShare = (e: Event) => {
 .action-button.reply:hover,
 .action-button.reply:focus-visible {
   color: var(--color-primary);
-  background-color: rgba(76, 175, 80, 0.15); /* from --color-primary (dark) */
+  background-color: var(--color-primary-bg);
   outline: none;
 }
 
 .action-button.repost:hover,
 .action-button.repost:focus-visible {
   color: var(--color-accent);
-  background-color: rgba(52, 211, 153, 0.15); /* from --color-accent */
+  background-color: var(--color-accent-bg);
   outline: none;
 }
 
 .action-button.like:hover,
 .action-button.like:focus-visible {
   color: var(--color-like);
-  background-color: rgba(231, 76, 60, 0.15); /* from --color-like */
+  background-color: var(--color-like-bg);
   outline: none;
 }
 
 .action-button.share:hover,
 .action-button.share:focus-visible {
   color: var(--color-primary);
-  background-color: rgba(76, 175, 80, 0.12); /* from --color-primary, a bit lighter */
+  background-color: var(--color-primary-bg-light);
   outline: none;
 }
 
