@@ -71,18 +71,17 @@ onMounted(() => {
 <template>
   <div v-if="!isAuthPage">
     <header class="header">
-      <button v-if="authStore.isAuthenticated" class="profile-button" @click="handleProfileClick">
-        <div v-if="imageLoading" class="loading-profile-image" />
-        <img 
-          v-else
-          :src="imageUrl"
-          alt="Profile"
-          class="profile-image"
-          @error="imageUrl = '/default-profile.png'"
-        />
-      </button>
-      <h1 class="app-name" @click="handleHomeClick">toiter</h1>
-      <div class="header-right">
+      <div class="header-left">
+        <button v-if="authStore.isAuthenticated" class="profile-button" @click="handleProfileClick">
+          <div v-if="imageLoading" class="loading-profile-image" />
+          <img 
+            v-else
+            :src="imageUrl"
+            alt="Profile"
+            class="profile-image"
+            @error="imageUrl = '/default-profile.png'"
+          />
+        </button>
         <button 
           class="theme-toggle" 
           @click="handleThemeToggle"
@@ -91,6 +90,9 @@ onMounted(() => {
         >
           {{ themeStore.theme === 'dark' ? '☀️' : '🌙' }}
         </button>
+      </div>
+      <h1 class="app-name" @click="handleHomeClick">toiter</h1>
+      <div class="header-right">
         <button v-if="authStore.isAuthenticated" class="logout-button" @click="handleLogout">
           Logout
         </button>
@@ -167,6 +169,12 @@ onMounted(() => {
 
 .profile-button:hover {
   opacity: 0.8;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .header-right {

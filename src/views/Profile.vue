@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getUserProfile, followUser, unfollowUser, updateUserProfile, updateProfileImage, updateHeaderImage } from '../services/userService'
 import { getPostsByUser } from '../services/postService'
@@ -54,6 +54,24 @@ const loadPosts = async () => {
     console.error('Erro ao carregar posts:', error)
   } finally {
     loading.value = false
+  }
+}
+
+const resetAndLoad = async () => {
+  // Reset state
+  profile.value = null
+  posts.value = []
+  page.value = 0
+  hasMore.value = true
+  loading.value = false
+  
+  // Load new data
+  await loadProfile()
+  await loadPosts()
+  
+  // Update document title
+  if (typeof document !== 'undefined') {
+    document.title = `@${username.value} - Toiter`
   }
 }
 
@@ -124,11 +142,13 @@ const handleUpdateImage = async (file: File) => {
 }
 
 onMounted(() => {
-  loadProfile()
-  loadPosts()
-  
-  if (typeof document !== 'undefined') {
-    document.title = `@${username.value} - Toiter`
+  resetAndLoad()
+})
+
+// Watch for route changes to reload profile when navigating between different profiles
+watch(() => route.params.username, (newUsername, oldUsername) => {
+  if (newUsername && newUsername !== oldUsername) {
+    resetAndLoad()
   }
 })
 </script>
