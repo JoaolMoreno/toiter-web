@@ -88,11 +88,13 @@ services:
     container_name: redis
     ports:
       - "6379:6379"
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
     volumes:
       - redis_data:/data
-    command: ["redis-server", "--appendonly", "yes"]
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "$REDIS_PASSWORD"]
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "$REDIS_PASSWORD", "ping"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -119,7 +121,8 @@ services:
       JWT_REFRESH_TOKEN_EXPIRATION: 1209600000
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
-      SERVICE_POST_URL: http://toiter-post-service:9991/internal
+      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
+      SERVICE_POST_URL: http://toiter-post-service:9991/api/internal
       SERVICE_SHARED_KEY: ${SERVICE_SHARED_KEY}
       SERVER_URL: ${SERVER_URL}
     volumes:
@@ -147,7 +150,8 @@ services:
       JWT_REFRESH_TOKEN_EXPIRATION: 1209600000
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
-      SERVICE_USER_URL: http://toiter-user-service:9990/internal
+      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
+      SERVICE_USER_URL: http://toiter-user-service:9990/api/internal
       SERVICE_SHARED_KEY: ${SERVICE_SHARED_KEY}
       SERVER_URL: ${SERVER_URL}
     volumes:
@@ -177,7 +181,7 @@ services:
       - "5173:5173"
     environment:
       NODE_ENV: production
-      SERVICE_POST_URL: http://toiter-post-service:9991/
+      SERVICE_POST_URL: http://toiter-post-service:9991/api/
       VITE_PUBLIC_HOST: ${SERVER_URL}
     depends_on:
       - postgres
