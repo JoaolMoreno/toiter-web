@@ -225,7 +225,7 @@ const formatTime = (timestamp: string): string => {
   max-width: 65%;
   padding: 10px 14px;
   border-radius: 16px;
-  background: #2c2c2c;
+  background: var(--color-background-elevated);
   color: var(--color-text);
   align-self: flex-start;
   display: flex;
