@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'vue-toastification'
 import PasswordInput from './PasswordInput.vue'
@@ -11,10 +11,31 @@ const toast = useToast()
 const username = ref('')
 const email = ref('')
 const password = ref('')
+const confirmPassword = ref('')
 const isLoading = ref(false)
+
+const passwordsMatch = computed(() => {
+  if (!confirmPassword.value) return true
+  return password.value === confirmPassword.value
+})
+
+const isFormValid = computed(() => {
+  return username.value && email.value && password.value && confirmPassword.value && passwordsMatch.value
+})
 
 const handleSubmit = async (e: Event) => {
   e.preventDefault()
+
+  if (!passwordsMatch.value) {
+    toast.error('As senhas não coincidem')
+    return
+  }
+
+  if (!isFormValid.value) {
+    toast.error('Preencha todos os campos corretamente')
+    return
+  }
+
   try {
     isLoading.value = true
     await api.post('/auth/register', {
@@ -50,20 +71,31 @@ const handleSubmit = async (e: Event) => {
       placeholder="Nome"
       v-model="username"
       class="input"
+      required
     />
     <input
       type="email"
       placeholder="Email"
       v-model="email"
       class="input"
+      required
     />
     <PasswordInput
       v-model="password"
       placeholder="Senha"
     />
+    <div class="password-confirm-wrapper">
+      <PasswordInput
+        v-model="confirmPassword"
+        placeholder="Confirme a senha"
+      />
+      <p v-if="confirmPassword && !passwordsMatch" class="error-message">
+        As senhas não coincidem
+      </p>
+    </div>
     <button
       type="submit"
-      :disabled="isLoading"
+      :disabled="isLoading || !isFormValid"
       :class="['button', { 'is-loading': isLoading }]"
     >
       {{ isLoading ? 'Registrando...' : 'Registrar' }}
@@ -91,6 +123,26 @@ const handleSubmit = async (e: Event) => {
   height: 44px;
 }
 
+.password-confirm-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.error-message {
+  color: var(--color-error);
+  font-size: 0.875rem;
+  margin: 0;
+  padding: 0 4px;
+  animation: shake 0.3s;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
 .button {
   width: 100%;
   padding: 12px;
@@ -104,12 +156,12 @@ const handleSubmit = async (e: Event) => {
   transition: all 0.2s;
 }
 
-.button:hover {
+.button:hover:not(:disabled) {
   background-color: var(--color-secondary);
   transform: scale(1.05);
 }
 
-.button:active {
+.button:active:not(:disabled) {
   transform: scale(0.95);
 }
 
@@ -121,6 +173,7 @@ const handleSubmit = async (e: Event) => {
 
 .button:disabled {
   cursor: not-allowed;
+  opacity: 0.6;
 }
 
 @keyframes pulse {
