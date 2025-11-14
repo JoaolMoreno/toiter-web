@@ -14,7 +14,7 @@ export const getUserProfile = async (username: string): Promise<UserProfile> => 
 
     return {
       username: data.username,
-      displayName: data.username,
+      displayName: data.displayName,
       bio: data.bio,
       headerImageUrl,
       profileImageUrl,
