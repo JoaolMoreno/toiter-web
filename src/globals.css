@@ -35,6 +35,8 @@
   --color-button-text: #FFFFFF;
   --color-following-button: #657786;
   --color-following-button-hover: #556677;
+  --color-menu-background: #1c1c1e;
+  --color-menu-hover: #2c2c2e;
 }
 
 /* Light Theme */
@@ -57,6 +59,8 @@
   --color-button-text: #FFFFFF;
   --color-following-button: #9E9E9E;
   --color-following-button-hover: #757575;
+  --color-menu-background: #FFFFFF;
+  --color-menu-hover: #F5F5F5;
 }
 
 body {

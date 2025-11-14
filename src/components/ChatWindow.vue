@@ -204,7 +204,7 @@ const formatTime = (timestamp: string): string => {
   border-radius: 999px;
   padding: 8px 18px;
   background: var(--color-primary);
-  color: #fff;
+  color: var(--color-button-text);
   font-weight: 600;
   transition: background 0.2s ease;
 }
@@ -247,7 +247,7 @@ const formatTime = (timestamp: string): string => {
 
 .message-bubble.mine {
   background: var(--color-primary);
-  color: #fff;
+  color: var(--color-button-text);
   align-self: flex-end;
 }
 
