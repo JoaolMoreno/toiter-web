@@ -47,12 +47,23 @@ const handleKeyPress = (e: KeyboardEvent) => {
     handleSendMessage()
   }
 }
+
+const formatTime = (timestamp: string): string => {
+  const date = new Date(timestamp)
+  return date.toLocaleTimeString('pt-BR', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  })
+}
 </script>
 
 <template>
   <div class="chat-window">
     <div v-if="selectedChatId && receiverUsername" class="header">
-      <button class="back-button" @click="emit('back')">←</button>
+      <button class="back-button" @click="emit('back')" aria-label="Voltar para lista de chats">
+        ←
+      </button>
       <h3 class="username">{{ receiverUsername }}</h3>
     </div>
     
@@ -63,20 +74,23 @@ const handleKeyPress = (e: KeyboardEvent) => {
           :key="index"
           :class="['message-bubble', { mine: msg.sender === authStore.user?.username }]"
         >
-          {{ msg.message }}
+          <div class="message-content">{{ msg.message }}</div>
+          <div class="message-time">{{ formatTime(msg.timestamp) }}</div>
         </div>
         <div ref="messagesEndRef" />
       </div>
       <div class="input-area">
-        <input
-          v-model="newMessage"
-          class="input"
-          placeholder="Digite uma mensagem..."
-          @keypress="handleKeyPress"
-        />
-        <button class="send-button" @click="handleSendMessage">
-          Enviar
-        </button>
+        <div class="input-wrapper">
+          <input
+            v-model="newMessage"
+            class="message-input"
+            placeholder="Digite uma mensagem..."
+            @keypress="handleKeyPress"
+          />
+          <button class="send-button" type="button" @click="handleSendMessage">
+            Enviar
+          </button>
+        </div>
       </div>
     </template>
     
@@ -91,69 +105,112 @@ const handleKeyPress = (e: KeyboardEvent) => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: #fff;
-  height: 100%;
-  overflow: hidden;
+  min-height: 0;
+  background: var(--color-background-alt);
+  color: var(--color-text);
+  border-left: 1px solid var(--color-border);
 }
 
 .header {
   display: flex;
   align-items: center;
-  padding: 16px;
-  background: #fff;
+  padding: 16px 24px;
+  background: var(--color-background-elevated);
   border-bottom: 1px solid var(--color-border);
   flex-shrink: 0;
 }
 
 .back-button {
-  background: none;
-  border: none;
-  font-size: 18px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  width: 36px;
+  height: 36px;
+  font-size: 1rem;
+  color: var(--color-text);
   cursor: pointer;
-  margin-right: 10px;
+  margin-right: 12px;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.back-button:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: var(--color-text);
 }
 
 .username {
   flex: 1;
-  text-align: center;
   margin: 0;
+  font-size: 1rem;
+  color: var(--color-text);
+  text-align: left;
 }
 
 .message-list {
   flex: 1;
   overflow-y: auto;
-  padding: 20px;
+  padding: 24px 32px 16px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
   min-height: 0;
 }
 
+.message-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.message-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+}
+
 .input-area {
-  display: flex;
-  padding: 16px;
-  background: var(--color-background-elevated);
+  padding: 20px 24px;
+  background: var(--color-background);
   border-top: 1px solid var(--color-border);
   flex-shrink: 0;
 }
 
-.input {
+.input-wrapper {
+  display: flex;
+  align-items: center;
+  background: var(--color-background-alt);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 10px 14px;
+  gap: 12px;
+}
+
+.message-input {
   flex: 1;
-  padding: 8px;
-  margin-bottom: 0 !important;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  background: transparent;
+  border: none;
+  color: var(--color-text);
+  font-size: 0.95rem;
   font-family: inherit;
 }
 
+.message-input::placeholder {
+  color: var(--color-text-secondary);
+}
+
+.message-input:focus {
+  outline: none;
+}
+
 .send-button {
-  margin-left: 10px;
-  padding: 8px 16px;
-  background: #007bff;
-  color: #fff;
   border: none;
-  border-radius: 4px;
-  cursor: pointer;
+  border-radius: 999px;
+  padding: 8px 18px;
+  background: var(--color-primary);
+  color: #fff;
+  font-weight: 600;
+  transition: background 0.2s ease;
+}
+
+.send-button:hover {
+  background: var(--color-button-hover);
 }
 
 .placeholder {
@@ -161,21 +218,40 @@ const handleKeyPress = (e: KeyboardEvent) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #888;
+  color: var(--color-text-secondary);
 }
 
 .message-bubble {
-  max-width: 60%;
-  padding: 6px 7px 8px 9px;
-  background: #f1f1f1;
-  color: #000;
-  border-radius: 8px;
+  max-width: 65%;
+  padding: 10px 14px;
+  border-radius: 16px;
+  background: #2c2c2c;
+  color: var(--color-text);
   align-self: flex-start;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.message-content {
+  word-wrap: break-word;
+  line-height: 1.4;
+}
+
+.message-time {
+  font-size: 0.7rem;
+  opacity: 0.6;
+  align-self: flex-end;
+  margin-top: 2px;
 }
 
 .message-bubble.mine {
-  background: #007bff;
+  background: var(--color-primary);
   color: #fff;
   align-self: flex-end;
+}
+
+.message-bubble.mine .message-time {
+  opacity: 0.8;
 }
 </style>

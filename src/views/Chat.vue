@@ -1,13 +1,11 @@
 <script setup lang="ts">
 import {onMounted, onUnmounted, ref} from 'vue'
-import {useRouter} from 'vue-router'
 import {type ChatPreview, chatService, type Message} from '../services/chatService'
 import {useWebSocket} from '../composables/useWebSocket'
 import {useAuthStore} from '../stores/auth'
 import ChatList from '../components/ChatList.vue'
 import ChatWindow from '../components/ChatWindow.vue'
 
-const router = useRouter()
 const authStore = useAuthStore()
 const { connect, disconnect, sendMessage: wsSendMessage, subscribeToMessages } = useWebSocket()
 
@@ -18,10 +16,6 @@ const receiverUsername = ref<string>('')
 
 const syncedChats = ref<Record<number, number>>({})
 const isMobile = ref(false)
-
-const handleBack = () => {
-  router.push('/feed')
-}
 
 const loadChats = async () => {
   try {
@@ -178,9 +172,6 @@ onUnmounted(() => {
         />
       </template>
     </div>
-    <button class="back-button" @click="handleBack">
-      ← Voltar para Feed
-    </button>
   </div>
 </template>
 
@@ -189,28 +180,14 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   background-color: var(--color-background);
-  min-height: 100vh;
+  height: calc(100vh - 80px);
+  overflow: hidden;
 }
 
 .chat-layout {
   display: flex;
   flex: 1;
-  height: calc(100vh - 60px); /* Adjust for back button */
   background: var(--color-background-elevated);
   overflow: hidden;
-}
-
-.back-button {
-  background: none;
-  border: none;
-  color: var(--color-primary);
-  cursor: pointer;
-  font-size: var(--font-size-regular);
-  padding: 16px;
-  align-self: flex-start;
-}
-
-.back-button:hover {
-  text-decoration: underline;
 }
 </style>

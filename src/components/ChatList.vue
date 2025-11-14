@@ -83,9 +83,10 @@ onMounted(() => {
   width: 320px;
   display: flex;
   flex-direction: column;
-  background: white;
+  background: var(--color-background-elevated);
   border-right: 1px solid var(--color-border);
   height: 100%;
+  color: var(--color-text);
 }
 
 @media (max-width: 768px) {
@@ -96,43 +97,42 @@ onMounted(() => {
 }
 
 .search-container {
-  padding: 15px;
+  padding: 16px;
   display: flex;
-  gap: 10px;
-  border-bottom: 1px solid #eee;
+  gap: 12px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-background);
 }
 
 .search-input {
   flex: 1;
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  margin-bottom: 0 !important;
-  border-radius: 20px;
-  background: #fff;
+  padding: 10px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-background-alt);
+  color: var(--color-text);
   outline: none;
   font-family: inherit;
-}
-
-.search-input:focus {
-  border-color: #0084ff;
+  margin-bottom: 0 !important;
 }
 
 .search-input::placeholder {
-  color: #999;
+  color: var(--color-text-secondary);
 }
 
 .new-chat-button {
-  padding: 8px 12px;
-  border-radius: 20px;
-  background: #0084ff;
-  color: white;
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: #fff;
   border: none;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 0.9rem;
+  white-space: nowrap;
 }
 
 .new-chat-button:hover {
-  background: #0073e6;
+  background: var(--color-button-hover);
 }
 
 .chat-list {
@@ -141,38 +141,40 @@ onMounted(() => {
 }
 
 .chat-item {
-  padding: 15px;
-  border-bottom: 1px solid #eee;
+  padding: 16px;
+  border-bottom: 1px solid var(--color-border);
   cursor: pointer;
   background: transparent;
-  transition: background 0.2s;
+  transition: background 0.2s ease, border-left 0.2s ease;
+  color: var(--color-text);
 }
 
 .chat-item.active {
-  background: #e6f0fa;
+  background: rgba(255, 255, 255, 0.05);
+  border-left: 3px solid var(--color-primary);
 }
 
 .chat-item:hover {
-  background: #e6f0fa;
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .chat-item h4 {
   margin: 0;
-  font-size: 16px;
-  color: #333;
+  font-size: 1rem;
+  color: var(--color-text);
 }
 
 .chat-item p {
-  margin: 5px 0 0;
-  font-size: 14px;
-  color: #666;
+  margin: 6px 0 0;
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .chat-item small {
-  font-size: 12px;
-  color: #999;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
 }
 </style>
