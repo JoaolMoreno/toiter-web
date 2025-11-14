@@ -102,7 +102,8 @@ const handleShare = (e: Event) => {
     <div class="post-header">
       <div class="user-info" @click="handleProfileClick">
         <img :src="profilePicture" alt="Profile picture" class="profile-pic" />
-        <strong>{{ post.username }}</strong>
+        <strong>{{ post.displayName }}</strong>
+        <span class="username">@{{ post.username }}</span>
         <span class="timestamp">· {{ formatTimestamp(post.createdAt) }}</span>
       </div>
       <button
@@ -185,6 +186,12 @@ const handleShare = (e: Event) => {
 
 .user-info strong:hover {
   color: var(--color-primary);
+}
+
+.username {
+  color: var(--color-text-secondary);
+  font-size: 1rem;
+  font-weight: 400;
 }
 
 .timestamp {
