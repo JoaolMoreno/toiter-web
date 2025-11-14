@@ -25,7 +25,11 @@ const filteredMessages = computed(() => {
   if (!props.selectedChatId) return []
   return props.messages
     .filter(msg => msg.chatId === props.selectedChatId)
-    .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+    .sort((a, b) => {
+      const at = parseUtcDate(a.sentDate)?.getTime() ?? 0
+      const bt = parseUtcDate(b.sentDate)?.getTime() ?? 0
+      return at - bt
+    })
 })
 
 watch(() => props.messages, async () => {
@@ -50,8 +54,21 @@ const handleKeyPress = (e: KeyboardEvent) => {
   }
 }
 
-const formatTime = (timestamp: string): string => {
-  const date = new Date(timestamp)
+// Robust UTC parser: appends 'Z' if missing, trims fractional seconds to 3 digits
+const parseUtcDate = (input?: string): Date | null => {
+  if (!input) return null
+  let iso = input
+  // Append Z only if no timezone info already present
+  if (!/[zZ]|[+-]\d{2}:?\d{2}$/.test(iso)) iso += 'Z'
+  // Trim fractional seconds to 3 digits if present
+  iso = iso.replace(/(\.\d{3})\d+/, '$1')
+  const d = new Date(iso)
+  return isNaN(d.getTime()) ? null : d
+}
+
+const formatTime = (sentDate?: string): string => {
+  const date = parseUtcDate(sentDate)
+  if (!date) return ''
   return date.toLocaleTimeString('pt-BR', {
     hour: '2-digit',
     minute: '2-digit',
@@ -84,7 +101,7 @@ const onHeaderAvatarError = (e: Event) => onImgError(e)
           :class="['message-bubble', { mine: msg.sender === authStore.user?.username }]"
         >
           <div class="message-content">{{ msg.message }}</div>
-          <div class="message-time">{{ formatTime(msg.timestamp) }}</div>
+          <div class="message-time">{{ formatTime(msg.sentDate) }}</div>
         </div>
         <div ref="messagesEndRef" />
       </div>

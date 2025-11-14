@@ -35,6 +35,24 @@ const filteredChats = computed(() => {
   )
 })
 
+// Robust UTC parser for backend timestamps without timezone
+const parseUtcDate = (input?: string): Date | null => {
+  if (!input) return null
+  let iso = input
+  // Add Z if no timezone info is present
+  if (!/[zZ]|[+-]\d{2}:?\d{2}$/.test(iso)) iso += 'Z'
+  // Trim fractional seconds to 3 digits
+  iso = iso.replace(/(\.\d{3})\d+/, '$1')
+  const d = new Date(iso)
+  return isNaN(d.getTime()) ? null : d
+}
+
+const formatTime = (input?: string): string => {
+  const d = parseUtcDate(input)
+  if (!d) return ''
+  return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', hour12: false })
+}
+
 const getProfileImageUrl = (chat: ChatPreview): string => getSafeImageUrl(chat.receiverProfileImageUrl)
 const onAvatarError = (e: Event) => onImgError(e)
 
@@ -73,7 +91,7 @@ onMounted(() => {
         <div class="chat-info">
           <div class="chat-header">
             <h4>{{ chat.receiverUsername }}</h4>
-            <small>{{ new Date(chat.lastMessageSentDate).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) }}</small>
+            <small>{{ formatTime(chat.lastMessageSentDate) }}</small>
           </div>
           <p>{{ chat.lastMessageContent }}</p>
         </div>

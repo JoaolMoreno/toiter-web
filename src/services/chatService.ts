@@ -18,7 +18,7 @@ export interface Message {
     chatId: number;
     message: string;
     sender: string;
-    timestamp: string;
+    sentDate: string;
 }
 
 export interface FollowData {
@@ -155,7 +155,7 @@ class ChatService {
         const pageSize = 100;
         let hasMore = true;
         const allMessages = [...localMessages];
-        const latestLocalId = Math.max(...localMessages.map(m => this.parseTimestampToId(m.timestamp)));
+        const latestLocalId = Math.max(...localMessages.map(m => this.parseTimestampToId(m.sentDate)));
 
         while (hasMore) {
             try {
@@ -167,17 +167,17 @@ class ChatService {
                     chatId: msg.chatId,
                     message: msg.message,
                     sender: msg.sender,
-                    timestamp: msg.sentDate
+                    sentDate: msg.sentDate
                 }));
 
                 // Check if a known message is found
-                const hasKnownMessage = messages.some((msg: { timestamp: string; }) => {
-                    const msgId = this.parseTimestampToId(msg.timestamp);
+                const hasKnownMessage = messages.some((msg: { sentDate: string; }) => {
+                    const msgId = this.parseTimestampToId(msg.sentDate);
                     return msgId <= latestLocalId;
                 });
 
-                allMessages.unshift(...messages.filter((msg: { timestamp: string; }) => {
-                    const msgId = this.parseTimestampToId(msg.timestamp);
+                allMessages.unshift(...messages.filter((msg: { sentDate: string; }) => {
+                    const msgId = this.parseTimestampToId(msg.sentDate);
                     return msgId > latestLocalId;
                 }));
 
@@ -235,7 +235,7 @@ class ChatService {
                                 chatId: receivedMessage.chatId,
                                 message: receivedMessage.message,
                                 sender: receivedMessage.sender,
-                                timestamp: receivedMessage.sentDate || receivedMessage.timestamp
+                                sentDate: receivedMessage.sentDate
                             };
 
                             console.log(`📨 Message in chat ${formattedMessage.chatId}: ${formattedMessage.message}`);
