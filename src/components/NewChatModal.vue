@@ -46,12 +46,17 @@ const handleStartChat = (username: string) => {
         <h3 class="modal-title">Nova mensagem</h3>
         <button class="close-button" @click="emit('close')">✕</button>
       </div>
-      <input
-        v-model="search"
-        type="text"
-        placeholder="Pesquisar..."
-        class="search-input"
-      />
+      <div class="search-container">
+        <span class="search-icon">🔍</span>
+        <input
+          v-model="search"
+          type="text"
+          placeholder="Pesquisar..."
+          class="search-input"
+          spellcheck="false"
+          autocomplete="off"
+        />
+      </div>
       <div class="user-list">
         <div
           v-for="username in users"
@@ -59,7 +64,9 @@ const handleStartChat = (username: string) => {
           class="user-item"
           @click="handleStartChat(username)"
         >
-          <div class="user-avatar" />
+          <div class="user-avatar">
+            <img src="/default-profile.png" alt="Avatar" />
+          </div>
           <div class="user-name">{{ username }}</div>
         </div>
       </div>
@@ -74,7 +81,7 @@ const handleStartChat = (username: string) => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -82,87 +89,130 @@ const handleStartChat = (username: string) => {
 }
 
 .modal-container {
-  background: #fff;
-  border-radius: 12px;
-  width: 400px;
+  background: var(--color-background-elevated);
+  border-radius: 16px;
+  width: 500px;
   max-width: 90vw;
   max-height: 80vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
 .modal-header {
-  padding: 15px;
+  padding: 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .modal-title {
   margin: 0;
-  font-size: 18px;
-  color: #333;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--color-text);
 }
 
 .close-button {
   background: none;
   border: none;
-  font-size: 18px;
+  font-size: 20px;
   cursor: pointer;
-  color: #666;
+  color: var(--color-text-secondary);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .close-button:hover {
-  color: #333;
+  background: var(--color-background-alt);
+  color: var(--color-text);
+}
+
+.search-container {
+  position: relative;
+  padding: 15px 20px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.search-icon {
+  position: absolute;
+  left: 32px;
+  top: 27px;
+  font-size: 18px;
+  pointer-events: none;
+  opacity: 0.5;
+  line-height: 1;
 }
 
 .search-input {
   width: 100%;
-  padding: 10px 15px;
+  padding: 12px 20px 12px 45px;
   border: none;
-  border-bottom: 1px solid #eee;
+  border-radius: 24px;
   outline: none;
-  font-size: 16px;
+  font-size: 15px;
   font-family: inherit;
+  background: var(--color-background-alt);
+  color: var(--color-text);
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .search-input:focus {
-  border-bottom: 1px solid #0084ff;
+  background: var(--color-background);
+  box-shadow: 0 0 0 2px var(--color-primary);
 }
 
 .search-input::placeholder {
-  color: #999;
+  color: var(--color-text-secondary);
 }
 
 .user-list {
   flex: 1;
   overflow-y: auto;
-  padding: 10px 0;
+  padding: 5px 0;
 }
 
 .user-item {
-  padding: 10px 15px;
+  padding: 12px 20px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  transition: background-color 0.2s ease;
 }
 
 .user-item:hover {
-  background: #f0f2f5;
+  background: var(--color-background-alt);
 }
 
 .user-avatar {
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
-  background: #ddd;
+  background: var(--color-background-alt);
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .user-name {
   font-size: 16px;
-  color: #333;
+  font-weight: 500;
+  color: var(--color-text);
 }
 </style>
