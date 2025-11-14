@@ -239,17 +239,27 @@ watch(() => feedStore.page, () => {
         Você chegou ao final do feed!
       </p>
       
-      <!-- Floating action buttons -->
+      <!-- Floating action button -->
       <div class="floating-buttons">
         <button class="floating-button" @click="handleCreateNewPost" title="Criar novo post">
           +
         </button>
-        <button class="floating-button chat-button" @click="toggleChat" :title="isChatOpen ? 'Fechar chat' : 'Abrir chat'">
-          💬
-        </button>
       </div>
     </div>
-    
+
+    <!-- Chat toggle button and panel -->
+    <button
+      v-if="!isChatOpen"
+      class="chat-toggle-button"
+      @click="toggleChat"
+      title="Abrir mensagens"
+    >
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2C6.5 2 2 6.14 2 11.25C2 14.02 3.32 16.5 5.44 18.21V22L8.88 20.06C9.84 20.35 10.88 20.5 12 20.5C17.5 20.5 22 16.36 22 11.25C22 6.14 17.5 2 12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span class="chat-toggle-text">Mensagens</span>
+    </button>
+
     <!-- Chat panel -->
     <div :class="['chat-panel', { open: isChatOpen }]">
       <div class="chat-panel-header">
@@ -374,7 +384,7 @@ watch(() => feedStore.page, () => {
   margin-top: 20px;
 }
 
-/* Floating action buttons */
+/* Floating action button - create post */
 .floating-buttons {
   position: fixed;
   bottom: 20px;
@@ -405,31 +415,61 @@ watch(() => feedStore.page, () => {
   transform: scale(1.05);
 }
 
-.floating-button.chat-button {
-  background-color: var(--color-secondary);
+/* Chat toggle button - Instagram style pill */
+.chat-toggle-button {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  height: 48px;
+  padding: 0 20px;
+  border-radius: 24px;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-background-elevated);
+  color: var(--color-text);
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 15px;
+  font-weight: 600;
 }
 
-.floating-button.chat-button:hover {
-  background-color: var(--color-button-hover);
+.chat-toggle-button:hover {
+  background-color: var(--color-background-alt);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  transform: translateY(-2px);
 }
 
-/* Chat panel */
+.chat-toggle-text {
+  white-space: nowrap;
+}
+
+/* Chat panel - expands from the button */
 .chat-panel {
   position: fixed;
-  top: 0;
-  right: -400px;
-  width: 400px;
-  height: 100vh;
+  bottom: 20px;
+  right: 20px;
+  width: 0;
+  height: 0;
   background-color: var(--color-background-elevated);
-  box-shadow: -2px 0 8px rgba(0,0,0,0.3);
-  transition: right 0.3s ease;
-  z-index: 1000;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  border-radius: 16px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 999;
   display: flex;
   flex-direction: column;
+  opacity: 0;
+  overflow: hidden;
 }
 
 .chat-panel.open {
-  right: 0;
+  width: 360px;
+  height: 500px;
+  opacity: 1;
 }
 
 .chat-panel-header {
@@ -439,12 +479,14 @@ watch(() => feedStore.page, () => {
   padding: 16px 20px;
   background-color: var(--color-background);
   border-bottom: 1px solid var(--color-border);
+  border-radius: 16px 16px 0 0;
+  flex-shrink: 0;
 }
 
 .chat-panel-header h2 {
   margin: 0;
   color: var(--color-text);
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: 700;
 }
 
@@ -452,15 +494,16 @@ watch(() => feedStore.page, () => {
   background: none;
   border: none;
   color: var(--color-text);
-  font-size: 24px;
+  font-size: 20px;
   cursor: pointer;
   padding: 4px 8px;
   transition: opacity 0.2s;
   line-height: 1;
+  border-radius: 4px;
 }
 
 .close-chat-button:hover {
-  opacity: 0.7;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .chat-panel-content {
@@ -468,18 +511,30 @@ watch(() => feedStore.page, () => {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  min-height: 0;
 }
 
 /* Mobile responsive */
 @media (max-width: 768px) {
+  .chat-toggle-button {
+    bottom: 16px;
+    right: 16px;
+  }
+
   .chat-panel {
+    bottom: 0;
+    right: 0;
+    left: 0;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .chat-panel.open {
     width: 100%;
-    right: -100%;
+    height: 85vh;
   }
   
   .floating-buttons {
-    left: 50%;
-    transform: translateX(-50%);
+    left: 16px;
     bottom: 16px;
   }
 }
