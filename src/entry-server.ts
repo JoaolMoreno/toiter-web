@@ -42,12 +42,10 @@ export async function render(url: string, _manifest?: string) {
         const response = await axios.get(`${API_BASE}/users/${username}`)
         const user = response.data
         
-        const profileImageUrl = user.profileImageId 
-          ? `${API_BASE}/image/${user.profileImageId}`
-          : '/default-profile.png'
-        
+        const profileImageUrl = user.profileImageUrl || '/default-profile.png'
+
         const serverUrl = import.meta.env.VITE_PUBLIC_HOST || process.env.SERVER_URL || 'http://localhost:5173'
-        
+
         head = `
     <title>@${username} - Toiter</title>
     <meta name="description" content="${user.bio || `Perfil de ${username} no Toiter`}" />
@@ -61,7 +59,7 @@ export async function render(url: string, _manifest?: string) {
     <meta property="og:locale" content="pt_BR" />
     <meta property="og:type" content="profile" />
     <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content="@${username} no Toiter" />
+    <meta name="twitter:title" content="${username} no Toiter" />
     <meta name="twitter:description" content="${user.bio || `Perfil de ${username} no Toiter`}" />
     <meta name="twitter:image" content="${profileImageUrl}" />
         `
@@ -78,10 +76,8 @@ export async function render(url: string, _manifest?: string) {
         const response = await axios.get(`${API_BASE}/posts/${postId}`)
         const post = response.data
         
-        const profileImageUrl = post.profileImageId
-          ? `${API_BASE}/api/image/${post.profileImageId}`
-          : '/default-profile.png'
-        
+        const profileImageUrl = post.profileImageUrl || '/default-profile.png'
+
         const serverUrl = import.meta.env.VITE_PUBLIC_HOST || process.env.SERVER_URL || 'http://localhost:5173'
         const description = post.content.substring(0, 200) + (post.content.length > 200 ? '...' : '')
         
