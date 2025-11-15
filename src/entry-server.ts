@@ -38,8 +38,8 @@ export async function render(url: string, _manifest?: string) {
     if (currentRoute.name === 'Profile' && currentRoute.params.username) {
       const username = currentRoute.params.username as string
       try {
-        const API_BASE = import.meta.env.VITE_API_BASE || process.env.API_BASE || 'http://toiter-user-service:9990'
-        const response = await axios.get(`${API_BASE}/user/${username}`)
+        const API_BASE = import.meta.env.VITE_API_BASE || process.env.API_BASE || 'http://toiter-user-service:9990/api'
+        const response = await axios.get(`${API_BASE}/users/${username}`)
         const user = response.data
         
         const profileImageUrl = user.profileImageId 
@@ -72,8 +72,8 @@ export async function render(url: string, _manifest?: string) {
     if (currentRoute.name === 'Thread' && currentRoute.params.postId) {
       const postId = currentRoute.params.postId as string
       try {
-        const API_BASE = import.meta.env.VITE_API_BASE || process.env.API_BASE || 'http://localhost:9991'
-        const response = await axios.get(`${API_BASE}/post/${postId}`)
+        const API_BASE = import.meta.env.VITE_API_BASE || process.env.API_BASE || 'http://localhost:9991/api'
+        const response = await axios.get(`${API_BASE}/posts/${postId}`)
         const post = response.data
         
         const profileImageUrl = post.profileImageId

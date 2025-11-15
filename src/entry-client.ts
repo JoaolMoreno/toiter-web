@@ -25,6 +25,12 @@ app.use(Toast, {
   rtl: false
 })
 
+const ssrContext = (window as any).__SSR_CONTEXT__ || {}
+
+if (ssrContext) {
+  app.provide('ssrContext', ssrContext)
+}
+
 router.isReady().then(() => {
-  app.mount('#app')
+  app.mount('#app', true)
 })
