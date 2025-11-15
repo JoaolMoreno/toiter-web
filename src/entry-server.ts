@@ -42,7 +42,9 @@ export async function render(url: string, _manifest?: string) {
         const response = await axios.get(`${API_BASE}/users/${username}`)
         const user = response.data
         
-        const profileImageUrl = user.profileImageUrl || '/default-profile.png'
+        const profileImageUrl = user.profileImageId
+          ? `${API_BASE}/images/${user.profileImageId}`
+          : '/default-profile.png'
 
         const serverUrl = import.meta.env.VITE_PUBLIC_HOST || process.env.SERVER_URL || 'http://localhost:5173'
 
@@ -76,7 +78,9 @@ export async function render(url: string, _manifest?: string) {
         const response = await axios.get(`${API_BASE}/posts/${postId}`)
         const post = response.data
         
-        const profileImageUrl = post.profileImageUrl || '/default-profile.png'
+        const profileImageUrl = post.profileImageId
+          ? `${API_BASE}/images/${post.profileImageId}`
+          : '/default-profile.png'
 
         const serverUrl = import.meta.env.VITE_PUBLIC_HOST || process.env.SERVER_URL || 'http://localhost:5173'
         const description = post.content.substring(0, 200) + (post.content.length > 200 ? '...' : '')
