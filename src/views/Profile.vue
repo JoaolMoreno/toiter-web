@@ -202,7 +202,7 @@ watch(() => route.params.username, (newUsername, oldUsername) => {
         </button>
 
         <div class="profile-image-wrapper">
-          <div class="profile-image-container" @click="isOwnProfile ? handleEditProfileImage() : null">
+          <div class="profile-image-container" :class="{ 'editable': isOwnProfile }" @click="isOwnProfile ? handleEditProfileImage() : null">
             <img :src="profileImageUrl" alt="Profile" class="profile-image" />
           </div>
         </div>
@@ -406,11 +406,15 @@ watch(() => route.params.username, (newUsername, oldUsername) => {
   position: relative;
   width: 100%;
   height: 100%;
-  cursor: pointer;
+  cursor: default;
   z-index: 3;
 }
 
-.profile-image-container:hover::after {
+.profile-image-container.editable {
+  cursor: pointer;
+}
+
+.profile-image-container.editable:hover::after {
   content: '✏️';
   position: absolute;
   top: 50%;
