@@ -54,6 +54,8 @@ export async function render(url: string, _manifest?: string) {
     <meta property="og:title" content="@${username} no Toiter" />
     <meta property="og:description" content="${user.bio || `Perfil de ${username} no Toiter`}" />
     <meta property="og:image" content="${profileImageUrl}" />
+    <meta property="og:image:width" content="400" />
+    <meta property="og:image:height" content="400" />
     <meta property="og:url" content="${serverUrl}/profile/${username}" />
     <meta property="og:site_name" content="Toiter" />
     <meta property="og:locale" content="pt_BR" />
