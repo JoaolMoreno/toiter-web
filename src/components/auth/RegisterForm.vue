@@ -4,6 +4,8 @@ import { useRouter } from 'vue-router'
 import { useToast } from 'vue-toastification'
 import PasswordInput from './PasswordInput.vue'
 import api from '../../services/api'
+import { login } from '@/services/auth.ts'
+import { useAuthStore } from '@/stores/auth.ts'
 
 const router = useRouter()
 const toast = useToast()
@@ -13,6 +15,8 @@ const email = ref('')
 const password = ref('')
 const confirmPassword = ref('')
 const isLoading = ref(false)
+
+const authStore = useAuthStore()
 
 const passwordsMatch = computed(() => {
   if (!confirmPassword.value) return true
@@ -44,7 +48,17 @@ const handleSubmit = async (e: Event) => {
       password: password.value
     })
     toast.success('Cadastro bem-sucedido!')
-    router.push('/auth/login')
+
+    await login(email.value, password.value)
+
+    const { data } = await api.get('/users/me')
+    authStore.user = {
+      username: data.username,
+      profileImageId: data.profileImageId as number
+    }
+    authStore.isAuthenticated = true
+
+    router.push('/auth/setup')
   } catch (error: any) {
     console.error('Register error:', error)
     if (error.response) {

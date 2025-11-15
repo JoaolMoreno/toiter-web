@@ -23,6 +23,11 @@ export const routes: RouteRecordRaw[] = [
     component: () => import('../views/auth/Register.vue')
   },
   {
+    path: '/auth/setup',
+    name: 'PostRegisterSetup',
+    component: () => import('../views/auth/PostRegisterSetup.vue')
+  },
+  {
     path: '/profile/:username',
     name: 'Profile',
     component: () => import('../views/Profile.vue'),
@@ -61,7 +66,7 @@ router.beforeEach(async (to, _from, next) => {
 
   if (requiresAuth && !authStore.isAuthenticated) {
     next('/auth/login')
-  } else if (isAuthPage && authStore.isAuthenticated) {
+  } else if (isAuthPage && authStore.isAuthenticated && to.path !== '/auth/setup') {
     next('/feed')
   } else {
     next()
