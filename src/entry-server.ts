@@ -77,7 +77,7 @@ export async function render(url: string, _manifest?: string) {
         const post = response.data
         
         const profileImageUrl = post.profileImageId
-          ? `http://toiter-user-service:9990/image/${post.profileImageId}`
+          ? `${API_BASE}/api/image/${post.profileImageId}`
           : '/default-profile.png'
         
         const serverUrl = import.meta.env.VITE_PUBLIC_HOST || process.env.SERVER_URL || 'http://localhost:5173'
