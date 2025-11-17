@@ -8,6 +8,7 @@ import ChatList from '../components/ChatList.vue'
 import ChatWindow from '../components/ChatWindow.vue'
 import { chatService, type ChatPreview, type Message } from '../services/chatService'
 import { useWebSocket } from '../composables/useWebSocket'
+import Modal from '../components/Modal.vue'
 import pkg from 'lodash'
 const { debounce } = pkg
 
@@ -17,6 +18,7 @@ const { connect, disconnect, sendMessage: wsSendMessage, subscribeToMessages } =
 
 const inputContent = ref('')
 const isChatOpen = ref(false)
+const isPostModalOpen = ref(false)
 const chats = ref<ChatPreview[]>([])
 const messages = ref<Message[]>([])
 const selectedChatId = ref<number | null>(null)
@@ -62,14 +64,24 @@ const handleScroll = debounce(() => {
   }
 }, 250)
 
-const handleCreateNewPost = async () => {
-  if (!inputContent.value.trim()) return
+const handleCreateNewPost = async (content: string) => {
+  if (!content?.trim()) return
   try {
-    const newPost = await createPost(inputContent.value)
+    const newPost = await createPost(content)
     feedStore.setPosts(prevPosts => [newPost, ...prevPosts])
-    inputContent.value = ''
+    isPostModalOpen.value = false
   } catch (error) {
     console.error('Erro ao criar novo post:', error)
+  }
+}
+
+const handleCreateFromInput = async () => {
+  if (!inputContent.value.trim()) return
+  try {
+    await handleCreateNewPost(inputContent.value)
+    inputContent.value = ''
+  } catch (error) {
+    console.error('Erro ao criar post:', error)
   }
 }
 
@@ -217,7 +229,7 @@ watch(() => feedStore.page, () => {
           placeholder="No que você está pensando?"
           v-model="inputContent"
         />
-        <button class="create-post-button" @click="handleCreateNewPost">
+        <button class="create-post-button" @click="handleCreateFromInput">
           Postar
         </button>
       </div>
@@ -237,11 +249,20 @@ watch(() => feedStore.page, () => {
       
       <!-- Floating action button -->
       <div class="floating-buttons">
-        <button class="floating-button" @click="handleCreateNewPost" title="Criar novo post">
+        <button class="floating-button" @click="isPostModalOpen = true" title="Criar novo post">
           +
         </button>
       </div>
     </div>
+
+    <!-- Modal for creating post -->
+    <Modal
+      :isOpen="isPostModalOpen"
+      title="Criar Post"
+      postType="post"
+      @close="isPostModalOpen = false"
+      @submit="handleCreateNewPost"
+    />
 
     <!-- Chat toggle button and panel -->
     <button
