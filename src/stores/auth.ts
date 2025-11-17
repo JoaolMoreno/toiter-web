@@ -43,7 +43,13 @@ export const useAuthStore = defineStore('auth', () => {
           const { data } = await api.get('/users/me')
           user.value = {
             username: data.username,
-            profileImageId: data.profileImageId as number
+            displayName: data.displayName,
+            bio: data.bio,
+            profileImageId: data.profileImageId,
+            headerImageId: data.headerImageId,
+            followersCount: data.followersCount,
+            followingCount: data.followingCount,
+            postsCount: data.postsCount,
           }
           isAuthenticated.value = true
         } else {
@@ -69,7 +75,13 @@ export const useAuthStore = defineStore('auth', () => {
       const { data } = await api.get('/users/me')
       user.value = {
         username: data.username,
-        profileImageId: data.profileImageId as number
+        displayName: data.displayName,
+        bio: data.bio,
+        profileImageId: data.profileImageId,
+        headerImageId: data.headerImageId,
+        followersCount: data.followersCount,
+        followingCount: data.followingCount,
+        postsCount: data.postsCount,
       }
       isAuthenticated.value = true
 

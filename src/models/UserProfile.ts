@@ -17,5 +17,11 @@ export interface UpdatedUser {
 }
 export interface User {
   username: string;
-  profileImageId: number|null;
+  displayName: string;
+  bio: string;
+  profileImageId: number | null;
+  headerImageId: number | null;
+  followersCount: number;
+  followingCount: number;
+  postsCount: number;
 }

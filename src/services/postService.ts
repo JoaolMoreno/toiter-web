@@ -91,25 +91,19 @@ export const deletePost = async (postId: number) => {
     }
 };
 
-export const createRepost = async (_repostParentId: number): Promise<PostData> => {
-    alert('Calma ai patrão, ainda não implementei essa função');
-    return {} as PostData;
-    // try {
-    //     const response = await api.post('/posts', { repostParentId });
-    //     return response.data;
-    // } catch (error) {
-    //     console.error('Erro ao repostar:', error);
-    //     throw error;
-    // }
+export const createRepost = async (repostParentId: number): Promise<PostData> => {
+    try {
+        const response = await api.post('/posts', { repostParentId });
+        return response.data;
+    } catch (error) {
+        console.error('Erro ao repostar:', error);
+        throw error;
+    }
 };
 
-// Função para repostar com comentário
-export const createRepostWithComment = async (
-    repostParentId: number,
-    content: string
-): Promise<PostData> => {
+export const repostWithComment = async (repostParentId: number, content: string): Promise<PostData> => {
     try {
-        const response = await api.post('/posts', { repostParentId, content });
+        const response = await api.post('/posts', { content, repostParentId });
         return response.data;
     } catch (error) {
         console.error('Erro ao repostar com comentário:', error);

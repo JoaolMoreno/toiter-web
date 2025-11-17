@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import type { PostData } from '../models/PostData'
 import { useAuthStore } from '../stores/auth'
-import { likePost, unlikePost, deletePost } from '../services/postService'
+import { likePost, unlikePost, deletePost, createRepost, repostWithComment } from '../services/postService'
 
 interface Props {
   post: PostData
@@ -32,6 +32,8 @@ const repostsCount = ref(displayPost.value?.repostsCount ?? 0)
 const isRemoved = ref(false)
 const showToast = ref(false)
 const isActionHovered = ref(false)
+const repostMode = ref<'menu' | 'comment' | null>(null)
+const commentContent = ref('')
 
 const profilePicture = computed(() => {
   const picture = displayPost.value?.profilePicture || props.post.profilePicture
@@ -118,17 +120,45 @@ const handleOriginalPostClick = (e: Event) => {
     router.push(`/thread/${originalPost.value.id}`)
   }
 }
+
+const handleRepost = async () => {
+  const postId = displayPost.value?.id ?? props.post.id
+  try {
+    await createRepost(postId)
+    repostsCount.value++
+    repostMode.value = null
+  } catch (error) {
+    console.error('Erro ao repostar:', error)
+  }
+}
+
+const handleRepostWithCommentClick = () => {
+  repostMode.value = 'comment'
+}
+
+const handleRepostWithCommentSubmit = async () => {
+  if (!commentContent.value.trim()) return
+  const postId = displayPost.value?.id ?? props.post.id
+  try {
+    await repostWithComment(postId, commentContent.value)
+    repostsCount.value++
+    commentContent.value = ''
+    repostMode.value = null
+  } catch (error) {
+    console.error('Erro ao repostar com comentário:', error)
+  }
+}
 </script>
 
 <template>
-  <div v-if="!isRemoved" class="post-card" :class="{ 'no-hover': isActionHovered }" @click="handlePostClick">
+  <div v-if="!isRemoved" class="post-card" :class="{ 'no-hover': isActionHovered }" @click="repostMode ? repostMode = null : handlePostClick()">
     <!-- Repost header if this is a simple repost -->
-    <div v-if="isSimpleRepost" class="repost-header">
+    <div v-if="isSimpleRepost && repostMode !== 'comment'" class="repost-header">
       <span class="repost-icon">🔄</span>
       <span class="repost-text">{{ post.displayName }} repostou</span>
     </div>
 
-    <div class="post-header">
+    <div v-if="repostMode !== 'comment'" class="post-header">
       <div class="user-info" @click="handleProfileClick">
         <img :src="profilePicture" alt="Profile picture" class="profile-pic" />
         <strong>{{ displayPost?.displayName }}</strong>
@@ -146,12 +176,12 @@ const handleOriginalPostClick = (e: Event) => {
       </button>
     </div>
     
-    <div class="post-content">
+    <div v-if="repostMode !== 'comment'" class="post-content">
       {{ displayPost?.content }}
     </div>
 
     <!-- Original post for reposts with comments -->
-    <div v-if="originalPost" class="original-post" @click="handleOriginalPostClick">
+    <div v-if="originalPost && repostMode !== 'comment'" class="original-post" @click="handleOriginalPostClick">
       <div class="original-post-header">
         <div class="user-info">
           <img :src="originalPost.profilePicture || '/default-profile.png'" alt="Profile picture" class="profile-pic" />
@@ -165,13 +195,61 @@ const handleOriginalPostClick = (e: Event) => {
       </div>
     </div>
     
-    <div class="post-actions">
+    <!-- Comment input for repost with comment -->
+    <div v-if="repostMode === 'comment'" class="comment-preview" @click.stop>
+      <div class="post-header">
+        <div class="user-info">
+          <img :src="authStore.user?.profileImageId ? `/api/images/${authStore.user.profileImageId}` : '/default-profile.png'" alt="Profile picture" class="profile-pic" />
+          <strong>{{ authStore.user?.displayName }}</strong>
+          <span class="username">@{{ authStore.user?.username }}</span>
+        </div>
+      </div>
+      <textarea v-model="commentContent" placeholder="Adicione um comentário..." class="comment-textarea"></textarea>
+      <!-- Original post preview -->
+      <div class="original-post">
+        <div class="original-post-header">
+          <div class="user-info">
+            <img :src="displayPost?.profilePicture || '/default-profile.png'" alt="Profile picture" class="profile-pic" />
+            <strong>{{ displayPost?.displayName }}</strong>
+            <span class="username">@{{ displayPost?.username }}</span>
+            <span class="timestamp">· {{ displayPost?.createdAt ? formatTimestamp(displayPost.createdAt) : '' }}</span>
+          </div>
+        </div>
+        <div class="original-post-content">
+          {{ displayPost?.content }}
+        </div>
+      </div>
+      <div class="preview-actions">
+        <button class="action-button cancel" @click="repostMode = null">
+          Cancelar
+        </button>
+        <button class="action-button publish" @click="handleRepostWithCommentSubmit">
+          Publicar
+        </button>
+      </div>
+    </div>
+
+    <div v-if="repostMode !== 'comment'" class="post-actions">
       <button class="action-button reply" @mouseenter="isActionHovered = true" @mouseleave="isActionHovered = false" @click.stop>
         💬 {{ repliesCount }}
       </button>
-      <button class="action-button repost" @mouseenter="isActionHovered = true" @mouseleave="isActionHovered = false" @click.stop>
-        🔄 {{ repostsCount }}
-      </button>
+      <div class="repost-container">
+        <button class="action-button repost" @mouseenter="isActionHovered = true" @mouseleave="isActionHovered = false" @click.stop="repostMode = repostMode ? null : 'menu'">
+          🔄 {{ repostsCount }}
+        </button>
+        <!-- Repost menu (shown when repost button is clicked) -->
+        <div v-if="repostMode === 'menu'" class="repost-menu" @click.stop>
+          <button class="repost-option" @click="handleRepost">
+            Repostar
+          </button>
+          <button class="repost-option" @click="handleRepostWithCommentClick">
+            Repostar com comentário
+          </button>
+          <button class="repost-option cancel" @click="repostMode = null">
+            Cancelar
+          </button>
+        </div>
+      </div>
       <button
         class="action-button like"
         :class="{ liked: isLiked }"
@@ -185,7 +263,7 @@ const handleOriginalPostClick = (e: Event) => {
         📤
       </button>
     </div>
-    
+
     <div v-if="showToast" class="toast">
       Link copiado!
     </div>
@@ -201,6 +279,7 @@ const handleOriginalPostClick = (e: Event) => {
   margin-bottom: 16px;
   cursor: pointer;
   transition: all 0.2s;
+  position: relative;
 }
 
 .post-card:hover:not(.no-hover) {
@@ -418,5 +497,92 @@ const handleOriginalPostClick = (e: Event) => {
   height: 32px;
   border-radius: 50%;
   object-fit: cover;
+}
+
+.repost-menu {
+  background-color: var(--color-background-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 12px;
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  margin-bottom: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  animation: fadeIn 0.3s;
+}
+
+.repost-option {
+  background: none;
+  border: none;
+  color: var(--color-text);
+  cursor: pointer;
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  text-align: left;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.repost-option:hover {
+  background-color: var(--color-primary-bg);
+  color: var(--color-primary);
+}
+
+.comment-preview {
+  background-color: var(--color-background-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 12px;
+}
+
+.comment-textarea {
+  width: 100%;
+  height: 60px;
+  padding: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background-color: var(--color-background);
+  color: var(--color-text);
+  font-size: 0.875rem;
+  line-height: 1.4;
+  resize: none;
+}
+
+.preview-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.action-button.cancel {
+  color: var(--color-error);
+}
+
+.action-button.cancel:hover,
+.action-button.cancel:focus-visible {
+  color: var(--color-button-text);
+  background-color: var(--color-error);
+  outline: none;
+}
+
+.action-button.publish {
+  color: var(--color-primary);
+}
+
+.action-button.publish:hover,
+.action-button.publish:focus-visible {
+  color: var(--color-button-text);
+  background-color: var(--color-primary);
+  outline: none;
+}
+
+.repost-container {
+  position: relative;
 }
 </style>
