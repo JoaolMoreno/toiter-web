@@ -93,7 +93,7 @@ export const deletePost = async (postId: number) => {
 
 export const createRepost = async (repostParentId: number): Promise<PostData> => {
     try {
-        const response = await api.post('/posts', { repostParentId });
+        const response = await api.post('/posts', { content: '', repostParentId });
         return response.data;
     } catch (error) {
         console.error('Erro ao repostar:', error);
