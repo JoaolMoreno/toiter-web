@@ -13,19 +13,32 @@ const props = defineProps<Props>()
 const router = useRouter()
 const authStore = useAuthStore()
 
-const isLiked = ref(props.post.isLiked)
-const likesCount = ref(props.post.likesCount)
-const repliesCount = ref(props.post.repliesCount)
-const repostsCount = ref(props.post.repostsCount)
+const isSimpleRepost = computed(() => {
+  return props.post.repostPostData && (!props.post.content || props.post.content.trim() === '')
+})
+
+const displayPost = computed(() => {
+  return isSimpleRepost.value ? props.post.repostPostData : props.post
+})
+
+const originalPost = computed(() => {
+  return isSimpleRepost.value ? null : props.post.repostPostData
+})
+
+const isLiked = ref(displayPost.value?.isLiked ?? false)
+const likesCount = ref(displayPost.value?.likesCount ?? 0)
+const repliesCount = ref(displayPost.value?.repliesCount ?? 0)
+const repostsCount = ref(displayPost.value?.repostsCount ?? 0)
 const isRemoved = ref(false)
 const showToast = ref(false)
 const isActionHovered = ref(false)
 
 const profilePicture = computed(() => {
-  if (!props.post.profilePicture) {
+  const picture = displayPost.value?.profilePicture || props.post.profilePicture
+  if (!picture) {
     return '/default-profile.png'
   }
-  return import.meta.env.DEV ? props.post.profilePicture.replace('https://', 'http://') : props.post.profilePicture
+  return import.meta.env.DEV ? picture.replace('https://', 'http://') : picture
 })
 
 const formatTimestamp = (dateString: string): string => {
@@ -55,13 +68,14 @@ const formatTimestamp = (dateString: string): string => {
 
 const handleLikeToggle = async (e: Event) => {
   e.stopPropagation()
+  const postId = displayPost.value?.id ?? props.post.id
   try {
     if (isLiked.value) {
-      await unlikePost(props.post.id)
+      await unlikePost(postId)
       likesCount.value--
       isLiked.value = false
     } else {
-      await likePost(props.post.id)
+      await likePost(postId)
       likesCount.value++
       isLiked.value = true
     }
@@ -80,34 +94,49 @@ const handleDelete = async () => {
 }
 
 const handlePostClick = () => {
-  router.push(`/thread/${props.post.id}`)
+  const postId = displayPost.value?.id ?? props.post.id
+  router.push(`/thread/${postId}`)
 }
 
 const handleProfileClick = (e: Event) => {
   e.stopPropagation()
-  router.push(`/profile/${props.post.username}`)
+  const username = displayPost.value?.username ?? props.post.username
+  router.push(`/profile/${username}`)
 }
 
 const handleShare = (e: Event) => {
   e.stopPropagation()
-  const shareUrl = `${window.location.origin}/thread/${props.post.id}`
+  const shareUrl = `${window.location.origin}/thread/${displayPost.value?.id ?? props.post.id}`
   navigator.clipboard.writeText(shareUrl)
   showToast.value = true
   setTimeout(() => showToast.value = false, 2000)
+}
+
+const handleOriginalPostClick = (e: Event) => {
+  e.stopPropagation()
+  if (originalPost.value) {
+    router.push(`/thread/${originalPost.value.id}`)
+  }
 }
 </script>
 
 <template>
   <div v-if="!isRemoved" class="post-card" :class="{ 'no-hover': isActionHovered }" @click="handlePostClick">
+    <!-- Repost header if this is a simple repost -->
+    <div v-if="isSimpleRepost" class="repost-header">
+      <span class="repost-icon">🔄</span>
+      <span class="repost-text">{{ post.displayName }} repostou</span>
+    </div>
+
     <div class="post-header">
       <div class="user-info" @click="handleProfileClick">
         <img :src="profilePicture" alt="Profile picture" class="profile-pic" />
-        <strong>{{ post.displayName }}</strong>
-        <span class="username">@{{ post.username }}</span>
-        <span class="timestamp">· {{ formatTimestamp(post.createdAt) }}</span>
+        <strong>{{ displayPost?.displayName }}</strong>
+        <span class="username">@{{ displayPost?.username }}</span>
+        <span class="timestamp">· {{ displayPost?.createdAt ? formatTimestamp(displayPost.createdAt) : '' }}</span>
       </div>
       <button
-        v-if="authStore.user?.username === post.username"
+        v-if="authStore.user?.username === displayPost?.username"
         class="delete-button"
         @mouseenter="isActionHovered = true"
         @mouseleave="isActionHovered = false"
@@ -118,7 +147,22 @@ const handleShare = (e: Event) => {
     </div>
     
     <div class="post-content">
-      {{ post.content }}
+      {{ displayPost?.content }}
+    </div>
+
+    <!-- Original post for reposts with comments -->
+    <div v-if="originalPost" class="original-post" @click="handleOriginalPostClick">
+      <div class="original-post-header">
+        <div class="user-info">
+          <img :src="originalPost.profilePicture || '/default-profile.png'" alt="Profile picture" class="profile-pic" />
+          <strong>{{ originalPost.displayName }}</strong>
+          <span class="username">@{{ originalPost.username }}</span>
+          <span class="timestamp">· {{ formatTimestamp(originalPost.createdAt) }}</span>
+        </div>
+      </div>
+      <div class="original-post-content">
+        {{ originalPost.content }}
+      </div>
     </div>
     
     <div class="post-actions">
@@ -162,6 +206,26 @@ const handleShare = (e: Event) => {
 .post-card:hover:not(.no-hover) {
   border-color: var(--color-primary);
   transform: translateY(-2px);
+}
+
+.repost-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.repost-icon {
+  font-size: 14px;
+  color: var(--color-accent);
+}
+
+.repost-text {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  font-weight: 500;
 }
 
 .post-header {
@@ -222,6 +286,36 @@ const handleShare = (e: Event) => {
   font-size: 1rem;
   font-weight: 400;
   margin-bottom: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.original-post {
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 16px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.original-post:hover {
+  border-color: var(--color-primary);
+}
+
+.original-post-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.original-post-content {
+  color: var(--color-text);
+  font-size: 1rem;
+  font-weight: 400;
   line-height: 1.5;
   white-space: pre-wrap;
   word-wrap: break-word;
