@@ -12,8 +12,13 @@ const themeStore = useThemeStore()
 
 const imageUrl = ref<string>('')
 const imageLoading = ref(true)
+const dropdownVisible = ref(false)
 
 const isAuthPage = computed(() => route.path.startsWith('/auth'))
+
+const toggleDropdown = () => {
+  dropdownVisible.value = !dropdownVisible.value
+}
 
 const loadProfileImage = async () => {
   if (!authStore.user) return
@@ -70,9 +75,9 @@ onMounted(() => {
 
 <template>
   <div v-if="!isAuthPage">
-    <header class="header">
-      <div class="header-left">
-        <button v-if="authStore.isAuthenticated" class="profile-button" @click="handleProfileClick">
+    <header class="header" @click="dropdownVisible = false">
+      <div class="header-col header-left">
+        <button v-if="authStore.isAuthenticated" class="profile-button" @click.stop="toggleDropdown">
           <div v-if="imageLoading" class="loading-profile-image" />
           <img 
             v-else
@@ -82,21 +87,17 @@ onMounted(() => {
             @error="imageUrl = '/default-profile.png'"
           />
         </button>
-        <button 
-          class="theme-toggle" 
-          @click="handleThemeToggle"
-          :aria-label="themeStore.theme === 'dark' ? 'Mudar para tema claro' : 'Mudar para tema escuro'"
-          :title="themeStore.theme === 'dark' ? 'Mudar para tema claro' : 'Mudar para tema escuro'"
-        >
-          {{ themeStore.theme === 'dark' ? '☀️' : '🌙' }}
-        </button>
+        <div v-if="dropdownVisible" class="dropdown-menu" @click.stop>
+          <button @click="handleProfileClick(); dropdownVisible = false">Meu Perfil</button>
+          <button @click="handleThemeToggle(); dropdownVisible = false">Trocar tema</button>
+          <button @click="handleLogout(); dropdownVisible = false" class="logout-option">Logout</button>
+        </div>
       </div>
-      <h1 class="app-name" @click="handleHomeClick">toiter</h1>
-      <div class="header-right">
-        <button v-if="authStore.isAuthenticated" class="logout-button" @click="handleLogout">
-          Logout
-        </button>
-        <button v-else class="login-button" @click="handleLogin">
+      <div class="header-col header-center">
+        <h1 class="app-name" @click="handleHomeClick">toiter</h1>
+      </div>
+      <div class="header-col header-right">
+        <button v-if="!authStore.isAuthenticated" class="login-button" @click="handleLogin">
           Login
         </button>
       </div>
@@ -117,12 +118,31 @@ onMounted(() => {
   padding: 0 24px;
   width: 100%;
   display: flex;
-  justify-content: space-between;
+  flex-direction: row;
   align-items: center;
   border-bottom: 1px solid var(--color-border);
   position: sticky;
   top: 0;
   z-index: 10;
+}
+
+.header-col {
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.header-center {
+  justify-content: center;
+}
+
+.header-left {
+  justify-content: flex-start;
+}
+
+.header-right {
+  justify-content: flex-end;
 }
 
 .loading-state {
@@ -141,6 +161,7 @@ onMounted(() => {
   padding-bottom: 2px;
   border-bottom: 2px solid transparent;
   margin: 16px 0;
+  text-align: center;
 }
 
 .app-name:hover {
@@ -171,37 +192,6 @@ onMounted(() => {
   opacity: 0.8;
 }
 
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.theme-toggle {
-  background: none;
-  border: none;
-  padding: 8px;
-  font-size: 22px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-  opacity: 0.7;
-}
-
-.theme-toggle:hover {
-  opacity: 1;
-  transform: scale(1.1);
-}
-
-.logout-button,
 .login-button {
   background-color: var(--color-primary);
   color: var(--color-text);
@@ -214,31 +204,53 @@ onMounted(() => {
   transition: all 0.2s ease;
 }
 
-.logout-button:hover,
 .login-button:hover {
   background-color: var(--color-secondary);
   transform: translateY(-1px);
 }
 
-.loading-profile-image {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 2px solid var(--color-primary);
-  background: var(--color-background-alt);
-  animation: pulse 1.5s ease-in-out infinite;
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 12px;
+  background: var(--color-background-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 20;
+  min-width: 170px;
+  padding: 8px 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
-@keyframes pulse {
-  0% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.4;
-  }
-  100% {
-    opacity: 1;
-  }
+.dropdown-menu button {
+  width: 100%;
+  padding: 12px 16px;
+  text-align: left;
+  background: none;
+  border: none;
+  color: var(--color-text);
+  cursor: pointer;
+  font-size: var(--font-size-regular);
+  transition: background 0.2s, color 0.2s;
+}
+
+.dropdown-menu button:not(.logout-option):hover {
+  background: var(--color-background-alt);
+}
+
+.dropdown-menu button.logout-option {
+  background: #e74c3c !important;
+  color: #fff !important;
+  font-weight: 600;
+}
+
+.dropdown-menu button.logout-option:hover {
+  background: #c0392b !important;
+  color: #fff !important;
 }
 
 .main {
