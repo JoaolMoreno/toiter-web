@@ -4,7 +4,6 @@ import { getFeed, createPost } from '../services/postService'
 import { useAuthStore } from '../stores/auth'
 import { useFeedStore } from '../stores/feed'
 import Post from '../components/Post.vue'
-import Modal from '../components/Modal.vue'
 import ChatList from '../components/ChatList.vue'
 import ChatWindow from '../components/ChatWindow.vue'
 import { chatService, type ChatPreview, type Message } from '../services/chatService'
@@ -17,7 +16,6 @@ const feedStore = useFeedStore()
 const { connect, disconnect, sendMessage: wsSendMessage, subscribeToMessages } = useWebSocket()
 
 const inputContent = ref('')
-const isModalOpen = ref(false)
 const isChatOpen = ref(false)
 const chats = ref<ChatPreview[]>([])
 const messages = ref<Message[]>([])
@@ -64,20 +62,12 @@ const handleScroll = debounce(() => {
   }
 }, 250)
 
-const handleCreateNewPost = () => {
-  isModalOpen.value = true
-}
-
-const handleModalClose = () => {
-  isModalOpen.value = false
-  inputContent.value = ''
-}
-
-const handleSubmitPost = async (content: string) => {
+const handleCreateNewPost = async () => {
+  if (!inputContent.value.trim()) return
   try {
-    const newPost = await createPost(content)
+    const newPost = await createPost(inputContent.value)
     feedStore.setPosts(prevPosts => [newPost, ...prevPosts])
-    isModalOpen.value = false
+    inputContent.value = ''
   } catch (error) {
     console.error('Erro ao criar novo post:', error)
   }
@@ -136,7 +126,7 @@ const sendMessage = async (chatId: number, message: string) => {
       chatId,
       message,
       sender: authStore.user?.username || '',
-      timestamp: new Date().toISOString()
+      sentDate: new Date().toISOString()
     }
     messages.value.push(newMsg)
   } catch (error) {
@@ -187,7 +177,7 @@ onMounted(() => {
         const chat = chats.value.find(c => c.chatId === message.chatId)
         if (chat) {
           chat.lastMessageContent = message.message
-          chat.lastMessageSentDate = message.timestamp
+          chat.lastMessageSentDate = message.sentDate
           chat.lastMessageSender = message.sender
         }
       })
@@ -294,16 +284,6 @@ watch(() => feedStore.page, () => {
         </template>
       </div>
     </div>
-    
-    <Modal
-      v-if="isModalOpen"
-      :is-open="isModalOpen"
-      @close="handleModalClose"
-      @submit="handleSubmitPost"
-      title="Criar Novo Post"
-      post-type="post"
-      :initial-content="inputContent"
-    />
   </div>
 </template>
 
