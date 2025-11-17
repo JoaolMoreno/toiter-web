@@ -238,14 +238,17 @@ const handleOriginalPostClick = (e: Event) => {
 .user-info {
   display: flex;
   align-items: center;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 2px 8px;
   color: var(--color-text);
   cursor: pointer;
+  min-width: 0;
 }
 
 .user-info strong {
   font-weight: 700;
   color: var(--color-text);
+  white-space: nowrap;
 }
 
 .user-info strong:hover {
@@ -256,11 +259,17 @@ const handleOriginalPostClick = (e: Event) => {
   color: var(--color-text-secondary);
   font-size: 1rem;
   font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .timestamp {
   color: var(--color-text-secondary);
   font-size: 0.875rem;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .delete-button {
