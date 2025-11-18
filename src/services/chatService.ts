@@ -96,12 +96,21 @@ class ChatService {
         const storedMessagesStr = typeof window !== 'undefined' ? localStorage.getItem(`chat_${chatId}_messages`) : null;
         let localMessages: Message[] = storedMessagesStr ? JSON.parse(storedMessagesStr) : [];
 
-        // If there are no local messages, fetch all paginated messages
+        // Validação: se alguma mensagem não tem id, limpa todas e refaz sync
+        if (localMessages.length && localMessages.some(m => typeof m.id !== 'number' || !m.id)) {
+            console.warn(`⚠️ Mensagens inconsistentes detectadas no chat ${chatId}. Limpando e sincronizando novamente.`);
+            if (typeof window !== 'undefined') {
+                localStorage.removeItem(`chat_${chatId}_messages`);
+            }
+            localMessages = [];
+        }
+
+        // Se não há mensagens locais, busca todas paginadas
         if (!localMessages.length) {
             return await this.fetchAllMessages(chatId);
         }
 
-        // If there are local messages, fetch until a known message is found
+        // Se há mensagens locais, busca até encontrar uma conhecida
         return await this.fetchMessagesUntilKnown(chatId, localMessages);
     }
 
@@ -117,12 +126,13 @@ class ChatService {
                     params: { page, size: pageSize }
                 });
 
-                const messages = response.data.content.map((msg: any) => ({
+                // Padroniza para Message (com id, sentDate)
+                const messages: Message[] = response.data.content.map((msg: any) => ({
                     id: msg.id,
                     chatId: msg.chatId,
                     message: msg.message,
                     sender: msg.sender,
-                    timestamp: msg.sentDate
+                    sentDate: msg.sentDate
                 }));
 
                 allMessages.push(...messages);
@@ -130,7 +140,7 @@ class ChatService {
                 hasMore = !response.data.last;
                 page++;
 
-                // Save progress in localStorage in reversed order
+                // Save progress in localStorage
                 if (typeof window !== 'undefined') {
                     localStorage.setItem(`chat_${chatId}_messages`, JSON.stringify(allMessages));
                 }
@@ -164,6 +174,7 @@ class ChatService {
                 });
 
                 const messages = response.data.content.map((msg: any) => ({
+                    id: msg.id,
                     chatId: msg.chatId,
                     message: msg.message,
                     sender: msg.sender,
