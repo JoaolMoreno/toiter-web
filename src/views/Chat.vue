@@ -60,15 +60,6 @@ const loadMessages = async (chatId: number) => {
 const sendMessage = async (chatId: number, message: string) => {
   try {
     wsSendMessage(chatId, message)
-    // Optimistically add the message
-    const newMsg: Message = {
-      id: Date.now(), // Temporary ID
-      chatId,
-      message,
-      sender: authStore.user?.username || '',
-      timestamp: new Date().toISOString()
-    }
-    messages.value.push(newMsg)
   } catch (error) {
     console.error('Failed to send message:', error)
   }
@@ -116,13 +107,14 @@ onMounted(async () => {
       subscribeToMessages((message: Message) => {
         if (message.chatId === selectedChatId.value) {
           messages.value.push(message)
+          console.log('Mensagem adicionada ao array:', JSON.stringify(messages.value))
           localStorage.setItem(`chat_${selectedChatId.value}_messages`, JSON.stringify(messages.value))
         }
         // Update last message in chats
         const chat = chats.value.find(c => c.chatId === message.chatId)
         if (chat) {
           chat.lastMessageContent = message.message
-          chat.lastMessageSentDate = message.timestamp
+          chat.lastMessageSentDate = message.sentDate
           chat.lastMessageSender = message.sender
         }
       })
