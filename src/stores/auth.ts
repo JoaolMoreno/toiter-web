@@ -13,16 +13,16 @@ export const useAuthStore = defineStore('auth', () => {
   const router = useRouter()
   const toast = useToast()
 
+  // Clear user data (does not manipulate tokens - handled by backend via cookies)
   const clearUserData = () => {
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('accessToken')
       localStorage.removeItem('username')
     }
-    delete api.defaults.headers.common['Authorization']
     user.value = null
     isAuthenticated.value = false
   }
 
+  // Verify session using HttpOnly cookies
   const verifySession = async () => {
     isLoading.value = true
     try {
@@ -33,28 +33,22 @@ export const useAuthStore = defineStore('auth', () => {
         return
       }
 
-      const token = localStorage.getItem('accessToken')
+      // Check session validity via cookies
+      const sessionValid = await checkSession()
 
-      if (token) {
-        api.defaults.headers.common['Authorization'] = `Bearer ${token}`
-        const sessionValid = await checkSession()
-
-        if (sessionValid) {
-          const { data } = await api.get('/users/me')
-          user.value = {
-            username: data.username,
-            displayName: data.displayName,
-            bio: data.bio,
-            profileImageId: data.profileImageId,
-            headerImageId: data.headerImageId,
-            followersCount: data.followersCount,
-            followingCount: data.followingCount,
-            postsCount: data.postsCount,
-          }
-          isAuthenticated.value = true
-        } else {
-          clearUserData()
+      if (sessionValid) {
+        const { data } = await api.get('/users/me')
+        user.value = {
+          username: data.username,
+          displayName: data.displayName,
+          bio: data.bio,
+          profileImageId: data.profileImageId,
+          headerImageId: data.headerImageId,
+          followersCount: data.followersCount,
+          followingCount: data.followingCount,
+          postsCount: data.postsCount,
         }
+        isAuthenticated.value = true
       } else {
         clearUserData()
       }
@@ -66,12 +60,14 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  // Login using HttpOnly cookies
   const login = async (email: string, password: string) => {
     isLoading.value = true
     try {
       await loginService(email, password)
 
       // Fetch user profile data immediately after login
+      // Authentication is via HttpOnly cookies sent automatically
       const { data } = await api.get('/users/me')
       user.value = {
         username: data.username,
@@ -105,12 +101,11 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  // Logout - clears HttpOnly cookies on backend
   const logout = async () => {
     try {
       await logoutService()
-      localStorage.removeItem('accessToken')
       localStorage.removeItem('username')
-      delete api.defaults.headers.common['Authorization']
       user.value = null
       isAuthenticated.value = false
       await router.push('/auth/login')

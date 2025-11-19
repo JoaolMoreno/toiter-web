@@ -214,7 +214,9 @@ class ChatService {
         return allMessages;
     }
 
-    connectToWebSocket(jwtToken: string) {
+    // Connect to WebSocket using HttpOnly cookies for authentication
+    // No Authorization header needed - cookies are sent automatically in handshake
+    connectToWebSocket() {
         if (this.stompClient?.connected) {
             console.log('📡 WebSocket already connected, skipping connection...');
             return;
@@ -225,12 +227,9 @@ class ChatService {
         this.stompClient = Stomp.over(() => new SockJS('/api/chat'));
 
         return new Promise((resolve, reject) => {
-            const connectHeaders = {
-                Authorization: `Bearer ${jwtToken}`
-            };
-    
+            // No Authorization header - authentication via HttpOnly cookies
             this.stompClient.connect(
-                connectHeaders,
+                {}, // Empty headers - cookies sent automatically
                 () => {
                     console.log('🔗 WebSocket connected successfully');
                     this.stompClient.subscribe('/user/queue/messages', (message: any) => {

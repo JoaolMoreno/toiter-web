@@ -8,6 +8,9 @@ const api = axios.create({
     withCredentials: true,
 });
 
+// Response interceptor for handling 401 errors
+// Note: Authentication is now handled via HttpOnly cookies
+// No manual token refresh or Authorization header manipulation
 api.interceptors.response.use(
     (response) => response,
     async (error) => {
@@ -17,20 +20,14 @@ api.interceptors.response.use(
             originalRequest._retry = true;
 
             try {
-                // Solicita um novo token de acesso
-                const { data } = await axios.post(
+                // Request token refresh - backend will set new HttpOnly cookies
+                await axios.post(
                     '/auth/refresh',
                     {},
                     { withCredentials: true }
                 );
 
-                if (typeof window !== 'undefined') {
-                    localStorage.setItem('accessToken', data.accessToken);
-                }
-
-                api.defaults.headers.common['Authorization'] = `Bearer ${data.accessToken}`;
-                originalRequest.headers['Authorization'] = `Bearer ${data.accessToken}`;
-
+                // Retry the original request with refreshed cookies
                 return api(originalRequest);
             } catch (refreshError) {
                 console.error('Erro ao renovar token:', refreshError);

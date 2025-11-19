@@ -39,11 +39,7 @@ const filteredMessages = computed(() => {
   if (!props.selectedChatId) return []
   return props.messages
     .filter(msg => msg.chatId === props.selectedChatId)
-    .sort((a, b) => {
-      const at = parseUtcDate(a.sentDate)?.getTime() ?? 0
-      const bt = parseUtcDate(b.sentDate)?.getTime() ?? 0
-      return at - bt
-    })
+    .sort((a, b) => a.id - b.id)
 })
 
 watchEffect(async () => {

@@ -1,20 +1,17 @@
 import api from './api';
 
+// Authentication via HttpOnly cookies
+// The backend sets accessToken and refresh_token cookies on successful login
 export const login = async (email: string, password: string) => {
     try {
-        // 1. Login to get token
-        const { data } = await api.post('/auth/login', { 
+        // Login request - backend will set HttpOnly cookies
+        await api.post('/auth/login', { 
             usernameOrEmail: email, 
             password 
         });
 
-        // 2. Set token
-        if (typeof window !== 'undefined') {
-            localStorage.setItem('accessToken', data.accessToken);
-        }
-        api.defaults.headers.common['Authorization'] = `Bearer ${data.accessToken}`;
-        
-        // 3. Get user data from /me endpoint
+        // Get user data from /me endpoint
+        // Authentication is handled via cookies sent automatically
         const userData = await api.get('/users/me');
         
         return { 
@@ -27,24 +24,29 @@ export const login = async (email: string, password: string) => {
     }
 };
 
+// Logout - clears HttpOnly cookies on the backend
 export const logout = async () => {
     try {
         await api.post('/auth/logout');
         console.log('Logout bem-sucedido');
+        // Clear all localStorage on logout
+        if (typeof window !== 'undefined') {
+            localStorage.clear();
+        }
     } catch (error: any) {
         console.error('Erro ao fazer logout:', error.response?.data || error.message);
+        // Still clear localStorage even if logout fails
+        if (typeof window !== 'undefined') {
+            localStorage.clear();
+        }
     }
 };
 
+// Check session validity using HttpOnly cookies
 export const checkSession = async () => {
     try {
-        const { data } = await api.get('/auth/check-session');
-
-        // Atualiza o token e o localStorage, se necessário
-        if (typeof window !== 'undefined') {
-            localStorage.setItem('accessToken', data.accessToken);
-        }
-        api.defaults.headers.common['Authorization'] = `Bearer ${data.accessToken}`;
+        // Session check via cookies - no token manipulation needed
+        await api.get('/auth/check-session');
         console.log('Sessão válida');
         return true;
     } catch (error) {

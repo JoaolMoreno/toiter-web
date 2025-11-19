@@ -95,24 +95,22 @@ export function useChatLogic() {
     return chat?.receiverProfileImageUrl ?? null
   })
 
+  // Initialize chat with WebSocket (using HttpOnly cookies for auth)
   const initChat = () => {
     if (authStore.user) {
-      const token = localStorage.getItem('accessToken')
-      if (token) {
-        initWebSocket()
-        subscribeToMessages((message: Message) => {
-          if (message.chatId === selectedChatId.value) {
-            messages.value.push(message)
-            localStorage.setItem(`chat_${selectedChatId.value}_messages`, JSON.stringify(messages.value))
-          }
-          const chat = chats.value.find(c => c.chatId === message.chatId)
-          if (chat) {
-            chat.lastMessageContent = message.message
-            chat.lastMessageSentDate = message.sentDate
-            chat.lastMessageSender = message.sender
-          }
-        })
-      }
+      initWebSocket()
+      subscribeToMessages((message: Message) => {
+        if (message.chatId === selectedChatId.value) {
+          messages.value.push(message)
+          localStorage.setItem(`chat_${selectedChatId.value}_messages`, JSON.stringify(messages.value))
+        }
+        const chat = chats.value.find(c => c.chatId === message.chatId)
+        if (chat) {
+          chat.lastMessageContent = message.message
+          chat.lastMessageSentDate = message.sentDate
+          chat.lastMessageSender = message.sender
+        }
+      })
     }
   }
 
