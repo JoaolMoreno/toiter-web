@@ -3,6 +3,7 @@ import { chatService, type Message } from '../services/chatService'
 
 const connected = ref(false)
 const handlers = ref<((message: Message) => void)[]>([])
+const currentToken = ref<string | null>(null)
 
 export function useWebSocket() {
   const connect = (token: string) => {
@@ -10,10 +11,14 @@ export function useWebSocket() {
       const result = chatService.connectToWebSocket(token)
       if (result) {
         result
-          .then(() => (connected.value = true))
+          .then(() => {
+            connected.value = true
+            currentToken.value = token
+          })
           .catch(err => console.error('Failed to connect WebSocket:', err))
       } else {
         connected.value = true
+        currentToken.value = token
       }
     }
   }
@@ -23,12 +28,36 @@ export function useWebSocket() {
       chatService.disconnectWebSocket()
       connected.value = false
       handlers.value = []
+      currentToken.value = null
     }
   }
 
-  const sendMessage = (chatId: number, message: string) => {
-    if (connected.value) {
+  const sendMessage = async (chatId: number, message: string) => {
+    if (!chatService.isConnected() && currentToken.value) {
+      console.log('WebSocket not connected, attempting to reconnect...')
+      try {
+        await new Promise<void>((resolve, reject) => {
+          const result = chatService.connectToWebSocket(currentToken.value!)
+          if (result) {
+            result.then(() => {
+              connected.value = true
+              resolve()
+            }).catch(reject)
+          } else {
+            connected.value = true
+            resolve()
+          }
+        })
+      } catch (err) {
+        console.error('Failed to reconnect WebSocket:', err)
+        throw new Error('WebSocket not connected and failed to reconnect')
+      }
+    }
+
+    if (chatService.isConnected()) {
       chatService.sendMessage(chatId, message)
+    } else {
+      throw new Error('WebSocket not connected')
     }
   }
 

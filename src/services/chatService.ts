@@ -222,15 +222,12 @@ class ChatService {
     
         console.log('📡 Initializing WebSocket connection...');
     
-        const socket = new SockJS('/api/chat');
-        this.stompClient = Stomp.over(socket);
-    
+        this.stompClient = Stomp.over(() => new SockJS('/api/chat'));
+
         return new Promise((resolve, reject) => {
             const connectHeaders = {
                 Authorization: `Bearer ${jwtToken}`
             };
-    
-            console.log('🔑 Connecting with headers:', connectHeaders);
     
             this.stompClient.connect(
                 connectHeaders,
@@ -263,11 +260,6 @@ class ChatService {
                     reject(error);
                 }
             );
-    
-            socket.onclose = () => {
-                console.log('🚫 Socket closed');
-                this.stompClient = null;
-            };
         });
     }
 
@@ -281,12 +273,12 @@ class ChatService {
     }
 
     sendMessage(chatId: number, message: string) {
-        if (!this.stompClient?.connected) {
-            console.error('❌ Cannot send message: WebSocket not connected');
-            throw new Error('WebSocket not connected');
-        }
         console.log(`📤 Sending message to chat ${chatId}:`, message);
         this.stompClient.send(`/app/chat/${chatId}/message`, {}, message);
+    }
+
+    isConnected(): boolean {
+        return this.stompClient?.connected || false;
     }
 
     onMessage(handler: (message: Message) => void) {
