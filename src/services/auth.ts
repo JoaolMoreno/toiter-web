@@ -29,8 +29,16 @@ export const logout = async () => {
     try {
         await api.post('/auth/logout');
         console.log('Logout bem-sucedido');
+        // Clear all localStorage on logout
+        if (typeof window !== 'undefined') {
+            localStorage.clear();
+        }
     } catch (error: any) {
         console.error('Erro ao fazer logout:', error.response?.data || error.message);
+        // Still clear localStorage even if logout fails
+        if (typeof window !== 'undefined') {
+            localStorage.clear();
+        }
     }
 };
 
