@@ -132,17 +132,16 @@ export interface ThreadResponse {
     currentPage: number;
 }
 
+// Get thread of posts
+// Authentication via HttpOnly cookies - no token parameter needed
 export const getThread = async (
     id: number, 
     page: number, 
-    size: number,
-    token?: string
+    size: number
   ): Promise<ThreadResponse> => {
     try {
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
       const { data } = await api.get(`posts/thread/${id}`, { 
-        params: { page, size },
-        headers
+        params: { page, size }
       });
   
       return transformThreadResponse(data);

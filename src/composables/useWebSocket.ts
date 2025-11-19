@@ -3,22 +3,20 @@ import { chatService, type Message } from '../services/chatService'
 
 const connected = ref(false)
 const handlers = ref<((message: Message) => void)[]>([])
-const currentToken = ref<string | null>(null)
 
+// WebSocket connection using HttpOnly cookies for authentication
 export function useWebSocket() {
-  const connect = (token: string) => {
-    if (token && !connected.value) {
-      const result = chatService.connectToWebSocket(token)
+  const connect = () => {
+    if (!connected.value) {
+      const result = chatService.connectToWebSocket()
       if (result) {
         result
           .then(() => {
             connected.value = true
-            currentToken.value = token
           })
           .catch(err => console.error('Failed to connect WebSocket:', err))
       } else {
         connected.value = true
-        currentToken.value = token
       }
     }
   }
@@ -28,16 +26,15 @@ export function useWebSocket() {
       chatService.disconnectWebSocket()
       connected.value = false
       handlers.value = []
-      currentToken.value = null
     }
   }
 
   const sendMessage = async (chatId: number, message: string) => {
-    if (!chatService.isConnected() && currentToken.value) {
+    if (!chatService.isConnected()) {
       console.log('WebSocket not connected, attempting to reconnect...')
       try {
         await new Promise<void>((resolve, reject) => {
-          const result = chatService.connectToWebSocket(currentToken.value!)
+          const result = chatService.connectToWebSocket()
           if (result) {
             result.then(() => {
               connected.value = true
@@ -78,11 +75,12 @@ export function useWebSocket() {
 }
 
 // Initialize WebSocket connection on app mount
+// Authentication via HttpOnly cookies - no token needed
 export function initWebSocket() {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
-  if (token) {
+  // Only initialize if in browser context
+  if (typeof window !== 'undefined') {
     const { connect } = useWebSocket()
-    connect(token)
+    connect()
   }
 
   // Configure WebSocket message subscription
