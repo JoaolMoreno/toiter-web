@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref, watch, nextTick, computed } from 'vue'
+import { ref, nextTick, computed, watchEffect } from 'vue'
 import type { Message } from '../services/chatService'
 import { useAuthStore } from '../stores/auth'
 import { getSafeImageUrl, onImgError } from '../utils/image'
+import { useRouter } from 'vue-router'
 
 interface Props {
   selectedChatId: number | null
@@ -18,8 +19,21 @@ const emit = defineEmits<{
 }>()
 
 const authStore = useAuthStore()
+const router = useRouter()
 const newMessage = ref('')
 const messagesEndRef = ref<HTMLElement | null>(null)
+
+// Robust UTC parser: appends 'Z' if missing, trims fractional seconds to 3 digits
+const parseUtcDate = (input?: string): Date | null => {
+  if (!input) return null
+  let iso = input
+  // Append Z only if no timezone info already present
+  if (!/[zZ]|[+-]\d{2}:?\d{2}$/.test(iso)) iso += 'Z'
+  // Trim fractional seconds to 3 digits if present
+  iso = iso.replace(/(\.\d{3})\d+/, '$1')
+  const d = new Date(iso)
+  return isNaN(d.getTime()) ? null : d
+}
 
 const filteredMessages = computed(() => {
   if (!props.selectedChatId) return []
@@ -32,9 +46,15 @@ const filteredMessages = computed(() => {
     })
 })
 
-watch(() => props.messages, async () => {
-  await nextTick()
-  messagesEndRef.value?.scrollIntoView({ behavior: 'smooth' })
+watchEffect(async () => {
+  if (props.selectedChatId && filteredMessages.value.length > 0) {
+    await nextTick()
+    setTimeout(() => {
+      if (messagesEndRef.value) {
+        messagesEndRef.value.scrollIntoView({ block: 'nearest' })
+      }
+    }, 0)
+  }
 })
 
 const handleSendMessage = async () => {
@@ -49,21 +69,10 @@ const handleSendMessage = async () => {
 }
 
 const handleKeyPress = (e: KeyboardEvent) => {
-  if (e.key === 'Enter') {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault()
     handleSendMessage()
   }
-}
-
-// Robust UTC parser: appends 'Z' if missing, trims fractional seconds to 3 digits
-const parseUtcDate = (input?: string): Date | null => {
-  if (!input) return null
-  let iso = input
-  // Append Z only if no timezone info already present
-  if (!/[zZ]|[+-]\d{2}:?\d{2}$/.test(iso)) iso += 'Z'
-  // Trim fractional seconds to 3 digits if present
-  iso = iso.replace(/(\.\d{3})\d+/, '$1')
-  const d = new Date(iso)
-  return isNaN(d.getTime()) ? null : d
 }
 
 const formatTime = (sentDate?: string): string => {
@@ -79,6 +88,12 @@ const formatTime = (sentDate?: string): string => {
 const safeReceiverImageUrl = computed(() => getSafeImageUrl(props.receiverImageUrl || null))
 
 const onHeaderAvatarError = (e: Event) => onImgError(e)
+
+const handleProfileClick = () => {
+  if (props.receiverUsername) {
+    router.push(`/profile/${props.receiverUsername}`)
+  }
+}
 </script>
 
 <template>
@@ -87,10 +102,10 @@ const onHeaderAvatarError = (e: Event) => onImgError(e)
       <button class="back-button" @click="emit('back')" aria-label="Voltar para lista de chats">
         ←
       </button>
-      <div class="header-avatar">
+      <div class="header-avatar" @click="handleProfileClick">
         <img :src="safeReceiverImageUrl" alt="Profile" @error="onHeaderAvatarError" />
       </div>
-      <h3 class="username">{{ receiverUsername }}</h3>
+      <h3 class="username" @click="handleProfileClick">{{ receiverUsername }}</h3>
     </div>
     
     <template v-if="selectedChatId">
@@ -172,6 +187,7 @@ const onHeaderAvatarError = (e: Event) => onImgError(e)
   overflow: hidden;
   background: var(--color-background-alt);
   flex-shrink: 0;
+  cursor: pointer;
 }
 
 .header-avatar img {
@@ -187,6 +203,12 @@ const onHeaderAvatarError = (e: Event) => onImgError(e)
   font-weight: 600;
   color: var(--color-text);
   text-align: left;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.username:hover {
+  color: var(--color-primary);
 }
 
 .message-list {
@@ -197,8 +219,13 @@ const onHeaderAvatarError = (e: Event) => onImgError(e)
   flex-direction: column;
   gap: 12px;
   min-height: 0;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
 }
 
+.message-list::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, and Opera */
+}
 
 .input-area {
   padding: 20px 24px;

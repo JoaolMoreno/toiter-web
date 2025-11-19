@@ -13,6 +13,13 @@ export function useChatLogic() {
   const receiverUsername = ref<string>('')
   const syncedChats = ref<Record<number, number>>({})
 
+  if (typeof window !== 'undefined') {
+    const stored = localStorage.getItem('syncedChats')
+    if (stored) {
+      syncedChats.value = JSON.parse(stored)
+    }
+  }
+
   const loadChats = async () => {
     try {
       const response = await chatService.getMyChats()
@@ -41,6 +48,9 @@ export function useChatLogic() {
         console.log(`Syncing messages for chat ${chatId} (last synced ${lastSynced ? new Date(lastSynced).toLocaleTimeString() : 'never'})`)
         messages.value = await chatService.syncChatMessages(chatId)
         syncedChats.value[chatId] = now
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('syncedChats', JSON.stringify(syncedChats.value))
+        }
       } else {
         console.log(`Using cached messages for chat ${chatId}`)
         const storedMessagesStr = localStorage.getItem(`chat_${chatId}_messages`)
@@ -95,7 +105,6 @@ export function useChatLogic() {
             messages.value.push(message)
             localStorage.setItem(`chat_${selectedChatId.value}_messages`, JSON.stringify(messages.value))
           }
-          // Update last message in chats
           const chat = chats.value.find(c => c.chatId === message.chatId)
           if (chat) {
             chat.lastMessageContent = message.message
