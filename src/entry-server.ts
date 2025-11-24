@@ -7,6 +7,26 @@ import axios from 'axios'
 import App from './App.vue'
 import { routes } from './router'
 
+function getOptimizedImageUrl(url: string): string {
+  if (!url || url.startsWith('/')) return url
+
+  const bucketDomain = 'bucket.joaoplmoreno.com'
+
+  if (url.includes(bucketDomain)) {
+    // Injeta as configurações: 
+    // width=400, height=400 (quadrado para OG Tags)
+    // fit=cover (corta as bordas se não for quadrada, não estica)
+    // format=auto (tenta WebP/AVIF)
+    return url.replace(
+      `${bucketDomain}/`,
+      `${bucketDomain}/cdn-cgi/image/width=400,height=400,fit=cover,format=auto/`
+    )
+  }
+
+  return url
+}
+// -----------------------------
+
 function createApp() {
   const app = createSSRApp(App)
   const pinia = createPinia()
@@ -42,7 +62,10 @@ export async function render(url: string, _manifest?: string) {
         const response = await axios.get(`${API_BASE}/users/${username}`)
         const user = response.data
 
-        const profileImageUrl = user.profileImageUrl || '/default-profile.png'
+        let profileImageUrl = user.profileImageUrl || '/default-profile.png'
+        if (user.profileImageUrl) {
+          profileImageUrl = getOptimizedImageUrl(user.profileImageUrl)
+        }
 
         const serverUrl = import.meta.env.VITE_PUBLIC_HOST || process.env.SERVER_URL || 'http://localhost:5173'
 
@@ -76,7 +99,10 @@ export async function render(url: string, _manifest?: string) {
         const response = await axios.get(`${API_BASE}/posts/${postId}`)
         const post = response.data
 
-        const profileImageUrl = post.profileImageUrl || '/default-profile.png'
+        let profileImageUrl = post.profileImageUrl || '/default-profile.png'
+        if (post.profileImageUrl) {
+          profileImageUrl = getOptimizedImageUrl(post.profileImageUrl)
+        }
 
         const serverUrl = import.meta.env.VITE_PUBLIC_HOST || process.env.SERVER_URL || 'http://localhost:5173'
         const description = post.content.substring(0, 200) + (post.content.length > 200 ? '...' : '')
