@@ -8,9 +8,7 @@ export interface ChatPreview {
     lastMessageSender: string;
     lastMessageContent: string;
     lastMessageSentDate: string;
-    // New optional fields for receiver profile image
     receiverProfileImageUrl: string | null;
-    receiverProfileImageId: number | null;
 }
 
 export interface Message {
@@ -25,7 +23,6 @@ export interface FollowData {
     username: string;
     profileImageUrl: string | null;
     followDate: string;
-    profileImageId: number | null;
 }
 
 export interface ChatsResponse {
@@ -221,9 +218,9 @@ class ChatService {
             console.log('📡 WebSocket already connected, skipping connection...');
             return;
         }
-    
+
         console.log('📡 Initializing WebSocket connection...');
-    
+
         this.stompClient = Stomp.over(() => new SockJS('/api/chat'));
 
         return new Promise((resolve, reject) => {

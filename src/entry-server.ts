@@ -10,7 +10,7 @@ import { routes } from './router'
 function createApp() {
   const app = createSSRApp(App)
   const pinia = createPinia()
-  
+
   const router = _createRouter({
     history: createMemoryHistory(),
     routes: routes as RouteRecordRaw[]
@@ -41,10 +41,8 @@ export async function render(url: string, _manifest?: string) {
         const API_BASE = import.meta.env.VITE_API_BASE || process.env.API_BASE || 'http://toiter-user-service:9990/api'
         const response = await axios.get(`${API_BASE}/users/${username}`)
         const user = response.data
-        
-        const profileImageUrl = user.profileImageId
-          ? `${API_BASE}/images/${user.profileImageId}`
-          : '/default-profile.png'
+
+        const profileImageUrl = user.profileImageUrl || '/default-profile.png'
 
         const serverUrl = import.meta.env.VITE_PUBLIC_HOST || process.env.SERVER_URL || 'http://localhost:5173'
 
@@ -69,7 +67,7 @@ export async function render(url: string, _manifest?: string) {
         console.error('Error fetching profile data for SSR:', error)
       }
     }
-    
+
     // Generate OG tags for thread pages
     if (currentRoute.name === 'Thread' && currentRoute.params.postId) {
       const postId = currentRoute.params.postId as string
@@ -77,14 +75,12 @@ export async function render(url: string, _manifest?: string) {
         const API_BASE = import.meta.env.VITE_API_BASE || process.env.API_BASE || 'http://localhost:9991/api'
         const response = await axios.get(`${API_BASE}/posts/${postId}`)
         const post = response.data
-        
-        const profileImageUrl = post.profileImageId
-          ? `${API_BASE}/images/${post.profileImageId}`
-          : '/default-profile.png'
+
+        const profileImageUrl = post.profileImageUrl || '/default-profile.png'
 
         const serverUrl = import.meta.env.VITE_PUBLIC_HOST || process.env.SERVER_URL || 'http://localhost:5173'
         const description = post.content.substring(0, 200) + (post.content.length > 200 ? '...' : '')
-        
+
         head = `
     <title>${post.username} no Toiter</title>
     <meta name="description" content="${description}" />

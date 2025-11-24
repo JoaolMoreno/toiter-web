@@ -54,7 +54,7 @@ const handleSubmit = async (e: Event) => {
     const { data } = await api.get('/users/me')
     authStore.user = {
       username: data.username,
-      profileImageId: data.profileImageId as number
+      profileImageUrl: data.profileImageUrl || '/default-profile.png'
     }
     authStore.isAuthenticated = true
 
@@ -80,38 +80,16 @@ const handleSubmit = async (e: Event) => {
 
 <template>
   <form @submit="handleSubmit" class="form">
-    <input
-      type="text"
-      placeholder="Nome"
-      v-model="username"
-      class="input"
-      required
-    />
-    <input
-      type="email"
-      placeholder="Email"
-      v-model="email"
-      class="input"
-      required
-    />
-    <PasswordInput
-      v-model="password"
-      placeholder="Senha"
-    />
+    <input type="text" placeholder="Nome" v-model="username" class="input" required />
+    <input type="email" placeholder="Email" v-model="email" class="input" required />
+    <PasswordInput v-model="password" placeholder="Senha" />
     <div class="password-confirm-wrapper">
-      <PasswordInput
-        v-model="confirmPassword"
-        placeholder="Confirme a senha"
-      />
+      <PasswordInput v-model="confirmPassword" placeholder="Confirme a senha" />
       <p v-if="confirmPassword && !passwordsMatch" class="error-message">
         As senhas não coincidem
       </p>
     </div>
-    <button
-      type="submit"
-      :disabled="isLoading || !isFormValid"
-      :class="['button', { 'is-loading': isLoading }]"
-    >
+    <button type="submit" :disabled="isLoading || !isFormValid" :class="['button', { 'is-loading': isLoading }]">
       {{ isLoading ? 'Registrando...' : 'Registrar' }}
     </button>
   </form>
@@ -152,9 +130,19 @@ const handleSubmit = async (e: Event) => {
 }
 
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-4px); }
-  75% { transform: translateX(4px); }
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform: translateX(-4px);
+  }
+
+  75% {
+    transform: translateX(4px);
+  }
 }
 
 .button {
@@ -191,9 +179,12 @@ const handleSubmit = async (e: Event) => {
 }
 
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
   }
+
   50% {
     transform: scale(1.02);
   }

@@ -46,11 +46,11 @@ const profilePicture = computed(() => {
 const formatTimestamp = (dateString: string): string => {
   const date = new Date(`${dateString}Z`)
   const now = new Date()
-  
+
   const diffMs = now.getTime() - date.getTime()
   const diffMins = Math.floor(diffMs / (1000 * 60))
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
-  
+
   if (diffMins < 0) {
     return 'Agora mesmo'
   } else if (diffMins < 60) {
@@ -151,7 +151,8 @@ const handleRepostWithCommentSubmit = async () => {
 </script>
 
 <template>
-  <div v-if="!isRemoved" class="post-card" :class="{ 'no-hover': isActionHovered }" @click="repostMode ? repostMode = null : handlePostClick()">
+  <div v-if="!isRemoved" class="post-card" :class="{ 'no-hover': isActionHovered }"
+    @click="repostMode ? repostMode = null : handlePostClick()">
     <!-- Repost header if this is a simple repost -->
     <div v-if="isSimpleRepost && repostMode !== 'comment'" class="repost-header">
       <span class="repost-icon">🔄</span>
@@ -165,17 +166,12 @@ const handleRepostWithCommentSubmit = async () => {
         <span class="username">@{{ displayPost?.username }}</span>
         <span class="timestamp">· {{ displayPost?.createdAt ? formatTimestamp(displayPost.createdAt) : '' }}</span>
       </div>
-      <button
-        v-if="authStore.user?.username === displayPost?.username"
-        class="delete-button"
-        @mouseenter="isActionHovered = true"
-        @mouseleave="isActionHovered = false"
-        @click.stop="handleDelete"
-      >
+      <button v-if="authStore.user?.username === displayPost?.username" class="delete-button"
+        @mouseenter="isActionHovered = true" @mouseleave="isActionHovered = false" @click.stop="handleDelete">
         🗑️
       </button>
     </div>
-    
+
     <div v-if="repostMode !== 'comment'" class="post-content">
       {{ displayPost?.content }}
     </div>
@@ -194,12 +190,13 @@ const handleRepostWithCommentSubmit = async () => {
         {{ originalPost.content }}
       </div>
     </div>
-    
+
     <!-- Comment input for repost with comment -->
     <div v-if="repostMode === 'comment'" class="comment-preview" @click.stop>
       <div class="post-header">
         <div class="user-info">
-          <img :src="authStore.user?.profileImageId ? `/api/images/${authStore.user.profileImageId}` : '/default-profile.png'" alt="Profile picture" class="profile-pic" />
+          <img :src="authStore.user?.profileImageUrl || '/default-profile.png'" alt="Profile picture"
+            class="profile-pic" />
           <strong>{{ authStore.user?.displayName }}</strong>
           <span class="username">@{{ authStore.user?.username }}</span>
         </div>
@@ -209,7 +206,8 @@ const handleRepostWithCommentSubmit = async () => {
       <div class="original-post">
         <div class="original-post-header">
           <div class="user-info">
-            <img :src="displayPost?.profilePicture || '/default-profile.png'" alt="Profile picture" class="profile-pic" />
+            <img :src="displayPost?.profilePicture || '/default-profile.png'" alt="Profile picture"
+              class="profile-pic" />
             <strong>{{ displayPost?.displayName }}</strong>
             <span class="username">@{{ displayPost?.username }}</span>
             <span class="timestamp">· {{ displayPost?.createdAt ? formatTimestamp(displayPost.createdAt) : '' }}</span>
@@ -230,11 +228,13 @@ const handleRepostWithCommentSubmit = async () => {
     </div>
 
     <div v-if="repostMode !== 'comment'" class="post-actions">
-      <button class="action-button reply" @mouseenter="isActionHovered = true" @mouseleave="isActionHovered = false" @click.stop>
+      <button class="action-button reply" @mouseenter="isActionHovered = true" @mouseleave="isActionHovered = false"
+        @click.stop>
         💬 {{ repliesCount }}
       </button>
       <div class="repost-container">
-        <button class="action-button repost" @mouseenter="isActionHovered = true" @mouseleave="isActionHovered = false" @click.stop="repostMode = repostMode ? null : 'menu'">
+        <button class="action-button repost" @mouseenter="isActionHovered = true" @mouseleave="isActionHovered = false"
+          @click.stop="repostMode = repostMode ? null : 'menu'">
           🔄 {{ repostsCount }}
         </button>
         <!-- Repost menu (shown when repost button is clicked) -->
@@ -250,16 +250,12 @@ const handleRepostWithCommentSubmit = async () => {
           </button>
         </div>
       </div>
-      <button
-        class="action-button like"
-        :class="{ liked: isLiked }"
-        @mouseenter="isActionHovered = true"
-        @mouseleave="isActionHovered = false"
-        @click="handleLikeToggle"
-      >
+      <button class="action-button like" :class="{ liked: isLiked }" @mouseenter="isActionHovered = true"
+        @mouseleave="isActionHovered = false" @click="handleLikeToggle">
         {{ isLiked ? '❤️' : '🤍' }} {{ likesCount }}
       </button>
-      <button class="action-button share" @mouseenter="isActionHovered = true" @mouseleave="isActionHovered = false" @click="handleShare">
+      <button class="action-button share" @mouseenter="isActionHovered = true" @mouseleave="isActionHovered = false"
+        @click="handleShare">
         📤
       </button>
     </div>
@@ -486,6 +482,7 @@ const handleRepostWithCommentSubmit = async () => {
     opacity: 0;
     transform: translateX(-50%) translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateX(-50%) translateY(0);

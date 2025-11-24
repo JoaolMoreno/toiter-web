@@ -9,19 +9,20 @@ export interface UserProfile {
     postsCount: number;
     isFollowing: boolean;
     isFollowingMe: boolean;
-  }
+}
 
 export interface UpdatedUser {
     displayName: string;
     bio: string;
 }
+
 export interface User {
-  username: string;
-  displayName: string;
-  bio: string;
-  profileImageId: number | null;
-  headerImageId: number | null;
-  followersCount: number;
-  followingCount: number;
-  postsCount: number;
+    username: string;
+    displayName: string;
+    bio: string;
+    profileImageUrl: string | null;
+    headerImageUrl: string | null;
+    followersCount: number;
+    followingCount: number;
+    postsCount: number;
 }

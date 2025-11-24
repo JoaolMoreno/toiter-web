@@ -3,7 +3,6 @@ import { computed, ref, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useThemeStore } from '../stores/theme'
-import { getImageById } from '../services/imageService'
 
 const route = useRoute()
 const router = useRouter()
@@ -22,19 +21,9 @@ const toggleDropdown = () => {
 
 const loadProfileImage = async () => {
   if (!authStore.user) return
-  
+
   imageLoading.value = true
-  if (authStore.user.profileImageId) {
-    try {
-      const url = await getImageById(authStore.user.profileImageId)
-      imageUrl.value = url
-    } catch (error) {
-      console.error('Error loading profile image:', error)
-      imageUrl.value = '/default-profile.png'
-    }
-  } else {
-    imageUrl.value = '/default-profile.png'
-  }
+  imageUrl.value = authStore.user.profileImageUrl || '/default-profile.png'
   imageLoading.value = false
 }
 
@@ -79,13 +68,7 @@ onMounted(() => {
       <div class="header-col header-left">
         <button v-if="authStore.isAuthenticated" class="profile-button" @click.stop="toggleDropdown">
           <div v-if="imageLoading" class="loading-profile-image" />
-          <img 
-            v-else
-            :src="imageUrl"
-            alt="Profile"
-            class="profile-image"
-            @error="imageUrl = '/default-profile.png'"
-          />
+          <img v-else :src="imageUrl" alt="Profile" class="profile-image" @error="imageUrl = '/default-profile.png'" />
         </button>
         <div v-if="dropdownVisible" class="dropdown-menu" @click.stop>
           <button @click="handleProfileClick(); dropdownVisible = false">Meu Perfil</button>
@@ -103,7 +86,7 @@ onMounted(() => {
       </div>
     </header>
   </div>
-  
+
   <main class="main">
     <div v-if="authStore.isLoading && !authStore.isAuthenticated" class="loading-state">
       Carregando...
@@ -217,7 +200,7 @@ onMounted(() => {
   background: var(--color-background-elevated);
   border: 1px solid var(--color-border);
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   z-index: 20;
   min-width: 170px;
   padding: 8px 0;
