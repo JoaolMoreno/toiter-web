@@ -14,7 +14,7 @@ export const getUserProfile = async (username: string): Promise<UserProfile> => 
             followersCount: data.followersCount,
             followingCount: data.followingCount,
             postsCount: data.postsCount || 0,
-            isFollowing: data.following,
+            isFollowing: data.isFollowing,
             isFollowingMe: data.isFollowingMe
         };
     } catch (error) {
