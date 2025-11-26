@@ -23,6 +23,7 @@ const emit = defineEmits<{
 const authStore = useAuthStore()
 const content = ref(props.initialContent || '')
 const mediaFile = ref<File | null>(null)
+const previewUrl = ref<string | null>(null)
 const isSubmitting = ref(false)
 
 watch(() => props.initialContent, (newVal) => {
@@ -32,8 +33,23 @@ watch(() => props.initialContent, (newVal) => {
 watch(() => props.isOpen, (newVal) => {
   if (!newVal) {
     mediaFile.value = null
+    previewUrl.value = null
   }
 })
+
+watch(mediaFile, (file) => {
+  if (file) {
+    const reader = new FileReader()
+    reader.onload = (e) => previewUrl.value = e.target?.result as string
+    reader.readAsDataURL(file)
+  } else {
+    previewUrl.value = null
+  }
+})
+
+const removeImage = () => {
+  mediaFile.value = null
+}
 
 const handleSubmit = async () => {
   try {
@@ -63,9 +79,6 @@ const handleClose = () => {
       <div class="header">
         <button class="close-button" @click="handleClose" :disabled="isSubmitting">
           ✕
-        </button>
-        <button class="post-button" @click="handleSubmit" :disabled="isSubmitting || !content.trim()">
-          {{ isSubmitting ? 'Postando...' : 'Responder' }}
         </button>
       </div>
 
@@ -99,7 +112,18 @@ const handleClose = () => {
             <textarea v-model="content"
               :placeholder="postType === 'post' ? 'No que você está pensando?' : 'Postar sua resposta'"
               class="text-area" ref="textarea" />
-            <ImageUpload v-model="mediaFile" />
+
+            <div v-if="previewUrl" class="preview-area">
+              <img :src="previewUrl" class="preview-image" />
+              <button class="remove-preview-btn" @click="removeImage">✕</button>
+            </div>
+
+            <div class="actions-footer">
+              <ImageUpload v-model="mediaFile" :showPreview="false" />
+              <button class="post-button" @click="handleSubmit" :disabled="isSubmitting || !content.trim()">
+                {{ isSubmitting ? 'Postando...' : 'Responder' }}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -256,9 +280,53 @@ const handleClose = () => {
   outline: none;
   padding: 0;
   margin-top: 8px;
+  margin-bottom: 12px;
 }
 
 .text-area::placeholder {
   color: var(--color-text-secondary);
+}
+
+.preview-area {
+  position: relative;
+  margin-bottom: 12px;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.preview-image {
+  width: 100%;
+  height: auto;
+  max-height: 500px;
+  object-fit: contain;
+  border-radius: 16px;
+  display: block;
+  background-color: var(--color-background-alt);
+}
+
+.remove-preview-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.actions-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 8px;
+  border-top: 1px solid var(--color-border);
+  margin-top: 8px;
 }
 </style>

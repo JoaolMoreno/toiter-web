@@ -196,7 +196,9 @@ const handleImageClick = (e: Event) => {
 
     <!-- Post Media -->
     <div v-if="mediaUrl && repostMode !== 'comment'" class="post-media" @click="handleImageClick">
-      <img :src="mediaUrl" alt="Post image" class="post-image" loading="lazy" />
+      <img :src="mediaUrl" alt="Post image" class="post-image" loading="lazy"
+        :width="displayPost?.mediaWidth || undefined" :height="displayPost?.mediaHeight || undefined"
+        :style="displayPost?.mediaWidth && displayPost?.mediaHeight ? { aspectRatio: `${displayPost.mediaWidth}/${displayPost.mediaHeight}` } : {}" />
     </div>
 
     <!-- Original post for reposts with comments -->
@@ -211,6 +213,11 @@ const handleImageClick = (e: Event) => {
       </div>
       <div class="original-post-content">
         {{ originalPost.content }}
+      </div>
+      <div v-if="originalPost.mediaUrl" class="post-media">
+        <img :src="originalPost.mediaUrl" alt="Post image" class="post-image" loading="lazy"
+          :width="originalPost.mediaWidth || undefined" :height="originalPost.mediaHeight || undefined"
+          :style="originalPost.mediaWidth && originalPost.mediaHeight ? { aspectRatio: `${originalPost.mediaWidth}/${originalPost.mediaHeight}` } : {}" />
       </div>
     </div>
 
@@ -238,6 +245,11 @@ const handleImageClick = (e: Event) => {
         </div>
         <div class="original-post-content">
           {{ displayPost?.content }}
+        </div>
+        <div v-if="mediaUrl" class="post-media">
+          <img :src="mediaUrl" alt="Post image" class="post-image" loading="lazy"
+            :width="displayPost?.mediaWidth || undefined" :height="displayPost?.mediaHeight || undefined"
+            :style="displayPost?.mediaWidth && displayPost?.mediaHeight ? { aspectRatio: `${displayPost.mediaWidth}/${displayPost.mediaHeight}` } : {}" />
         </div>
       </div>
       <div class="preview-actions">
