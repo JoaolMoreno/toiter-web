@@ -1,6 +1,21 @@
 import api from './api';
 import type { PostData } from '@/models/PostData';
 
+interface PostPayload {
+    content: string;
+    parentPostId?: number | null;
+    repostParentId?: number | null;
+}
+
+const createFormData = (postData: PostPayload, media?: File | null): FormData => {
+    const formData = new FormData();
+    formData.append('post', new Blob([JSON.stringify(postData)], { type: 'application/json' }));
+    if (media) {
+        formData.append('media', media);
+    }
+    return formData;
+};
+
 export const getPostsByUser = async (username: string, page: number, size: number) => {
     try {
         console.log('Buscando posts do usuário:', username);
@@ -78,19 +93,13 @@ export const createPost = async (
     repostParentId?: number | null
 ): Promise<PostData> => {
     try {
-        const formData = new FormData();
-        
         const postData = {
             content,
             parentPostId: parentPostId || null,
             repostParentId: repostParentId || null
         };
         
-        formData.append('post', new Blob([JSON.stringify(postData)], { type: 'application/json' }));
-        
-        if (media) {
-            formData.append('media', media);
-        }
+        const formData = createFormData(postData, media);
         
         const response = await api.post('/posts', formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
@@ -114,7 +123,16 @@ export const deletePost = async (postId: number) => {
 
 export const createRepost = async (repostParentId: number): Promise<PostData> => {
     try {
-        const response = await api.post('/posts', { content: '', repostParentId });
+        const postData = {
+            content: '',
+            repostParentId
+        };
+        
+        const formData = createFormData(postData);
+        
+        const response = await api.post('/posts', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
         return response.data;
     } catch (error) {
         console.error('Erro ao repostar:', error);
@@ -124,18 +142,12 @@ export const createRepost = async (repostParentId: number): Promise<PostData> =>
 
 export const repostWithComment = async (repostParentId: number, content: string, media?: File | null): Promise<PostData> => {
     try {
-        const formData = new FormData();
-        
         const postData = {
             content,
             repostParentId
         };
         
-        formData.append('post', new Blob([JSON.stringify(postData)], { type: 'application/json' }));
-        
-        if (media) {
-            formData.append('media', media);
-        }
+        const formData = createFormData(postData, media);
         
         const response = await api.post('/posts', formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
@@ -149,18 +161,12 @@ export const repostWithComment = async (repostParentId: number, content: string,
 
 export const createReply = async (parentPostId: number, content: string, media?: File | null): Promise<PostData> => {
     try {
-        const formData = new FormData();
-        
         const postData = {
             parentPostId,
             content
         };
         
-        formData.append('post', new Blob([JSON.stringify(postData)], { type: 'application/json' }));
-        
-        if (media) {
-            formData.append('media', media);
-        }
+        const formData = createFormData(postData, media);
         
         const response = await api.post('/posts', formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
