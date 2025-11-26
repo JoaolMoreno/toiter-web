@@ -7,19 +7,15 @@ import axios from 'axios'
 import App from './App.vue'
 import { routes } from './router'
 
-function getOptimizedImageUrl(url: string): string {
+function getOptimizedImageUrl(url: string, width = 400, height = 400): string {
   if (!url || url.startsWith('/')) return url
 
   const bucketDomain = 'bucket.joaoplmoreno.com'
 
   if (url.includes(bucketDomain)) {
-    // Injeta as configurações: 
-    // width=400, height=400 (quadrado para OG Tags)
-    // fit=cover (corta as bordas se não for quadrada, não estica)
-    // format=auto (tenta WebP/AVIF)
     return url.replace(
       `${bucketDomain}/`,
-      `${bucketDomain}/cdn-cgi/image/width=400,height=400,fit=cover,format=auto/`
+      `${bucketDomain}/cdn-cgi/image/width=${width},height=${height},fit=cover,format=auto/`
     )
   }
 
@@ -53,6 +49,17 @@ export async function render(url: string, _manifest?: string) {
   const currentRoute = router.currentRoute.value
   let head = ''
 
+  /**
+   * Constraints for WhatsApp Link Previews:
+   * 
+   * 1. <head> must appear within the first 300 KB of HTML.
+   * 2. <og:title>, <og:description>, <og:url> must be in <head> and not empty.
+   * 3. <og:title>: Content title WITHOUT brand indication. Max 2 lines.
+   * 4. <og:description>: Content description. Max 2 lines, up to 80 characters.
+   * 5. <og:url>: Canonical URL, absolute, no decorators/session params.
+   * 6. <og:image>: Absolute URL, < 600 KB, >= 300px width, aspect ratio <= 4:1.
+   */
+
   try {
     // Generate OG tags for profile pages
     if (currentRoute.name === 'Profile' && currentRoute.params.username) {
@@ -64,16 +71,18 @@ export async function render(url: string, _manifest?: string) {
 
         let profileImageUrl = user.profileImageUrl || '/default-profile.png'
         if (user.profileImageUrl) {
-          profileImageUrl = getOptimizedImageUrl(user.profileImageUrl)
+          profileImageUrl = getOptimizedImageUrl(user.profileImageUrl, 400, 400)
         }
 
         const serverUrl = import.meta.env.VITE_PUBLIC_HOST || process.env.SERVER_URL || 'http://localhost:5173'
+        const displayName = user.displayName || username
+        const description = (user.bio || `Perfil de ${displayName}`).substring(0, 80)
 
         head = `
-    <title>@${username} - Toiter</title>
-    <meta name="description" content="${user.bio || `Perfil de ${username} no Toiter`}" />
-    <meta property="og:title" content="@${username} no Toiter" />
-    <meta property="og:description" content="${user.bio || `Perfil de ${username} no Toiter`}" />
+    <title>${displayName} (@${username}) - Toiter</title>
+    <meta name="description" content="${description}" />
+    <meta property="og:title" content="${displayName} (@${username})" />
+    <meta property="og:description" content="${description}" />
     <meta property="og:image" content="${profileImageUrl}" />
     <meta property="og:image:width" content="400" />
     <meta property="og:image:height" content="400" />
@@ -82,8 +91,8 @@ export async function render(url: string, _manifest?: string) {
     <meta property="og:locale" content="pt_BR" />
     <meta property="og:type" content="profile" />
     <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content="${username} no Toiter" />
-    <meta name="twitter:description" content="${user.bio || `Perfil de ${username} no Toiter`}" />
+    <meta name="twitter:title" content="${displayName} (@${username})" />
+    <meta name="twitter:description" content="${description}" />
     <meta name="twitter:image" content="${profileImageUrl}" />
         `
       } catch (error) {
@@ -99,30 +108,38 @@ export async function render(url: string, _manifest?: string) {
         const response = await axios.get(`${API_BASE}/posts/${postId}`)
         const post = response.data
 
-        let profileImageUrl = post.profileImageUrl || '/default-profile.png'
-        if (post.profileImageUrl) {
-          profileImageUrl = getOptimizedImageUrl(post.profileImageUrl)
+        let ogImageUrl = post.profileImageUrl || '/default-profile.png'
+        let ogWidth = '400'
+        let ogHeight = '400'
+
+        if (post.mediaUrl) {
+          ogImageUrl = getOptimizedImageUrl(post.mediaUrl, post.mediaWidth || 1200, post.mediaHeight || 1200)
+          ogWidth = (post.mediaWidth || 1200).toString()
+          ogHeight = (post.mediaHeight || 1200).toString()
+        } else if (post.profileImageUrl) {
+          ogImageUrl = getOptimizedImageUrl(post.profileImageUrl, 400, 400)
         }
 
         const serverUrl = import.meta.env.VITE_PUBLIC_HOST || process.env.SERVER_URL || 'http://localhost:5173'
-        const description = post.content.substring(0, 200) + (post.content.length > 200 ? '...' : '')
+        const description = post.content.substring(0, 80) + (post.content.length > 80 ? '...' : '')
+        const title = `${post.displayName || post.username}`
 
         head = `
-    <title>${post.username} no Toiter</title>
+    <title>${title} on Toiter</title>
     <meta name="description" content="${description}" />
-    <meta property="og:title" content="${post.username} no Toiter" />
+    <meta property="og:title" content="${title}" />
     <meta property="og:description" content="${description}" />
-    <meta property="og:image" content="${profileImageUrl}" />
-    <meta property="og:image:width" content="400" />
-    <meta property="og:image:height" content="400" />
+    <meta property="og:image" content="${ogImageUrl}" />
+    <meta property="og:image:width" content="${ogWidth}" />
+    <meta property="og:image:height" content="${ogHeight}" />
     <meta property="og:url" content="${serverUrl}/thread/${postId}" />
     <meta property="og:site_name" content="Toiter" />
     <meta property="og:locale" content="pt_BR" />
     <meta property="og:type" content="article" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="${post.username} no Toiter" />
+    <meta name="twitter:title" content="${title}" />
     <meta name="twitter:description" content="${description}" />
-    <meta name="twitter:image" content="${profileImageUrl}" />
+    <meta name="twitter:image" content="${ogImageUrl}" />
         `
       } catch (error) {
         console.error('Error fetching thread data for SSR:', error)

@@ -7,6 +7,8 @@ export interface PostData {
     profilePicture: string | null;
     content: string;
     mediaUrl?: string | null;
+    mediaWidth?: number | null;
+    mediaHeight?: number | null;
     likesCount: number;
     repliesCount: number;
     repostsCount: number;

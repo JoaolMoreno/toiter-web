@@ -7,6 +7,7 @@ import Post from '../components/Post.vue'
 import ChatList from '../components/ChatList.vue'
 import ChatWindow from '../components/ChatWindow.vue'
 import Modal from '../components/Modal.vue'
+import ImageUpload from '../components/ImageUpload.vue'
 import pkg from 'lodash'
 import { useChatLogic } from '../composables/useChatLogic'
 const { debounce } = pkg
@@ -29,28 +30,42 @@ const {
 } = useChatLogic()
 
 const inputContent = ref('')
+const inputMediaFile = ref<File | null>(null)
+const previewUrl = ref<string | null>(null)
 const isChatOpen = ref(false)
 const isPostModalOpen = ref(false)
 
-// Set document title
 if (typeof document !== 'undefined') {
   document.title = 'Feed - Toiter'
+}
+
+watch(inputMediaFile, (file) => {
+  if (file) {
+    const reader = new FileReader()
+    reader.onload = (e) => previewUrl.value = e.target?.result as string
+    reader.readAsDataURL(file)
+  } else {
+    previewUrl.value = null
+  }
+})
+
+const removeImage = () => {
+  inputMediaFile.value = null
 }
 
 const loadPosts = async () => {
   if (!feedStore.hasMore || feedStore.loading) return
   feedStore.setLoading(true)
-  
+
   try {
     const data = await getFeed(feedStore.page, 10)
-    
-    // Prevent duplicates
+
     feedStore.setPosts((prev) => {
       const existingIds = new Set(prev.map(post => post.id))
       const newPosts = data.content.filter((post: { id: number }) => !existingIds.has(post.id))
       return [...prev, ...newPosts]
     })
-    
+
     const totalPages = Math.ceil(data.totalElements / 10)
     feedStore.setHasMore(feedStore.page + 1 < totalPages)
   } catch (error) {
@@ -62,19 +77,19 @@ const loadPosts = async () => {
 
 const handleScroll = debounce(() => {
   if (!feedStore.hasMore || feedStore.loading) return
-  
+
   const scrollPosition = window.innerHeight + document.documentElement.scrollTop
   const scrollThreshold = document.documentElement.offsetHeight - 100
-  
+
   if (scrollPosition >= scrollThreshold) {
     feedStore.setPage(prev => prev + 1)
   }
 }, 250)
 
-const handleCreateNewPost = async (content: string) => {
+const handleCreateNewPost = async (content: string, media?: File | null) => {
   if (!content?.trim()) return
   try {
-    const newPost = await createPost(content)
+    const newPost = await createPost(content, media)
     feedStore.setPosts(prevPosts => [newPost, ...prevPosts])
     isPostModalOpen.value = false
   } catch (error) {
@@ -85,8 +100,9 @@ const handleCreateNewPost = async (content: string) => {
 const handleCreateFromInput = async () => {
   if (!inputContent.value.trim()) return
   try {
-    await handleCreateNewPost(inputContent.value)
+    await handleCreateNewPost(inputContent.value, inputMediaFile.value)
     inputContent.value = ''
+    inputMediaFile.value = null
   } catch (error) {
     console.error('Erro ao criar post:', error)
   }
@@ -131,31 +147,32 @@ watch(() => feedStore.page, () => {
   <div class="container">
     <div class="feed-container">
       <h1 class="feed-title">Seu Feed</h1>
-      
+
       <div class="create-post-container">
-        <textarea
-          class="create-post-input"
-          placeholder="No que você está pensando?"
-          v-model="inputContent"
-        />
-        <button class="create-post-button" @click="handleCreateFromInput">
-          Postar
-        </button>
+        <textarea class="create-post-input" placeholder="No que você está pensando?" v-model="inputContent" />
+
+        <div v-if="previewUrl" class="preview-area">
+          <img :src="previewUrl" class="preview-image" />
+          <button class="remove-preview-btn" @click="removeImage">✕</button>
+        </div>
+
+        <div class="actions-footer">
+          <ImageUpload v-model="inputMediaFile" :showPreview="false" />
+          <button class="create-post-button" @click="handleCreateFromInput" :disabled="!inputContent.trim()">
+            Postar
+          </button>
+        </div>
       </div>
-      
-      <Post
-        v-for="post in feedStore.posts"
-        :key="post.id"
-        :post="post"
-      />
-      
+
+      <Post v-for="post in feedStore.posts" :key="post.id" :post="post" />
+
       <p v-if="feedStore.loading" class="loading-message">
         Carregando mais posts...
       </p>
       <p v-if="!feedStore.hasMore" class="end-message">
         Você chegou ao final do feed!
       </p>
-      
+
       <!-- Floating action button -->
       <div class="floating-buttons">
         <button class="floating-button" @click="isPostModalOpen = true" title="Criar novo post">
@@ -165,23 +182,15 @@ watch(() => feedStore.page, () => {
     </div>
 
     <!-- Modal for creating post -->
-    <Modal
-      :isOpen="isPostModalOpen"
-      title="Criar Post"
-      postType="post"
-      @close="isPostModalOpen = false"
-      @submit="handleCreateNewPost"
-    />
+    <Modal :isOpen="isPostModalOpen" title="Criar Post" postType="post" @close="isPostModalOpen = false"
+      @submit="handleCreateNewPost" />
 
     <!-- Chat toggle button and panel -->
-    <button
-      v-if="!isChatOpen"
-      class="chat-toggle-button"
-      @click="toggleChat"
-      title="Abrir mensagens"
-    >
+    <button v-if="!isChatOpen" class="chat-toggle-button" @click="toggleChat" title="Abrir mensagens">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 2C6.5 2 2 6.14 2 11.25C2 14.02 3.32 16.5 5.44 18.21V22L8.88 20.06C9.84 20.35 10.88 20.5 12 20.5C17.5 20.5 22 16.36 22 11.25C22 6.14 17.5 2 12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path
+          d="M12 2C6.5 2 2 6.14 2 11.25C2 14.02 3.32 16.5 5.44 18.21V22L8.88 20.06C9.84 20.35 10.88 20.5 12 20.5C17.5 20.5 22 16.36 22 11.25C22 6.14 17.5 2 12 2Z"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
       </svg>
       <span class="chat-toggle-text">Mensagens</span>
     </button>
@@ -194,23 +203,12 @@ watch(() => feedStore.page, () => {
       </div>
       <div class="chat-panel-content">
         <template v-if="selectedChatId">
-          <ChatWindow
-            :selectedChatId="selectedChatId"
-            :messages="messages"
-            :receiverUsername="receiverUsername"
-            :receiverImageUrl="receiverImageUrl"
-            @sendMessage="sendMessage"
-            @back="backToList"
-          />
+          <ChatWindow :selectedChatId="selectedChatId" :messages="messages" :receiverUsername="receiverUsername"
+            :receiverImageUrl="receiverImageUrl" @sendMessage="sendMessage" @back="backToList" />
         </template>
         <template v-else>
-          <ChatList
-            :selectedChatId="selectedChatId"
-            :chats="chats"
-            @selectChat="selectChat"
-            @startChat="startChat"
-            @updateChats="updateChats"
-          />
+          <ChatList :selectedChatId="selectedChatId" :chats="chats" @selectChat="selectChat" @startChat="startChat"
+            @updateChats="updateChats" />
         </template>
       </div>
     </div>
@@ -256,34 +254,80 @@ watch(() => feedStore.page, () => {
   width: 100%;
   min-height: 100px;
   padding: 12px;
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border: none;
+  border-bottom: 1px solid var(--color-border);
   background-color: transparent;
   color: var(--color-text);
-  font-size: 16px;
+  font-size: 18px;
   resize: none;
   font-family: inherit;
+  margin-bottom: 12px;
 }
 
 .create-post-input:focus {
   outline: none;
-  border-color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+.preview-area {
+  position: relative;
+  margin-bottom: 12px;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.preview-image {
+  width: 100%;
+  height: auto;
+  max-height: 500px;
+  object-fit: contain;
+  border-radius: 16px;
+  display: block;
+  background-color: var(--color-background-alt);
+}
+
+.remove-preview-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.actions-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 8px;
 }
 
 .create-post-button {
-  padding: 12px 24px;
+  padding: 8px 20px;
   border: none;
-  border-radius: 24px;
+  border-radius: 9999px;
   background-color: var(--color-primary);
-  color: var(--color-text);
-  font-weight: 600;
+  color: white;
+  font-weight: 700;
   cursor: pointer;
-  align-self: flex-end;
-  transition: background-color 0.2s;
-  margin-top: 12px;
+  transition: background-color 0.2s, opacity 0.2s;
+  font-size: 15px;
 }
 
-.create-post-button:hover {
+.create-post-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.create-post-button:hover:not(:disabled) {
   background-color: var(--color-button-hover);
 }
 
@@ -320,7 +364,7 @@ watch(() => feedStore.page, () => {
   width: 56px;
   height: 56px;
   cursor: pointer;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
@@ -449,7 +493,7 @@ watch(() => feedStore.page, () => {
     width: 100%;
     height: 85vh;
   }
-  
+
   .floating-buttons {
     left: 16px;
     bottom: 16px;

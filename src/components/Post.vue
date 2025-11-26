@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import type { PostData } from '../models/PostData'
 import { useAuthStore } from '../stores/auth'
 import { likePost, unlikePost, deletePost, createRepost, repostWithComment } from '../services/postService'
+import ImageModal from './ImageModal.vue'
 
 interface Props {
   post: PostData
@@ -35,6 +36,8 @@ const showToast = ref(false)
 const isActionHovered = ref(false)
 const repostMode = ref<'menu' | 'comment' | null>(null)
 const commentContent = ref('')
+const isImageModalOpen = ref(false)
+const selectedImageUrl = ref('')
 
 const profilePicture = computed(() => {
   const picture = displayPost.value?.profilePicture || props.post.profilePicture
@@ -42,6 +45,12 @@ const profilePicture = computed(() => {
     return '/default-profile.png'
   }
   return import.meta.env.DEV ? picture.replace('https://', 'http://') : picture
+})
+
+const mediaUrl = computed(() => {
+  const url = displayPost.value?.mediaUrl || props.post.mediaUrl
+  if (!url) return null
+  return import.meta.env.DEV ? url.replace('https://', 'http://') : url
 })
 
 const formatTimestamp = (dateString: string): string => {
@@ -149,6 +158,14 @@ const handleRepostWithCommentSubmit = async () => {
     console.error('Erro ao repostar com comentário:', error)
   }
 }
+
+const handleImageClick = (e: Event) => {
+  e.stopPropagation()
+  if (mediaUrl.value) {
+    selectedImageUrl.value = mediaUrl.value
+    isImageModalOpen.value = true
+  }
+}
 </script>
 
 <template>
@@ -177,6 +194,13 @@ const handleRepostWithCommentSubmit = async () => {
       {{ displayPost?.content }}
     </div>
 
+    <!-- Post Media -->
+    <div v-if="mediaUrl && repostMode !== 'comment'" class="post-media" @click="handleImageClick">
+      <img :src="mediaUrl" alt="Post image" class="post-image" loading="lazy"
+        :width="displayPost?.mediaWidth || undefined" :height="displayPost?.mediaHeight || undefined"
+        :style="displayPost?.mediaWidth && displayPost?.mediaHeight ? { aspectRatio: `${displayPost.mediaWidth}/${displayPost.mediaHeight}` } : {}" />
+    </div>
+
     <!-- Original post for reposts with comments -->
     <div v-if="originalPost && repostMode !== 'comment'" class="original-post" @click="handleOriginalPostClick">
       <div class="original-post-header">
@@ -189,6 +213,11 @@ const handleRepostWithCommentSubmit = async () => {
       </div>
       <div class="original-post-content">
         {{ originalPost.content }}
+      </div>
+      <div v-if="originalPost.mediaUrl" class="post-media">
+        <img :src="originalPost.mediaUrl" alt="Post image" class="post-image" loading="lazy"
+          :width="originalPost.mediaWidth || undefined" :height="originalPost.mediaHeight || undefined"
+          :style="originalPost.mediaWidth && originalPost.mediaHeight ? { aspectRatio: `${originalPost.mediaWidth}/${originalPost.mediaHeight}` } : {}" />
       </div>
     </div>
 
@@ -216,6 +245,11 @@ const handleRepostWithCommentSubmit = async () => {
         </div>
         <div class="original-post-content">
           {{ displayPost?.content }}
+        </div>
+        <div v-if="mediaUrl" class="post-media">
+          <img :src="mediaUrl" alt="Post image" class="post-image" loading="lazy"
+            :width="displayPost?.mediaWidth || undefined" :height="displayPost?.mediaHeight || undefined"
+            :style="displayPost?.mediaWidth && displayPost?.mediaHeight ? { aspectRatio: `${displayPost.mediaWidth}/${displayPost.mediaHeight}` } : {}" />
         </div>
       </div>
       <div class="preview-actions">
@@ -264,6 +298,8 @@ const handleRepostWithCommentSubmit = async () => {
     <div v-if="showToast" class="toast">
       Link copiado!
     </div>
+
+    <ImageModal :isOpen="isImageModalOpen" :imageUrl="selectedImageUrl" @close="isImageModalOpen = false" />
   </div>
 </template>
 
@@ -582,5 +618,31 @@ const handleRepostWithCommentSubmit = async () => {
 
 .repost-container {
   position: relative;
+}
+
+.post-media {
+  margin-top: 12px;
+  border-radius: 16px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.post-image {
+  width: 100%;
+  height: auto;
+  max-height: 500px;
+  object-fit: cover;
+  display: block;
+  transition: opacity 0.2s;
+}
+
+.post-image:hover {
+  opacity: 0.95;
+}
+
+@media (max-width: 768px) {
+  .post-image {
+    max-height: 300px;
+  }
 }
 </style>
