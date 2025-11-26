@@ -1,5 +1,5 @@
 import api from './api';
-import type {PostData} from '@/models/PostData';
+import type { PostData } from '@/models/PostData';
 
 export const getPostsByUser = async (username: string, page: number, size: number) => {
     try {
@@ -111,7 +111,6 @@ export const repostWithComment = async (repostParentId: number, content: string)
     }
 };
 
-// Função para responder a um post
 export const createReply = async (parentPostId: number, content: string): Promise<PostData> => {
     try {
         const response = await api.post('/posts', { parentPostId, content });
@@ -132,28 +131,26 @@ export interface ThreadResponse {
     currentPage: number;
 }
 
-// Get thread of posts
-// Authentication via HttpOnly cookies - no token parameter needed
 export const getThread = async (
-    id: number, 
-    page: number, 
+    id: number,
+    page: number,
     size: number
-  ): Promise<ThreadResponse> => {
+): Promise<ThreadResponse> => {
     try {
-      const { data } = await api.get(`posts/thread/${id}`, { 
-        params: { page, size }
-      });
-  
-      return transformThreadResponse(data);
+        const { data } = await api.get(`posts/thread/${id}`, {
+            params: { page, size }
+        });
+
+        return transformThreadResponse(data);
     } catch (error) {
-      console.error('Erro ao buscar thread:', error);
-      throw error;
+        console.error('Erro ao buscar thread:', error);
+        throw error;
     }
-  };
+};
 
 function transformThreadResponse(response: any): ThreadResponse {
     return {
         ...response,
-        childPosts: response.childPosts.map((child: any) => child.post), // Extraindo o objeto `post`
+        childPosts: response.childPosts ? response.childPosts.map((child: any) => child.post) : [],
     };
 }

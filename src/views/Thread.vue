@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, onServerPrefetch } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { getPostById, getReplies, createReply } from '../services/postService'
+import { getThread, createReply } from '../services/postService'
 import type { PostData } from '../models/PostData'
 import Post from '../components/Post.vue'
 import Modal from '../components/Modal.vue'
@@ -15,24 +15,16 @@ const replies = ref<PostData[]>([])
 const loading = ref(false)
 const isModalOpen = ref(false)
 
-const loadPost = async () => {
-  try {
-    const data = await getPostById(postId.value)
-    post.value = data
-  } catch (error) {
-    console.error('Erro ao carregar post:', error)
-  }
-}
-
-const loadReplies = async () => {
+const loadThread = async () => {
   if (loading.value) return
   loading.value = true
-  
+
   try {
-    const data = await getReplies(postId.value, 0, 50)
-    replies.value = data.content
+    const data = await getThread(postId.value, 0, 50)
+    post.value = data.parentPost
+    replies.value = data.childPosts
   } catch (error) {
-    console.error('Erro ao carregar respostas:', error)
+    console.error('Erro ao carregar thread:', error)
   } finally {
     loading.value = false
   }
@@ -57,9 +49,8 @@ const handleBack = () => {
 }
 
 onMounted(() => {
-  loadPost()
-  loadReplies()
-  
+  loadThread()
+
   if (typeof document !== 'undefined') {
     document.title = post.value ? `${post.value.username} no Toiter` : 'Thread - Toiter'
   }
@@ -82,17 +73,13 @@ onMounted(() => {
           Responder
         </button>
       </div>
-      
+
       <div class="replies-section">
         <h2 v-if="replies.length > 0" class="section-title">
           Respostas
         </h2>
-        <Post
-          v-for="reply in replies"
-          :key="reply.id"
-          :post="reply"
-        />
-        
+        <Post v-for="reply in replies" :key="reply.id" :post="reply" />
+
         <p v-if="loading" class="loading-message">
           Carregando respostas...
         </p>
@@ -101,17 +88,9 @@ onMounted(() => {
         </p>
       </div>
     </div>
-    
-    <Modal
-      v-if="isModalOpen && post"
-      :is-open="isModalOpen"
-      @close="isModalOpen = false"
-      @submit="handleSubmitReply"
-      title="Responder"
-      post-type="reply"
-      :parent-post-content="post.content"
-      :parent-username="post.username"
-    />
+
+    <Modal v-if="isModalOpen && post" :is-open="isModalOpen" @close="isModalOpen = false" @submit="handleSubmitReply"
+      title="Responder" post-type="reply" :parent-post-content="post.content" :parent-username="post.username" />
   </div>
 </template>
 
