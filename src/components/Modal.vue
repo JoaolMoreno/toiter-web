@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { useAuthStore } from '../stores/auth'
+import ImageUpload from './ImageUpload.vue'
 
 interface Props {
   isOpen: boolean
@@ -16,23 +17,31 @@ interface Props {
 const props = defineProps<Props>()
 const emit = defineEmits<{
   close: []
-  submit: [content: string]
+  submit: [content: string, media?: File | null]
 }>()
 
 const authStore = useAuthStore()
 const content = ref(props.initialContent || '')
+const mediaFile = ref<File | null>(null)
 const isSubmitting = ref(false)
 
 watch(() => props.initialContent, (newVal) => {
   content.value = newVal || ''
 })
 
+watch(() => props.isOpen, (newVal) => {
+  if (!newVal) {
+    mediaFile.value = null
+  }
+})
+
 const handleSubmit = async () => {
   try {
     if (!content.value || isSubmitting.value) return
     isSubmitting.value = true
-    emit('submit', content.value)
+    emit('submit', content.value, mediaFile.value)
     content.value = ''
+    mediaFile.value = null
   } catch (error) {
     console.error('Erro ao postar:', error)
   } finally {
@@ -42,6 +51,7 @@ const handleSubmit = async () => {
 
 const handleClose = () => {
   if (!isSubmitting.value) {
+    mediaFile.value = null
     emit('close')
   }
 }
@@ -89,6 +99,7 @@ const handleClose = () => {
             <textarea v-model="content"
               :placeholder="postType === 'post' ? 'No que você está pensando?' : 'Postar sua resposta'"
               class="text-area" ref="textarea" />
+            <ImageUpload v-model="mediaFile" />
           </div>
         </div>
       </div>

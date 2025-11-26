@@ -7,6 +7,7 @@ import Post from '../components/Post.vue'
 import ChatList from '../components/ChatList.vue'
 import ChatWindow from '../components/ChatWindow.vue'
 import Modal from '../components/Modal.vue'
+import ImageUpload from '../components/ImageUpload.vue'
 import pkg from 'lodash'
 import { useChatLogic } from '../composables/useChatLogic'
 const { debounce } = pkg
@@ -29,6 +30,7 @@ const {
 } = useChatLogic()
 
 const inputContent = ref('')
+const inputMediaFile = ref<File | null>(null)
 const isChatOpen = ref(false)
 const isPostModalOpen = ref(false)
 
@@ -71,10 +73,10 @@ const handleScroll = debounce(() => {
   }
 }, 250)
 
-const handleCreateNewPost = async (content: string) => {
+const handleCreateNewPost = async (content: string, media?: File | null) => {
   if (!content?.trim()) return
   try {
-    const newPost = await createPost(content)
+    const newPost = await createPost(content, media)
     feedStore.setPosts(prevPosts => [newPost, ...prevPosts])
     isPostModalOpen.value = false
   } catch (error) {
@@ -85,8 +87,9 @@ const handleCreateNewPost = async (content: string) => {
 const handleCreateFromInput = async () => {
   if (!inputContent.value.trim()) return
   try {
-    await handleCreateNewPost(inputContent.value)
+    await handleCreateNewPost(inputContent.value, inputMediaFile.value)
     inputContent.value = ''
+    inputMediaFile.value = null
   } catch (error) {
     console.error('Erro ao criar post:', error)
   }
@@ -138,6 +141,7 @@ watch(() => feedStore.page, () => {
           placeholder="No que você está pensando?"
           v-model="inputContent"
         />
+        <ImageUpload v-model="inputMediaFile" />
         <button class="create-post-button" @click="handleCreateFromInput">
           Postar
         </button>

@@ -71,9 +71,30 @@ export const getReplies = async (postId: number, page: number, size: number) => 
     }
 };
 
-export const createPost = async (content: string): Promise<PostData> => {
+export const createPost = async (
+    content: string,
+    media?: File | null,
+    parentPostId?: number | null,
+    repostParentId?: number | null
+): Promise<PostData> => {
     try {
-        const response = await api.post('/posts', { content });
+        const formData = new FormData();
+        
+        const postData = {
+            content,
+            parentPostId: parentPostId || null,
+            repostParentId: repostParentId || null
+        };
+        
+        formData.append('post', new Blob([JSON.stringify(postData)], { type: 'application/json' }));
+        
+        if (media) {
+            formData.append('media', media);
+        }
+        
+        const response = await api.post('/posts', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
         return response.data;
     } catch (error) {
         console.error('Erro ao criar post:', error);
@@ -101,9 +122,24 @@ export const createRepost = async (repostParentId: number): Promise<PostData> =>
     }
 };
 
-export const repostWithComment = async (repostParentId: number, content: string): Promise<PostData> => {
+export const repostWithComment = async (repostParentId: number, content: string, media?: File | null): Promise<PostData> => {
     try {
-        const response = await api.post('/posts', { content, repostParentId });
+        const formData = new FormData();
+        
+        const postData = {
+            content,
+            repostParentId
+        };
+        
+        formData.append('post', new Blob([JSON.stringify(postData)], { type: 'application/json' }));
+        
+        if (media) {
+            formData.append('media', media);
+        }
+        
+        const response = await api.post('/posts', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
         return response.data;
     } catch (error) {
         console.error('Erro ao repostar com comentário:', error);
@@ -111,9 +147,24 @@ export const repostWithComment = async (repostParentId: number, content: string)
     }
 };
 
-export const createReply = async (parentPostId: number, content: string): Promise<PostData> => {
+export const createReply = async (parentPostId: number, content: string, media?: File | null): Promise<PostData> => {
     try {
-        const response = await api.post('/posts', { parentPostId, content });
+        const formData = new FormData();
+        
+        const postData = {
+            parentPostId,
+            content
+        };
+        
+        formData.append('post', new Blob([JSON.stringify(postData)], { type: 'application/json' }));
+        
+        if (media) {
+            formData.append('media', media);
+        }
+        
+        const response = await api.post('/posts', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
         return response.data;
     } catch (error) {
         console.error('Erro ao responder post:', error);

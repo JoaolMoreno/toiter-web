@@ -37,9 +37,9 @@ const handleReply = () => {
   isModalOpen.value = true
 }
 
-const handleSubmitReply = async (content: string) => {
+const handleSubmitReply = async (content: string, media?: File | null) => {
   try {
-    const newReply = await createReply(postId.value, content)
+    const newReply = await createReply(postId.value, content, media)
     replies.value = [newReply, ...replies.value]
     isModalOpen.value = false
   } catch (error) {
