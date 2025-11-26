@@ -10,6 +10,7 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+const emit = defineEmits(['reply'])
 const router = useRouter()
 const authStore = useAuthStore()
 
@@ -229,7 +230,7 @@ const handleRepostWithCommentSubmit = async () => {
 
     <div v-if="repostMode !== 'comment'" class="post-actions">
       <button class="action-button reply" @mouseenter="isActionHovered = true" @mouseleave="isActionHovered = false"
-        @click.stop>
+        @click.stop="$emit('reply', displayPost?.id ?? props.post.id)">
         💬 {{ repliesCount }}
       </button>
       <div class="repost-container">
